@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estúdio 3D — Teste</title>
+<title>Estúdio 3D</title>
 
 <style>
 *{box-sizing:border-box}
@@ -37,7 +37,7 @@ header h2{font-size:19px;margin:0}
 
 main{
   display:grid;
-  grid-template-columns:220px 1fr;
+  grid-template-columns:230px 1fr;
   min-height:calc(100vh - 60px);
 }
 
@@ -45,6 +45,7 @@ aside{
   background:#191e2b;
   padding:16px;
   border-right:1px solid #30384b;
+  overflow-y:auto;
 }
 
 h3{
@@ -57,14 +58,14 @@ h3{
 label{
   display:block;
   font-size:13px;
-  margin:18px 0 8px;
+  margin:15px 0 8px;
 }
 
-input,button{width:100%}
+input,button,select{width:100%}
 
 input[type=range]{accent-color:#6685ff}
 
-button,.upload{
+button,.upload,select{
   display:block;
   background:#29334a;
   color:white;
@@ -75,6 +76,15 @@ button,.upload{
   font-size:13px;
   cursor:pointer;
   text-align:center;
+}
+
+select{
+  text-align:left;
+}
+
+select option{
+  background:#191e2b;
+  color:white;
 }
 
 button:active{background:#526bff}
@@ -128,6 +138,17 @@ input[type=file]{display:none}
   pointer-events:none;
 }
 
+.library-count{
+  color:#9eacc8;
+  font-size:11px;
+  margin-top:7px;
+}
+
+.danger{
+  background:#482a36;
+  border-color:#754052;
+}
+
 @media(max-width:650px){
   main{
     display:flex;
@@ -148,13 +169,13 @@ input[type=file]{display:none}
   aside h3{display:none}
 
   aside>div{
-    flex:0 0 150px;
-    min-width:150px;
+    flex:0 0 155px;
+    min-width:155px;
   }
 
   .viewer{
     position:relative;
-    min-height:calc(100svh - 210px);
+    min-height:calc(100svh - 260px);
     flex:1;
   }
 
@@ -192,17 +213,26 @@ input[type=file]{display:none}
   </div>
 
   <div>
+    <label>Biblioteca de modelos</label>
+    <select id="modelSelect">
+      <option value="">Carregando modelos…</option>
+    </select>
+    <div class="library-count" id="libraryCount">0 modelos</div>
+    <button id="removeModel" class="danger">Remover modelo selecionado</button>
+  </div>
+
+  <div>
+    <label>Importar modelos</label>
+    <label class="upload" for="modelFile">＋ Importar GLB / GLTF</label>
+    <input id="modelFile" type="file" accept=".glb,.gltf">
+  </div>
+
+  <div>
     <label>Iluminação</label>
     <input id="light" type="range" min="0" max="5" step=".1" value="2.5">
 
     <label>Cor da luz</label>
     <input id="lightColor" type="color" value="#ffffff">
-  </div>
-
-  <div>
-    <label>Modelo 3D</label>
-    <label class="upload" for="modelFile">＋ Importar modelo</label>
-    <input id="modelFile" type="file" accept=".glb,.gltf">
   </div>
 
   <div>
@@ -234,11 +264,13 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 const mount = document.querySelector('#scene');
 const status = document.querySelector('#status');
 const modelStatus = document.querySelector('#modelStatus');
+const modelSelect = document.querySelector('#modelSelect');
+const libraryCount = document.querySelector('#libraryCount');
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x10131b);
 
-// CÂMERA 3D ORBITAL
+// CÂMERA
 
 const camera = new THREE.PerspectiveCamera(35,1,0.01,1000);
 
@@ -249,7 +281,6 @@ let cameraTarget = new THREE.Vector3(0,0,0);
 let minZoom = 2;
 const maxZoom = 60;
 
-// Ângulo horizontal e vertical da câmera
 let cameraTheta = 0;
 let cameraPhi = Math.PI/2;
 
@@ -285,7 +316,7 @@ renderer.toneMappingExposure = 1;
 
 mount.appendChild(renderer.domElement);
 
-// LUZES
+// ILUMINAÇÃO
 
 scene.add(new THREE.HemisphereLight(
   0xffffff,
@@ -328,14 +359,16 @@ scene.add(modelRoot);
 const loader = new GLTFLoader();
 
 let currentModel = null;
+let currentEntry = null;
 let mixer = null;
-let rotating = true;
 
+let rotating = true;
 let dragging = false;
+
 let lastX = 0;
 let lastY = 0;
-
 let touchDistance = 0;
+
 let currentObjectUrl = null;
 let clock = new THREE.Clock();
 
@@ -343,7 +376,101 @@ let modelHeight = 0;
 let modelWidth = 0;
 let modelDepth = 0;
 
-// CALCULAR ENQUADRAMENTO
+// BIBLIOTECA DE MODELOS
+
+const modelLibrary = [];
+let nextModelId = 1;
+
+// ATUALIZAR LISTA
+
+function updateLibrary(){
+
+  modelSelect.innerHTML = '';
+
+  if(modelLibrary.length===0){
+
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'Nenhum modelo disponível';
+
+    modelSelect.appendChild(option);
+
+  }else{
+
+    modelLibrary.forEach(entry=>{
+
+      const option = document.createElement('option');
+
+      option.value = String(entry.id);
+      option.textContent = entry.name;
+
+      modelSelect.appendChild(option);
+    });
+  }
+
+  libraryCount.textContent =
+    modelLibrary.length +
+    (modelLibrary.length===1 ? ' modelo na biblioteca' : ' modelos na biblioteca');
+
+  modelSelect.disabled = modelLibrary.length===0;
+
+  document.querySelector('#removeModel').disabled =
+    modelLibrary.length===0;
+}
+
+// PREPARAR MODELO IMPORTADO
+
+function prepareModel(gltf){
+
+  const model = gltf.scene;
+
+  model.traverse(item=>{
+
+    if(item.isMesh){
+
+      item.castShadow = true;
+      item.receiveShadow = true;
+
+      if(item.material){
+
+        const materials = Array.isArray(item.material)
+          ? item.material
+          : [item.material];
+
+        materials.forEach(material=>{
+          material.needsUpdate = true;
+        });
+      }
+    }
+  });
+
+  const originalBox = new THREE.Box3().setFromObject(model);
+
+  if(!originalBox.isEmpty()){
+
+    const originalSize = originalBox.getSize(new THREE.Vector3());
+
+    const largest = Math.max(
+      originalSize.x,
+      originalSize.y,
+      originalSize.z
+    );
+
+    if(largest>0){
+      model.scale.setScalar(3.2/largest);
+    }
+
+    const scaledBox = new THREE.Box3().setFromObject(model);
+
+    model.position.x -= scaledBox.getCenter(new THREE.Vector3()).x;
+    model.position.z -= scaledBox.getCenter(new THREE.Vector3()).z;
+    model.position.y += -1.5-scaledBox.min.y;
+  }
+
+  return model;
+}
+
+// ENQUADRAR PERSONAGEM
 
 function fitCharacter(){
 
@@ -385,89 +512,68 @@ function fitCharacter(){
   );
 
   cameraDistance = initialCameraDistance;
-
   minZoom = Math.max(1,requiredDistance*0.45);
 
   updateCamera();
 }
 
-// CARREGAR MODELO
+// ATIVAR MODELO
 
-function showModel(gltf,label){
+function activateModel(entry){
 
-  if(currentModel){
-    modelRoot.remove(currentModel);
-  }
+  if(!entry) return;
 
   if(mixer){
     mixer.stopAllAction();
     mixer = null;
   }
 
-  currentModel = gltf.scene;
+  modelRoot.clear();
 
-  currentModel.traverse(item=>{
-
-    if(item.isMesh){
-      item.castShadow = true;
-      item.receiveShadow = true;
-
-      if(item.material){
-        const materials = Array.isArray(item.material)
-          ? item.material
-          : [item.material];
-
-        materials.forEach(material=>{
-          material.needsUpdate = true;
-        });
-      }
-    }
-  });
+  currentEntry = entry;
+  currentModel = entry.scene;
 
   modelRoot.add(currentModel);
 
-  const originalBox = new THREE.Box3().setFromObject(currentModel);
-
-  if(!originalBox.isEmpty()){
-
-    const originalSize = originalBox.getSize(new THREE.Vector3());
-
-    const largest = Math.max(
-      originalSize.x,
-      originalSize.y,
-      originalSize.z
-    );
-
-    if(largest>0){
-      currentModel.scale.setScalar(3.2/largest);
-    }
-
-    const scaledBox = new THREE.Box3().setFromObject(currentModel);
-
-    currentModel.position.x -= scaledBox.getCenter(new THREE.Vector3()).x;
-    currentModel.position.z -= scaledBox.getCenter(new THREE.Vector3()).z;
-    currentModel.position.y += -1.5-scaledBox.min.y;
-  }
-
   modelRoot.rotation.set(0,0,0);
 
-  if(gltf.animations && gltf.animations.length){
+  if(entry.animations && entry.animations.length){
 
     mixer = new THREE.AnimationMixer(currentModel);
 
-    gltf.animations.forEach(animation=>{
+    entry.animations.forEach(animation=>{
       mixer.clipAction(animation).play();
     });
   }
 
-  // Volta a câmera para a posição frontal
   cameraTheta = 0;
   cameraPhi = Math.PI/2;
 
   fitCharacter();
 
-  modelStatus.textContent = label;
+  modelStatus.textContent = entry.name;
   status.textContent = '● Modelo 3D carregado';
+
+  modelSelect.value = String(entry.id);
+}
+
+// ADICIONAR MODELO À BIBLIOTECA
+
+function addModel(gltf,name){
+
+  const preparedScene = prepareModel(gltf);
+
+  const entry = {
+    id:nextModelId++,
+    name:name,
+    scene:preparedScene,
+    animations:gltf.animations || []
+  };
+
+  modelLibrary.push(entry);
+
+  updateLibrary();
+  activateModel(entry);
 }
 
 // PERSONAGEM PADRÃO
@@ -480,18 +586,28 @@ function loadDefaultCharacter(){
     './man-base-character-rigged.glb',
 
     gltf=>{
-      showModel(gltf,'Personagem humano carregado');
+
+      addModel(gltf,'Personagem original');
+
+      modelStatus.textContent = 'Personagem original carregado';
     },
 
     event=>{
+
       if(event.total){
-        const percent = Math.round(event.loaded/event.total*100);
+
+        const percent = Math.round(
+          event.loaded/event.total*100
+        );
+
         status.textContent = '● Carregando '+percent+'%';
       }
     },
 
     error=>{
+
       console.error(error);
+
       modelStatus.textContent = 'Erro ao carregar personagem';
       status.textContent = '● Falha ao carregar modelo';
     }
@@ -500,7 +616,126 @@ function loadDefaultCharacter(){
 
 loadDefaultCharacter();
 
-// ARRASTAR PARA CONTROLAR A CÂMERA
+// SELECIONAR MODELO DA BIBLIOTECA
+
+modelSelect.addEventListener('change',()=>{
+
+  const id = Number(modelSelect.value);
+
+  const entry = modelLibrary.find(item=>item.id===id);
+
+  if(entry){
+    activateModel(entry);
+  }
+});
+
+// REMOVER MODELO SELECIONADO
+
+document.querySelector('#removeModel').onclick = ()=>{
+
+  if(!currentEntry) return;
+
+  const removedIndex = modelLibrary.findIndex(
+    item=>item.id===currentEntry.id
+  );
+
+  if(removedIndex===-1) return;
+
+  const removedName = currentEntry.name;
+
+  if(mixer){
+    mixer.stopAllAction();
+    mixer = null;
+  }
+
+  modelRoot.clear();
+
+  currentModel = null;
+  currentEntry = null;
+
+  modelLibrary.splice(removedIndex,1);
+
+  updateLibrary();
+
+  if(modelLibrary.length>0){
+
+    const nextIndex = Math.min(
+      removedIndex,
+      modelLibrary.length-1
+    );
+
+    activateModel(modelLibrary[nextIndex]);
+
+  }else{
+
+    modelStatus.textContent = 'Nenhum modelo selecionado';
+    status.textContent = '● Biblioteca vazia';
+
+    cameraTarget.set(0,0,0);
+    cameraDistance = 10;
+    updateCamera();
+  }
+
+  console.log('Modelo removido:',removedName);
+};
+
+// IMPORTAR MODELOS
+
+document.querySelector('#modelFile').onchange = event=>{
+
+  const files = Array.from(event.target.files || []);
+
+  if(!files.length) return;
+
+  let processed = 0;
+
+  files.forEach(file=>{
+
+    const objectUrl = URL.createObjectURL(file);
+
+    status.textContent = '● Importando '+file.name+'…';
+
+    loader.load(
+
+      objectUrl,
+
+      gltf=>{
+
+        addModel(gltf,file.name);
+
+        URL.revokeObjectURL(objectUrl);
+
+        processed++;
+
+        if(processed===files.length){
+          status.textContent = '● Importação concluída';
+        }
+      },
+
+      undefined,
+
+      error=>{
+
+        console.error(error);
+
+        URL.revokeObjectURL(objectUrl);
+
+        processed++;
+
+        status.textContent = '● Erro ao importar '+file.name;
+
+        if(processed===files.length){
+          alert('Um ou mais modelos não puderam ser importados. Verifique os arquivos.');
+        }
+      }
+    );
+  });
+
+  // Permite selecionar o mesmo arquivo novamente
+  event.target.value = '';
+};
+
+// CONTROLE DA CÂMERA
 
 renderer.domElement.addEventListener('pointerdown',event=>{
 
@@ -521,10 +756,7 @@ renderer.domElement.addEventListener('pointermove',event=>{
   const deltaX = event.clientX-lastX;
   const deltaY = event.clientY-lastY;
 
-  // Movimento horizontal: orbitar ao redor do personagem
   cameraTheta -= deltaX*0.008;
-
-  // Movimento vertical: olhar de cima ou de baixo
   cameraPhi += deltaY*0.008;
 
   cameraPhi = THREE.MathUtils.clamp(
@@ -611,11 +843,10 @@ document.querySelector('#reset').onclick = ()=>{
   cameraTheta = 0;
   cameraPhi = Math.PI/2;
 
-  cameraDistance = initialCameraDistance;
-
   if(currentModel){
     fitCharacter();
   }else{
+    cameraDistance = initialCameraDistance;
     updateCamera();
   }
 
@@ -632,7 +863,7 @@ document.querySelector('#lightColor').oninput = event=>{
   light.color.set(event.target.value);
 };
 
-// ROTAÇÃO AUTOMÁTICA DO PERSONAGEM
+// ROTAÇÃO AUTOMÁTICA
 
 document.querySelector('#rotate').onclick = event=>{
 
@@ -641,52 +872,6 @@ document.querySelector('#rotate').onclick = event=>{
   event.target.textContent = rotating
     ? 'Girar modelo: ligado'
     : 'Girar modelo: desligado';
-};
-
-// IMPORTAR MODELO
-
-document.querySelector('#modelFile').onchange = event=>{
-
-  const file = event.target.files && event.target.files[0];
-
-  if(!file) return;
-
-  if(currentObjectUrl){
-    URL.revokeObjectURL(currentObjectUrl);
-  }
-
-  currentObjectUrl = URL.createObjectURL(file);
-
-  status.textContent = '● Importando modelo…';
-
-  loader.load(
-    currentObjectUrl,
-
-    gltf=>{
-
-      showModel(gltf,'Modelo importado: '+file.name);
-
-      URL.revokeObjectURL(currentObjectUrl);
-      currentObjectUrl = null;
-    },
-
-    undefined,
-
-    error=>{
-
-      console.error(error);
-
-      alert('Não foi possível abrir esse modelo. Confira se é um arquivo GLB ou GLTF válido.');
-
-      status.textContent = '● Erro ao importar modelo';
-
-      if(currentObjectUrl){
-        URL.revokeObjectURL(currentObjectUrl);
-      }
-
-      currentObjectUrl = null;
-    }
-  );
 };
 
 // REDIMENSIONAR TELA
