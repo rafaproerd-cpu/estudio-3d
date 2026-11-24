@@ -7,232 +7,401 @@
 <title>Estúdio 3D</title>
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;
- background:#0b1020;
- color:white;
- font-family:Arial,sans-serif;
-}
-header{
- padding:18px;
- background:#121a30;
- border-bottom:1px solid #293653;
- display:flex;
- justify-content:space-between;
- align-items:center;
-}
-.logo{font-size:21px;font-weight:bold;color:#78a0ff}
-button{
- border:0;
- border-radius:9px;
- padding:11px 15px;
- background:#4169e1;
- color:white;
- font-weight:bold;
- cursor:pointer;
-}
-main{padding:16px;max-width:1100px;margin:auto}
-h2{font-size:20px}
-.painel{
- display:grid;
- grid-template-columns:1fr 2fr 1fr;
- gap:12px;
-}
-.card{
- background:#151e33;
- border:1px solid #293653;
- border-radius:13px;
- padding:15px;
- min-width:0;
-}
-.item{
- background:#202d49;
- padding:12px;
- margin:9px 0;
- border-radius:8px;
- color:#dce5ff;
-}
-.visual{
- min-height:350px;
- display:flex;
- align-items:center;
- justify-content:center;
- flex-direction:column;
- background:radial-gradient(circle,#263c70,#10172a 70%);
- border-radius:12px;
-}
-.personagem{
- width:105px;
- height:155px;
- position:relative;
- animation:flutuar 2s infinite ease-in-out;
-}
-.cabeca{
- width:65px;height:65px;
- background:#f0bd98;
- border-radius:50%;
- margin:auto;
- position:relative;
-}
-.cabelo{
- position:absolute;
- top:-5px;left:0;
- width:65px;height:24px;
- background:#20283c;
- border-radius:50% 50% 20% 20%;
-}
-.olhos{
- position:absolute;top:30px;left:17px;
- width:7px;height:7px;
- background:#111;border-radius:50%;
- box-shadow:25px 0 #111;
-}
-.corpo{
- width:75px;height:65px;
- background:#527cff;
- border-radius:22px;
- margin:auto;
-}
-.pernas{
- display:flex;
- justify-content:center;
- gap:12px;
-}
-.perna{
- width:19px;height:40px;
- background:#20283c;
- border-radius:10px;
-}
-@keyframes flutuar{
- 50%{transform:translateY(-9px)}
-}
-.acoes{
- display:flex;
- flex-wrap:wrap;
- gap:8px;
- margin-top:14px;
-}
-.acoes button{flex:1}
-.propriedade{
- display:flex;
- justify-content:space-between;
- padding:12px 0;
- border-bottom:1px solid #293653;
- color:#cbd6ef;
- font-size:14px;
-}
-input{width:100%;accent-color:#527cff}
-.timeline{
- margin-top:14px;
- background:#151e33;
- padding:15px;
- border-radius:12px;
-}
-.trilha{
- height:9px;
- background:#293653;
- border-radius:10px;
- margin-top:12px;
-}
-.trilha div{
- width:35%;
- height:100%;
- background:#527cff;
- border-radius:10px;
-}
-footer{
- text-align:center;
- color:#8998b8;
- padding:25px;
- font-size:12px;
-}
+body{margin:0;background:#10131b;color:#f5f7ff;font-family:Arial,sans-serif}
+header{height:58px;background:#191f2c;border-bottom:1px solid #30394c;display:flex;align-items:center;justify-content:space-between;padding:0 15px}
+header strong{font-size:19px;color:#83aaff}
+header button,.toolbar button,.actions button{background:#29344a;color:white;border:1px solid #43516b;border-radius:8px;padding:10px;cursor:pointer}
+button:active{opacity:.7}
+.layout{display:grid;grid-template-columns:190px 1fr 210px;height:calc(100vh - 58px)}
+aside{background:#171d29;padding:12px;overflow:auto;border-right:1px solid #30394c}
+.right{border-right:0;border-left:1px solid #30394c}
+h3{font-size:13px;color:#91a9d4;text-transform:uppercase;margin:8px 0 12px}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.toolbar button{font-size:12px}
+button.active{background:#4169e1;border-color:#83aaff}
+.section{border-top:1px solid #30394c;padding:12px 0}
+label{display:block;font-size:12px;color:#c1cbe0;margin:9px 0 5px}
+input,select{width:100%;padding:8px;background:#242d3e;color:white;border:1px solid #43516b;border-radius:6px}
+input[type=color]{height:38px;padding:3px}
+input[type=range]{padding:0}
+#viewport{position:relative;min-width:0;background:#10131b}
+#scene{width:100%;height:100%;display:block;touch-action:none}
+#hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#20283acc;padding:9px 13px;border-radius:20px;font-size:11px;white-space:nowrap;pointer-events:none}
+#status{font-size:11px;color:#8fa2c5;margin-top:10px;line-height:1.5}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.actions button{font-size:12px}
+#objectList button{display:block;width:100%;text-align:left;margin:5px 0}
+footer{font-size:10px;color:#8090ad;margin-top:15px;line-height:1.5}
 @media(max-width:700px){
- .painel{grid-template-columns:1fr}
- .visual{min-height:300px}
- header{padding:14px}
+.layout{grid-template-columns:115px minmax(0,1fr);height:calc(100vh - 58px)}
+aside{padding:8px}
+.right{grid-column:1/3;grid-row:2;border:0;border-top:1px solid #30394c;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:190px}
+#viewport{grid-column:2;grid-row:1}
+.toolbar{grid-template-columns:1fr}
+.toolbar button{padding:9px 4px;font-size:11px}
+h3{font-size:11px}
 }
 </style>
 </head>
 <body>
-
 <header>
- <div class="logo">ESTÚDIO 3D</div>
- <button onclick="alert('Projeto criado!')">Novo projeto</button>
+<strong>✦ ESTÚDIO 3D</strong>
+<button id="reset">Nova cena</button>
 </header>
 
-<main>
- <h2>Meu espaço de criação</h2>
+<div class="layout">
+<aside>
+<h3>Adicionar objetos</h3>
+<div class="toolbar">
+<button id="box">＋ Cubo</button>
+<button id="sphere">＋ Esfera</button>
+<button id="cylinder">＋ Cilindro</button>
+<button id="torus">＋ Anel</button>
+</div>
 
- <div class="painel">
+<div class="section">
+<h3>Ferramentas</h3>
+<div class="toolbar">
+<button id="move" class="active">Mover</button>
+<button id="rotate">Girar</button>
+<button id="scale">Tamanho</button>
+</div>
+</div>
 
-  <section class="card">
-   <h3>Ferramentas</h3>
-   <div class="item">👤 Personagens</div>
-   <div class="item">🎨 Aparência</div>
-   <div class="item">📦 Objetos 3D</div>
-   <div class="item">💡 Iluminação</div>
-   <div class="item">🎬 Animações</div>
-   <div class="item">🖼️ Cenários</div>
-  </section>
+<div class="section">
+<h3>Objetos da cena</h3>
+<div id="objectList"></div>
+</div>
+</aside>
 
-  <section class="card">
-   <h3>Área de visualização</h3>
-   <div class="visual">
-    <div class="personagem">
-     <div class="cabeca">
-      <div class="cabelo"></div>
-      <div class="olhos"></div>
-     </div>
-     <div class="corpo"></div>
-     <div class="pernas">
-      <div class="perna"></div>
-      <div class="perna"></div>
-     </div>
-    </div>
-    <p>Seu personagem 3D</p>
-   </div>
-   <div class="acoes">
-    <button onclick="alert('Personagem selecionado!')">Selecionar</button>
-    <button onclick="alert('Ferramenta de rotação')">Girar</button>
-   </div>
-  </section>
-
-  <section class="card">
-   <h3>Propriedades</h3>
-   <div class="propriedade">
-    <span>Nome</span><span>Personagem 01</span>
-   </div>
-   <div class="propriedade">
-    <span>Posição</span><span>Central</span>
-   </div>
-   <div class="propriedade">
-    <span>Escala</span><span>100%</span>
-   </div>
-   <p>Controle de tamanho</p>
-   <input type="range" min="1" max="200" value="100">
-   <p>Configurações</p>
-   <div class="item">Ambiente: Padrão</div>
-   <div class="item">Iluminação: Ligada</div>
-  </section>
-
- </div>
-
- <section class="timeline">
-  <strong>Linha do tempo</strong>
-  <div class="trilha"><div></div></div>
-  <p>Quadro 01 — Animação inicial</p>
- </section>
-
- <div class="acoes">
-  <button onclick="alert('Área de importação em desenvolvimento')">Importar modelo</button>
-  <button onclick="window.print()">Salvar visualização</button>
- </div>
-
+<main id="viewport">
+<canvas id="scene"></canvas>
+<div id="hint">Toque em um objeto para selecioná-lo • Arraste para girar a câmera</div>
 </main>
 
-<footer>
- ESTÚDIO 3D — Seu espaço de criação
-</footer>
+<aside class="right">
+<div>
+<h3>Aparência</h3>
+<label>Cor do objeto</label>
+<input type="color" id="color" value="#527cff">
+<label>Escala</label>
+<input type="range" id="size" min="0.3" max="3" step="0.1" value="1">
+<label>Posição horizontal</label>
+<input type="range" id="position" min="-4" max="4" step="0.1" value="0">
+<label>Rotação</label>
+<input type="range" id="rotation" min="0" max="360" value="0">
+</div>
+<div>
+<h3>Iluminação e cenário</h3>
+<label>Intensidade da luz</label>
+<input type="range" id="light" min="0" max="5" step="0.1" value="2">
+<label>Fundo</label>
+<select id="background">
+<option value="#10131b">Escuro</option>
+<option value="#26344f">Azul</option>
+<option value="#555555">Cinza</option>
+<option value="#eeeeee">Claro</option>
+<option value="#183b32">Verde</option>
+</select>
 
+<div class="section">
+<h3>Animação</h3>
+<button id="animate">▶ Iniciar animação</button>
+</div>
+
+<div class="section">
+<h3>Projeto</h3>
+<div class="actions">
+<button id="export">Exportar JSON</button>
+<button id="import">Importar JSON</button>
+<button id="delete">Excluir objeto</button>
+</div>
+<input type="file" id="file" accept=".json,application/json" hidden>
+</div>
+<div id="status">Cena pronta.</div>
+<footer>Estúdio 3D • Primeira versão funcional<br>Conexão com internet necessária para carregar o motor 3D.</footer>
+</div>
+</aside>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const canvas=document.querySelector('#scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#10131b');
+
+const camera=new THREE.PerspectiveCamera(45,1,.1,100);
+camera.position.set(5,4,8);
+camera.lookAt(0,0,0);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x30364c,2));
+const sun=new THREE.DirectionalLight(0xffffff,2);
+sun.position.set(5,8,5);
+sun.castShadow=true;
+scene.add(sun);
+
+const floor=new THREE.Mesh(
+new THREE.PlaneGeometry(30,30),
+new THREE.MeshStandardMaterial({color:0x252c3d,roughness:.9})
+);
+floor.rotation.x=-Math.PI/2;
+floor.position.y=-1.6;
+floor.receiveShadow=true;
+scene.add(floor);
+
+const grid=new THREE.GridHelper(30,30,0x63749b,0x39435b);
+grid.position.y=-1.59;
+scene.add(grid);
+
+const objects=[];
+let selected=null;
+let mode='move';
+let animating=false;
+let cameraSpin=0;
+let dragging=false;
+let lastX=0,lastY=0;
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+
+function status(message){
+document.querySelector('#status').textContent=message;
+}
+
+function addObject(type){
+let geometry;
+if(type==='box') geometry=new THREE.BoxGeometry(1.4,1.4,1.4);
+if(type==='sphere') geometry=new THREE.SphereGeometry(.85,32,24);
+if(type==='cylinder') geometry=new THREE.CylinderGeometry(.7,.7,1.5,32);
+if(type==='torus') geometry=new THREE.TorusGeometry(.7,.22,16,48);
+
+const material=new THREE.MeshStandardMaterial({
+color:'#527cff',roughness:.45,metalness:.1
+});
+const mesh=new THREE.Mesh(geometry,material);
+mesh.position.set((Math.random()-.5)*2,0,0);
+mesh.castShadow=true;
+mesh.receiveShadow=true;
+mesh.userData.type=type;
+scene.add(mesh);
+objects.push(mesh);
+selectObject(mesh);
+updateList();
+status('Objeto adicionado.');
+}
+
+function selectObject(obj){
+selected=obj;
+if(!obj)return;
+document.querySelector('#color').value='#'+obj.material.color.getHexString();
+document.querySelector('#size').value=obj.scale.x;
+document.querySelector('#position').value=obj.position.x;
+document.querySelector('#rotation').value=THREE.MathUtils.radToDeg(obj.rotation.y);
+updateList();
+}
+
+function updateList(){
+const list=document.querySelector('#objectList');
+list.innerHTML='';
+objects.forEach((obj,i)=>{
+const b=document.createElement('button');
+b.textContent=(obj.userData.type||'Objeto')+' '+(i+1);
+b.className=obj===selected?'active':'';
+b.onclick=()=>selectObject(obj);
+list.appendChild(b);
+});
+}
+
+document.querySelector('#box').onclick=()=>addObject('box');
+document.querySelector('#sphere').onclick=()=>addObject('sphere');
+document.querySelector('#cylinder').onclick=()=>addObject('cylinder');
+document.querySelector('#torus').onclick=()=>addObject('torus');
+
+function setMode(value){
+mode=value;
+['move','rotate','scale'].forEach(id=>{
+document.querySelector('#'+id).classList.toggle('active',id===value);
+});
+status('Ferramenta selecionada: '+value);
+}
+document.querySelector('#move').onclick=()=>setMode('move');
+document.querySelector('#rotate').onclick=()=>setMode('rotate');
+document.querySelector('#scale').onclick=()=>setMode('scale');
+
+document.querySelector('#color').oninput=e=>{
+if(selected)selected.material.color.set(e.target.value);
+};
+document.querySelector('#size').oninput=e=>{
+if(selected)selected.scale.setScalar(Number(e.target.value));
+};
+document.querySelector('#position').oninput=e=>{
+if(selected)selected.position.x=Number(e.target.value);
+};
+document.querySelector('#rotation').oninput=e=>{
+if(selected)selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
+};
+document.querySelector('#light').oninput=e=>{
+sun.intensity=Number(e.target.value);
+};
+document.querySelector('#background').onchange=e=>{
+scene.background=new THREE.Color(e.target.value);
+};
+
+document.querySelector('#delete').onclick=()=>{
+if(!selected)return status('Selecione um objeto primeiro.');
+scene.remove(selected);
+objects.splice(objects.indexOf(selected),1);
+selected=null;
+updateList();
+status('Objeto excluído.');
+};
+
+document.querySelector('#animate').onclick=()=>{
+animating=!animating;
+document.querySelector('#animate').textContent=animating?'Ⅱ Pausar animação':'▶ Iniciar animação';
+};
+
+document.querySelector('#reset').onclick=()=>{
+objects.forEach(o=>scene.remove(o));
+objects.length=0;
+selected=null;
+updateList();
+status('Cena limpa. Adicione um objeto.');
+};
+
+function saveProject(){
+return {
+version:1,
+background:scene.background.getHexString(),
+light:sun.intensity,
+objects:objects.map(o=>({
+type:o.userData.type,
+color:'#'+o.material.color.getHexString(),
+position:o.position.toArray(),
+rotation:o.rotation.toArray(),
+scale:o.scale.toArray()
+}))
+};
+}
+
+document.querySelector('#export').onclick=()=>{
+const data=JSON.stringify(saveProject(),null,2);
+const blob=new Blob([data],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download='meu-projeto-3d.json';
+a.click();
+URL.revokeObjectURL(url);
+status('Projeto exportado.');
+};
+
+document.querySelector('#import').onclick=()=>{
+document.querySelector('#file').click();
+};
+
+document.querySelector('#file').onchange=async e=>{
+const file=e.target.files[0];
+if(!file)return;
+try{
+const data=JSON.parse(await file.text());
+if(!Array.isArray(data.objects))throw new Error('Arquivo inválido');
+objects.forEach(o=>scene.remove(o));
+objects.length=0;
+data.objects.forEach(item=>{
+addObject(item.type);
+const o=objects[objects.length-1];
+o.material.color.set(item.color);
+o.position.fromArray(item.position);
+o.rotation.fromArray(item.rotation);
+o.scale.fromArray(item.scale);
+});
+if(data.background)scene.background=new THREE.Color('#'+data.background);
+if(Number.isFinite(data.light))sun.intensity=data.light;
+selected=objects[objects.length-1]||null;
+updateList();
+status('Projeto importado.');
+}catch(err){
+status('Não foi possível abrir esse projeto.');
+}
+e.target.value='';
+};
+
+function resize(){
+const w=canvas.clientWidth;
+const h=canvas.clientHeight;
+if(!w||!h)return;
+renderer.setSize(w,h,false);
+camera.aspect=w/h;
+camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(canvas.parentElement);
+resize();
+
+canvas.addEventListener('pointerdown',e=>{
+dragging=true;
+lastX=e.clientX;
+lastY=e.clientY;
+canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+if(!dragging)return;
+const dx=e.clientX-lastX;
+const dy=e.clientY-lastY;
+lastX=e.clientX;
+lastY=e.clientY;
+
+if(selected&&mode!=='move'&&Math.abs(dx)+Math.abs(dy)>0){
+if(mode==='rotate')selected.rotation.y+=dx*.01;
+if(mode==='scale'){
+const s=Math.max(.2,Math.min(4,selected.scale.x+dx*.01));
+selected.scale.setScalar(s);
+}
+}else{
+cameraSpin+=dx*.008;
+camera.position.x=8*Math.sin(cameraSpin);
+camera.position.z=8*Math.cos(cameraSpin);
+camera.position.y=Math.max(1,Math.min(8,camera.position.y-dy*.02));
+camera.lookAt(0,0,0);
+}
+});
+canvas.addEventListener('pointerup',e=>{
+dragging=false;
+const rect=canvas.getBoundingClientRect();
+pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
+pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+raycaster.setFromCamera(pointer,camera);
+const hits=raycaster.intersectObjects(objects);
+if(hits.length){
+selectObject(hits[0].object);
+status('Objeto selecionado.');
+}
+});
+canvas.addEventListener('pointercancel',()=>dragging=false);
+
+function loop(){
+requestAnimationFrame(loop);
+if(animating){
+objects.forEach((o,i)=>{
+o.rotation.y+=.008;
+o.position.y=Math.sin(Date.now()*.002+i)*.15;
+});
+}
+renderer.render(scene,camera);
+}
+loop();
+
+addObject('box');
+addObject('sphere');
+selectObject(objects[0]);
+status('Estúdio 3D iniciado com sucesso.');
+</script>
 </body>
 </html>
+
+
