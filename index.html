@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estúdio 3D</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10131b;color:#f5f7ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    #scene{position:fixed;inset:0}
+    .panel{position:fixed;left:16px;right:16px;top:16px;z-index:2;pointer-events:none}
+    h1{font-size:clamp(22px,5vw,34px);margin:0 0 5px;font-weight:800;letter-spacing:-.04em}
+    p{margin:0;color:#b9c2d5;font-size:14px}
+    .hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:2;background:#20283acc;border:1px solid #ffffff24;border-radius:999px;padding:10px 15px;color:#dce5f7;font-size:12px;white-space:nowrap}
+    .error{position:fixed;inset:auto 16px 70px;background:#512b35;color:#fff;padding:12px;border-radius:12px;display:none;z-index:3}
+  </style>
+</head>
+<body>
+  <div id="scene"></div>
+  <header class="panel"><h1>Estúdio 3D</h1><p>Protótipo inicial • personagem animado</p></header>
+  <div class="hint">Arraste para girar • aproxime com dois dedos</div>
+  <div id="error" class="error">Não foi possível carregar o motor 3D. Verifique sua conexão e recarregue a página.</div>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+    const mount = document.querySelector('#scene');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x10131b);
+    scene.fog = new THREE.Fog(0x10131b, 8, 22);
+
+    const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 100);
+    camera.position.set(0, 2.2, 7.8);
+
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mount.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xbfd7ff, 0x252033, 2));
+    const key = new THREE.DirectionalLight(0xffffff, 2.6);
+    key.position.set(4,7,5); key.castShadow = true; scene.add(key);
+    const rim = new THREE.PointLight(0x6c8cff, 18, 12);
+    rim.position.set(-3,2,2); scene.add(rim);
+
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(8,64), new THREE.MeshStandardMaterial({color:0x202637, roughness:.82}));
+    floor.rotation.x = -Math.PI/2; floor.position.y = -1.55; floor.receiveShadow = true; scene.add(floor);
+    const grid = new THREE.GridHelper(16,32,0x46516e,0x30394f);
+    grid.position.y = -1.53; scene.add(grid);
+
+    const character = new THREE.Group(); scene.add(character);
+    const mat = (color, metalness=0, roughness=.55)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
+    const blue=mat(0x527cff,.18,.32), dark=mat(0x20283c,.35,.35), skin=mat(0xf0bd98), white=mat(0xeaf0ff,.1,.25), black=mat(0x111827,.15,.3);
+    function ball(parent, material, pos, scale, seg=32){
+      const m=new THREE.Mesh(new THREE.SphereGeometry(1,seg,seg),material);
+      m.position.set(...pos); m.scale.set(...scale); m.castShadow=true; m.receiveShadow=true; parent.add(m); return m;
+    }
+    function limb(parent, a, b, radius, material){
+      const A=new THREE.Vector3(...a), B=new THREE.Vector3(...b), d=new THREE.Vector3().subVectors(B,A);
+      const m=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,d.length(),20),material);
+      m.position.copy(A).add(B).multiplyScalar(.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize()); m.castShadow=true; parent.add(m); return m;
+    }
+
+    // Corpo e cabeça do personagem estilizado
+    ball(character,dark,[0,-.45,0],[.57,.72,.34]);
+    ball(character,blue,[0,-.43,.18],[.49,.61,.24]);
+    ball(character,skin,[0,.62,0],[.43,.48,.39]);
+    ball(character,white,[0,.76,.325],[.32,.16,.09]);
+    ball(character,black,[-.13,.76,.405],[.055,.07,.035]);
+    ball(character,black,[.13,.76,.405],[.055,.07,.035]);
+    ball(character,skin,[0,.38,.36],[.08,.06,.06]);
+    // cabelo
+    ball(character,dark,[0,1.02,-.02],[.44,.17,.4]);
+    ball(character,dark,[-.29,.91,.13],[.16,.23,.22]);
+    // braços articulados
+    const leftArm=new THREE.Group(); leftArm.position.set(-.53,.05,0); character.add(leftArm);
+    limb(leftArm,[0,0,0],[-.12,-.55,0],.13,blue);
+    ball(leftArm,skin,[-.12,-.59,0],[.14,.14,.14]);
+    const rightArm=new THREE.Group(); rightArm.position.set(.53,.05,0); character.add(rightArm);
+    limb(rightArm,[0,0,0],[.12,-.55,0],.13,blue);
+    ball(rightArm,skin,[.12,-.59,0],[.14,.14,.14]);
+    // pernas
+    const leftLeg=new THREE.Group(); leftLeg.position.set(-.23,-1.0,0); character.add(leftLeg);
+    limb(leftLeg,[0,0,0],[-.04,-.42,0],.16,dark);
+    ball(leftLeg,black,[-.08,-.45,.1],[.22,.12,.32]);
+    const rightLeg=new THREE.Group(); rightLeg.position.set(.23,-1.0,0); character.add(rightLeg);
+    limb(rightLeg,[0,0,0],[.04,-.42,0],.16,dark);
+    ball(rightLeg,black,[.08,-.45,.1],[.22,.12,.32]);
+
+    // aro decorativo
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(1.35,.012,8,100),new THREE.MeshBasicMaterial({color:0x536bff,transparent:true,opacity:.65}));
+    ring.rotation.x=Math.PI/2; ring.position.y=-1.48; character.add(ring);
+
+    let dragging=false, lastX=0, spin=0;
+    renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;renderer.domElement.setPointerCapture(e.pointerId)});
+    renderer.domElement.addEventListener('pointermove',e=>{if(dragging){spin+=(e.clientX-lastX)*.01;lastX=e.clientX}});
+    renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+    renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+    let touchDist=0;
+    renderer.domElement.addEventListener('touchmove',e=>{
+      if(e.touches.length===2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;const d=Math.hypot(dx,dy);if(touchDist){camera.position.z=Math.max(4,Math.min(11,camera.position.z+(touchDist-d)*.012));}touchDist=d;}
+    },{passive:true});
+    renderer.domElement.addEventListener('touchend',()=>touchDist=0);
+
+    const clock=new THREE.Clock();
+    function animate(){
+      requestAnimationFrame(animate);
+      const t=clock.getElapsedTime();
+      character.rotation.y=spin + Math.sin(t*.35)*.12;
+      character.position.y=Math.sin(t*2.2)*.07;
+      leftArm.rotation.z=Math.sin(t*2.2)*.22-.08;
+      rightArm.rotation.z=-Math.sin(t*2.2)*.22+.08;
+      leftLeg.rotation.x=Math.sin(t*2.2)*.12;
+      rightLeg.rotation.x=-Math.sin(t*2.2)*.12;
+      ring.rotation.z=t*.18;
+      renderer.render(scene,camera);
+    }
+    animate();
+    addEventListener('resize',()=>{
+      camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth,innerHeight);
+    });
+  </script>
+</body>
+</html>
