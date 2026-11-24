@@ -62,9 +62,8 @@ label{margin:8px 0}
 <h3>Ferramentas</h3>
 
 <div>
-<label>Câmera</label>
-<button id="zoomIn">＋ Aproximar</button>
-<button id="zoomOut">－ Diminuir zoom</button>
+<label for="zoomControl">Zoom da câmera</label>
+<input id="zoomControl" type="range" min="2" max="60" step="0.1" value="10">
 <button id="reset">↺ Reiniciar visão</button>
 </div>
 
@@ -113,7 +112,7 @@ label{margin:8px 0}
 VISUALIZADOR 3D<br>
 <span id="modelStatus">Carregando personagem…</span>
 </div>
-<div class="bottom">Arraste para orbitar • Use dois dedos para zoom</div>
+<div class="bottom">Arraste para orbitar • Use dois dedos ou a barra para zoom</div>
 </section>
 </main>
 
@@ -126,6 +125,7 @@ const status=document.querySelector('#status');
 const modelStatus=document.querySelector('#modelStatus');
 const modelSelect=document.querySelector('#modelSelect');
 const libraryCount=document.querySelector('#libraryCount');
+const zoomControl=document.querySelector('#zoomControl');
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x10131b);
@@ -151,6 +151,19 @@ cameraTarget.z+cameraDistance*sinPhi*Math.cos(cameraTheta)
 );
 camera.lookAt(cameraTarget);
 }
+
+function updateZoomControl(){
+zoomControl.min=String(minZoom);
+zoomControl.max=String(maxZoom);
+zoomControl.value=String(THREE.MathUtils.clamp(cameraDistance,minZoom,maxZoom));
+}
+
+zoomControl.addEventListener('input',()=>{
+cameraDistance=THREE.MathUtils.clamp(
+Number(zoomControl.value),minZoom,maxZoom
+);
+updateCamera();
+});
 
 // RENDERIZADOR
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
@@ -272,9 +285,10 @@ const distanceHeight=(modelHeight/2)/Math.tan(verticalFov/2);
 const distanceWidth=(modelWidth/2)/Math.tan(horizontalFov/2);
 const requiredDistance=Math.max(distanceHeight,distanceWidth)+modelDepth/2;
 initialCameraDistance=Math.max(3,requiredDistance*1.35);
-cameraDistance=initialCameraDistance;
 minZoom=Math.max(1,requiredDistance*0.45);
+cameraDistance=THREE.MathUtils.clamp(initialCameraDistance,minZoom,maxZoom);
 updateCamera();
+updateZoomControl();
 }
 
 // ATIVAR MODELO
@@ -348,7 +362,8 @@ headBoneScales.forEach(item=>{
 item.bone.scale.copy(item.scale).multiplyScalar(head);
 });
 
-fitCharacter();
+// Atualiza a câmera sem alterar o zoom escolhido
+updateCamera();
 }
 
 document.querySelector('#bodyHeight').addEventListener('input',applyBodyCustomization);
@@ -418,6 +433,7 @@ status.textContent='● Biblioteca vazia';
 cameraTarget.set(0,0,0);
 cameraDistance=10;
 updateCamera();
+updateZoomControl();
 }
 console.log('Modelo removido:',removedName);
 };
@@ -492,6 +508,7 @@ cameraDistance+(touchDistance-distance)*0.02,
 minZoom,maxZoom
 );
 updateCamera();
+updateZoomControl();
 }
 touchDistance=distance;
 },{passive:true});
@@ -499,25 +516,16 @@ touchDistance=distance;
 renderer.domElement.addEventListener('touchend',()=>{touchDistance=0;});
 renderer.domElement.addEventListener('touchcancel',()=>{touchDistance=0;});
 
-// ZOOM
-document.querySelector('#zoomIn').onclick=()=>{
-cameraDistance=Math.max(minZoom,cameraDistance-1);
-updateCamera();
-};
-
-document.querySelector('#zoomOut').onclick=()=>{
-cameraDistance=Math.min(maxZoom,cameraDistance+2);
-updateCamera();
-};
-
 // REINICIAR VISÃO
 document.querySelector('#reset').onclick=()=>{
 cameraTheta=0;
 cameraPhi=Math.PI/2;
-if(currentModel)fitCharacter();
-else{
+if(currentModel){
+fitCharacter();
+}else{
 cameraDistance=initialCameraDistance;
 updateCamera();
+updateZoomControl();
 }
 modelRoot.rotation.set(0,0,0);
 };
@@ -544,7 +552,9 @@ if(!width||!height)return;
 camera.aspect=width/height;
 camera.updateProjectionMatrix();
 renderer.setSize(width,height);
-if(currentModel)fitCharacter();
+
+// Não recalcula o enquadramento nem reinicia o zoom
+updateCamera();
 }
 
 const resizeObserver=new ResizeObserver(resize);
