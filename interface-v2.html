@@ -5,12 +5,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Estúdio 3D</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#10131b;color:#f5f7ff;font-family:Arial,sans-serif}
 header{height:58px;background:#191f2c;border-bottom:1px solid #30394c;display:flex;align-items:center;justify-content:space-between;padding:0 15px}
 header strong{font-size:19px;color:#83aaff}
-header button,.toolbar button,.actions button{background:#29344a;color:white;border:1px solid #43516b;border-radius:8px;padding:10px;cursor:pointer}
+header button,.toolbar button,.actions button,.section button{
+background:#29344a;color:white;border:1px solid #43516b;border-radius:8px;padding:10px;cursor:pointer
+}
 button:active{opacity:.7}
 .layout{display:grid;grid-template-columns:190px 1fr 210px;height:calc(100vh - 58px)}
 aside{background:#171d29;padding:12px;overflow:auto;border-right:1px solid #30394c}
@@ -32,17 +35,28 @@ input[type=range]{padding:0}
 .actions button{font-size:12px}
 #objectList button{display:block;width:100%;text-align:left;margin:5px 0}
 footer{font-size:10px;color:#8090ad;margin-top:15px;line-height:1.5}
+#animate,#pauseAnimation{width:100%;margin-top:6px}
 @media(max-width:700px){
 .layout{grid-template-columns:115px minmax(0,1fr);height:calc(100vh - 58px)}
 aside{padding:8px}
-.right{grid-column:1/3;grid-row:2;border:0;border-top:1px solid #30394c;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:190px}
+.right{grid-column:1/3;grid-row:2;border:0;border-top:1px solid #30394c;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:240px}
 #viewport{grid-column:2;grid-row:1}
 .toolbar{grid-template-columns:1fr}
 .toolbar button{padding:9px 4px;font-size:11px}
 h3{font-size:11px}
 }
 </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
+
 <body>
 <header>
 <strong>✦ ESTÚDIO 3D</strong>
@@ -50,6 +64,7 @@ h3{font-size:11px}
 </header>
 
 <div class="layout">
+
 <aside>
 <h3>Adicionar objetos</h3>
 <div class="toolbar">
@@ -76,25 +91,31 @@ h3{font-size:11px}
 
 <main id="viewport">
 <canvas id="scene"></canvas>
-<div id="hint">Toque em um objeto para selecioná-lo • Arraste para girar a câmera</div>
+<div id="hint">Personagem 3D • Arraste para girar a câmera</div>
 </main>
 
 <aside class="right">
+
 <div>
 <h3>Aparência</h3>
 <label>Cor do objeto</label>
 <input type="color" id="color" value="#527cff">
+
 <label>Escala</label>
 <input type="range" id="size" min="0.3" max="3" step="0.1" value="1">
+
 <label>Posição horizontal</label>
 <input type="range" id="position" min="-4" max="4" step="0.1" value="0">
+
 <label>Rotação</label>
 <input type="range" id="rotation" min="0" max="360" value="0">
 </div>
+
 <div>
 <h3>Iluminação e cenário</h3>
 <label>Intensidade da luz</label>
 <input type="range" id="light" min="0" max="5" step="0.1" value="2">
+
 <label>Fundo</label>
 <select id="background">
 <option value="#10131b">Escuro</option>
@@ -105,8 +126,13 @@ h3{font-size:11px}
 </select>
 
 <div class="section">
-<h3>Animação</h3>
-<button id="animate">▶ Iniciar animação</button>
+<h3>Animação do personagem</h3>
+<label>Movimento disponível</label>
+<select id="animationSelect" disabled>
+<option>Carregando personagem...</option>
+</select>
+<button id="animate" disabled>▶ Iniciar animação</button>
+<button id="pauseAnimation" disabled>Ⅱ Pausar animação</button>
 </div>
 
 <div class="section">
@@ -118,28 +144,41 @@ h3{font-size:11px}
 </div>
 <input type="file" id="file" accept=".json,application/json" hidden>
 </div>
-<div id="status">Cena pronta.</div>
-<footer>Estúdio 3D • Primeira versão funcional<br>Conexão com internet necessária para carregar o motor 3D.</footer>
+
+<div id="status">Preparando o Estúdio 3D...</div>
+<footer>
+Estúdio 3D • Interface V2<br>
+Carregamento de personagem GLB.
+</footer>
 </div>
 </aside>
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const canvas=document.querySelector('#scene');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+const renderer=new THREE.WebGLRenderer({
+canvas,
+antialias:true,
+alpha:false
+});
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color('#10131b');
 
 const camera=new THREE.PerspectiveCamera(45,1,.1,100);
-camera.position.set(5,4,8);
+camera.position.set(4,2.5,7);
 camera.lookAt(0,0,0);
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x30364c,2));
+
 const sun=new THREE.DirectionalLight(0xffffff,2);
 sun.position.set(5,8,5);
 sun.castShadow=true;
@@ -147,8 +186,12 @@ scene.add(sun);
 
 const floor=new THREE.Mesh(
 new THREE.PlaneGeometry(30,30),
-new THREE.MeshStandardMaterial({color:0x252c3d,roughness:.9})
+new THREE.MeshStandardMaterial({
+color:0x252c3d,
+roughness:.9
+})
 );
+
 floor.rotation.x=-Math.PI/2;
 floor.position.y=-1.6;
 floor.receiveShadow=true;
@@ -161,10 +204,15 @@ scene.add(grid);
 const objects=[];
 let selected=null;
 let mode='move';
-let animating=false;
 let cameraSpin=0;
 let dragging=false;
 let lastX=0,lastY=0;
+
+let character=null;
+let mixer=null;
+let animationActions=[];
+let activeAction=null;
+let clock=new THREE.Clock();
 
 const raycaster=new THREE.Raycaster();
 const pointer=new THREE.Vector2();
@@ -173,49 +221,200 @@ function status(message){
 document.querySelector('#status').textContent=message;
 }
 
+/* CARREGAMENTO DO PERSONAGEM */
+
+function loadCharacter(){
+
+status('Carregando personagem 3D...');
+
+const loader=new GLTFLoader();
+
+loader.load(
+'./man-base-character-rigged.glb',
+
+(gltf)=>{
+
+character=gltf.scene;
+character.userData.type='personagem';
+character.userData.isCharacter=true;
+
+character.traverse((child)=>{
+
+if(child.isMesh){
+
+child.castShadow=true;
+child.receiveShadow=true;
+child.userData.editorRoot=character;
+
+if(child.material){
+child.material.side=THREE.DoubleSide;
+}
+}
+
+});
+
+const box=new THREE.Box3().setFromObject(character);
+const size=box.getSize(new THREE.Vector3());
+const center=box.getCenter(new THREE.Vector3());
+
+if(size.y>0){
+
+const targetHeight=3.2;
+const factor=targetHeight/size.y;
+
+character.scale.setScalar(factor);
+
+character.position.set(
+-center.x*factor,
+-1.6-box.min.y*factor,
+-center.z*factor
+);
+
+}
+
+scene.add(character);
+objects.push(character);
+
+gltf.animations.forEach((clip)=>{
+
+animationActions.push(clip);
+
+});
+
+const select=document.querySelector('#animationSelect');
+select.innerHTML='';
+
+if(animationActions.length){
+
+animationActions.forEach((clip,index)=>{
+
+const option=document.createElement('option');
+option.value=index;
+option.textContent=clip.name||'Animação '+(index+1);
+select.appendChild(option);
+
+});
+
+mixer=new THREE.AnimationMixer(character);
+
+select.disabled=false;
+document.querySelector('#animate').disabled=false;
+document.querySelector('#pauseAnimation').disabled=false;
+
+status('Personagem carregado! '+animationActions.length+' animação(ões) encontrada(s).');
+
+}else{
+
+select.innerHTML='<option>Sem animações no modelo</option>';
+status('Personagem carregado, mas o arquivo não possui animações.');
+}
+
+selectObject(character);
+updateList();
+
+},
+
+undefined,
+
+(error)=>{
+
+console.error('Erro ao carregar personagem:',error);
+
+status('Erro ao carregar o GLB. Confira se o arquivo está na mesma pasta da interface-v2.html.');
+
+}
+);
+
+}
+
+/* OBJETOS */
+
 function addObject(type){
+
 let geometry;
+
 if(type==='box') geometry=new THREE.BoxGeometry(1.4,1.4,1.4);
 if(type==='sphere') geometry=new THREE.SphereGeometry(.85,32,24);
 if(type==='cylinder') geometry=new THREE.CylinderGeometry(.7,.7,1.5,32);
 if(type==='torus') geometry=new THREE.TorusGeometry(.7,.22,16,48);
 
 const material=new THREE.MeshStandardMaterial({
-color:'#527cff',roughness:.45,metalness:.1
+color:'#527cff',
+roughness:.45,
+metalness:.1
 });
+
 const mesh=new THREE.Mesh(geometry,material);
+
 mesh.position.set((Math.random()-.5)*2,0,0);
 mesh.castShadow=true;
 mesh.receiveShadow=true;
 mesh.userData.type=type;
+mesh.userData.editorRoot=mesh;
+
 scene.add(mesh);
 objects.push(mesh);
+
 selectObject(mesh);
 updateList();
+
 status('Objeto adicionado.');
 }
 
 function selectObject(obj){
+
 selected=obj;
+
 if(!obj)return;
-document.querySelector('#color').value='#'+obj.material.color.getHexString();
+
+let materialFound=null;
+
+obj.traverse((child)=>{
+
+if(!materialFound&&child.isMesh&&child.material){
+
+const material=Array.isArray(child.material)?child.material[0]:child.material;
+materialFound=material;
+
+}
+
+});
+
+if(materialFound&&materialFound.color){
+document.querySelector('#color').value='#'+materialFound.color.getHexString();
+}
+
 document.querySelector('#size').value=obj.scale.x;
 document.querySelector('#position').value=obj.position.x;
 document.querySelector('#rotation').value=THREE.MathUtils.radToDeg(obj.rotation.y);
+
 updateList();
 }
 
 function updateList(){
+
 const list=document.querySelector('#objectList');
 list.innerHTML='';
+
 objects.forEach((obj,i)=>{
+
 const b=document.createElement('button');
-b.textContent=(obj.userData.type||'Objeto')+' '+(i+1);
+
+b.textContent=obj.userData.isCharacter
+?'Personagem '+(i+1)
+:(obj.userData.type||'Objeto')+' '+(i+1);
+
 b.className=obj===selected?'active':'';
+
 b.onclick=()=>selectObject(obj);
+
 list.appendChild(b);
+
 });
+
 }
+
+/* BOTÕES */
 
 document.querySelector('#box').onclick=()=>addObject('box');
 document.querySelector('#sphere').onclick=()=>addObject('sphere');
@@ -223,185 +422,448 @@ document.querySelector('#cylinder').onclick=()=>addObject('cylinder');
 document.querySelector('#torus').onclick=()=>addObject('torus');
 
 function setMode(value){
+
 mode=value;
+
 ['move','rotate','scale'].forEach(id=>{
+
 document.querySelector('#'+id).classList.toggle('active',id===value);
+
 });
+
 status('Ferramenta selecionada: '+value);
+
 }
+
 document.querySelector('#move').onclick=()=>setMode('move');
 document.querySelector('#rotate').onclick=()=>setMode('rotate');
 document.querySelector('#scale').onclick=()=>setMode('scale');
 
+/* APARÊNCIA */
+
 document.querySelector('#color').oninput=e=>{
-if(selected)selected.material.color.set(e.target.value);
-};
-document.querySelector('#size').oninput=e=>{
-if(selected)selected.scale.setScalar(Number(e.target.value));
-};
-document.querySelector('#position').oninput=e=>{
-if(selected)selected.position.x=Number(e.target.value);
-};
-document.querySelector('#rotation').oninput=e=>{
-if(selected)selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
-};
-document.querySelector('#light').oninput=e=>{
-sun.intensity=Number(e.target.value);
-};
-document.querySelector('#background').onchange=e=>{
-scene.background=new THREE.Color(e.target.value);
+
+if(!selected)return;
+
+selected.traverse((child)=>{
+
+if(!child.isMesh||!child.material)return;
+
+const materials=Array.isArray(child.material)?child.material:[child.material];
+
+materials.forEach(material=>{
+
+if(material.color){
+material.color.set(e.target.value);
+}
+
+});
+
+});
+
 };
 
-document.querySelector('#delete').onclick=()=>{
-if(!selected)return status('Selecione um objeto primeiro.');
-scene.remove(selected);
-objects.splice(objects.indexOf(selected),1);
-selected=null;
-updateList();
-status('Objeto excluído.');
+document.querySelector('#size').oninput=e=>{
+
+if(selected){
+selected.scale.setScalar(Number(e.target.value));
+}
+
 };
+
+document.querySelector('#position').oninput=e=>{
+
+if(selected){
+selected.position.x=Number(e.target.value);
+}
+
+};
+
+document.querySelector('#rotation').oninput=e=>{
+
+if(selected){
+selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
+}
+
+};
+
+document.querySelector('#light').oninput=e=>{
+
+sun.intensity=Number(e.target.value);
+
+};
+
+document.querySelector('#background').onchange=e=>{
+
+scene.background=new THREE.Color(e.target.value);
+
+};
+
+/* ANIMAÇÕES */
+
+function playAnimation(index){
+
+if(!mixer||!animationActions[index])return;
+
+if(activeAction){
+activeAction.fadeOut(.2);
+}
+
+const clip=animationActions[index];
+
+activeAction=mixer.clipAction(clip);
+activeAction.reset();
+activeAction.fadeIn(.2);
+activeAction.play();
+
+status('Animação: '+(clip.name||'Movimento'));
+
+}
 
 document.querySelector('#animate').onclick=()=>{
-animating=!animating;
-document.querySelector('#animate').textContent=animating?'Ⅱ Pausar animação':'▶ Iniciar animação';
+
+const index=Number(document.querySelector('#animationSelect').value);
+
+if(!animationActions.length){
+status('Nenhuma animação disponível.');
+return;
+}
+
+if(activeAction&&activeAction.isRunning()){
+
+activeAction.stop();
+activeAction=null;
+status('Animação parada.');
+
+}else{
+
+playAnimation(index);
+
+}
+
+};
+
+document.querySelector('#pauseAnimation').onclick=()=>{
+
+if(!mixer||!activeAction){
+status('Nenhuma animação está em execução.');
+return;
+}
+
+mixer.timeScale=mixer.timeScale===0?1:0;
+
+document.querySelector('#pauseAnimation').textContent=
+mixer.timeScale===0?'▶ Continuar animação':'Ⅱ Pausar animação';
+
+status(mixer.timeScale===0?'Animação pausada.':'Animação retomada.');
+
+};
+
+document.querySelector('#animationSelect').onchange=e=>{
+
+if(animationActions.length){
+playAnimation(Number(e.target.value));
+}
+
+};
+
+/* EXCLUIR E NOVA CENA */
+
+document.querySelector('#delete').onclick=()=>{
+
+if(!selected){
+status('Selecione um objeto primeiro.');
+return;
+}
+
+if(selected.userData.isCharacter){
+
+scene.remove(selected);
+objects.splice(objects.indexOf(selected),1);
+
+character=null;
+mixer=null;
+activeAction=null;
+animationActions=[];
+
+document.querySelector('#animationSelect').innerHTML='<option>Personagem removido</option>';
+document.querySelector('#animationSelect').disabled=true;
+document.querySelector('#animate').disabled=true;
+document.querySelector('#pauseAnimation').disabled=true;
+
+}else{
+
+scene.remove(selected);
+objects.splice(objects.indexOf(selected),1);
+
+}
+
+selected=null;
+updateList();
+
+status('Objeto excluído.');
+
 };
 
 document.querySelector('#reset').onclick=()=>{
+
 objects.forEach(o=>scene.remove(o));
+
 objects.length=0;
 selected=null;
+character=null;
+mixer=null;
+activeAction=null;
+animationActions=[];
+
+document.querySelector('#animationSelect').innerHTML='<option>Sem personagem</option>';
+document.querySelector('#animationSelect').disabled=true;
+document.querySelector('#animate').disabled=true;
+document.querySelector('#pauseAnimation').disabled=true;
+
 updateList();
-status('Cena limpa. Adicione um objeto.');
+
+status('Cena limpa. Recarregue a página para carregar o personagem novamente.');
+
 };
 
+/* PROJETO JSON */
+
 function saveProject(){
-return {
-version:1,
+
+return{
+
+version:2,
+
 background:scene.background.getHexString(),
+
 light:sun.intensity,
-objects:objects.map(o=>({
+
+objects:objects
+.filter(o=>!o.userData.isCharacter)
+.map(o=>({
+
 type:o.userData.type,
 color:'#'+o.material.color.getHexString(),
 position:o.position.toArray(),
 rotation:o.rotation.toArray(),
 scale:o.scale.toArray()
+
 }))
+
 };
+
 }
 
 document.querySelector('#export').onclick=()=>{
+
 const data=JSON.stringify(saveProject(),null,2);
+
 const blob=new Blob([data],{type:'application/json'});
 const url=URL.createObjectURL(blob);
+
 const a=document.createElement('a');
 a.href=url;
 a.download='meu-projeto-3d.json';
 a.click();
+
 URL.revokeObjectURL(url);
-status('Projeto exportado.');
+
+status('Objetos da cena exportados em JSON. O personagem GLB não é incluído nesse arquivo.');
+
 };
 
 document.querySelector('#import').onclick=()=>{
+
 document.querySelector('#file').click();
+
 };
 
 document.querySelector('#file').onchange=async e=>{
+
 const file=e.target.files[0];
+
 if(!file)return;
+
 try{
+
 const data=JSON.parse(await file.text());
-if(!Array.isArray(data.objects))throw new Error('Arquivo inválido');
-objects.forEach(o=>scene.remove(o));
-objects.length=0;
+
+if(!Array.isArray(data.objects)){
+throw new Error('Arquivo inválido');
+}
+
+objects.filter(o=>!o.userData.isCharacter).forEach(o=>scene.remove(o));
+
+for(let i=objects.length-1;i>=0;i--){
+
+if(!objects[i].userData.isCharacter){
+objects.splice(i,1);
+}
+
+}
+
 data.objects.forEach(item=>{
+
+if(!['box','sphere','cylinder','torus'].includes(item.type))return;
+
 addObject(item.type);
+
 const o=objects[objects.length-1];
+
 o.material.color.set(item.color);
 o.position.fromArray(item.position);
 o.rotation.fromArray(item.rotation);
 o.scale.fromArray(item.scale);
+
 });
-if(data.background)scene.background=new THREE.Color('#'+data.background);
-if(Number.isFinite(data.light))sun.intensity=data.light;
-selected=objects[objects.length-1]||null;
-updateList();
-status('Projeto importado.');
-}catch(err){
-status('Não foi possível abrir esse projeto.');
+
+if(data.background){
+scene.background=new THREE.Color('#'+data.background);
 }
+
+if(Number.isFinite(data.light)){
+sun.intensity=data.light;
+}
+
+selected=objects[objects.length-1]||character||null;
+
+updateList();
+
+status('Projeto importado.');
+
+}catch(err){
+
+console.error(err);
+status('Não foi possível abrir esse projeto.');
+
+}
+
 e.target.value='';
+
 };
 
+/* CÂMERA E SELEÇÃO */
+
 function resize(){
+
 const w=canvas.clientWidth;
 const h=canvas.clientHeight;
+
 if(!w||!h)return;
+
 renderer.setSize(w,h,false);
+
 camera.aspect=w/h;
 camera.updateProjectionMatrix();
+
 }
+
 new ResizeObserver(resize).observe(canvas.parentElement);
 resize();
 
 canvas.addEventListener('pointerdown',e=>{
+
 dragging=true;
 lastX=e.clientX;
 lastY=e.clientY;
+
 canvas.setPointerCapture(e.pointerId);
+
 });
+
 canvas.addEventListener('pointermove',e=>{
+
 if(!dragging)return;
+
 const dx=e.clientX-lastX;
 const dy=e.clientY-lastY;
+
 lastX=e.clientX;
 lastY=e.clientY;
 
-if(selected&&mode!=='move'&&Math.abs(dx)+Math.abs(dy)>0){
-if(mode==='rotate')selected.rotation.y+=dx*.01;
+if(selected&&mode!=='move'){
+
+if(mode==='rotate'){
+selected.rotation.y+=dx*.01;
+}
+
 if(mode==='scale'){
+
 const s=Math.max(.2,Math.min(4,selected.scale.x+dx*.01));
 selected.scale.setScalar(s);
+
 }
+
 }else{
+
 cameraSpin+=dx*.008;
+
 camera.position.x=8*Math.sin(cameraSpin);
 camera.position.z=8*Math.cos(cameraSpin);
+
 camera.position.y=Math.max(1,Math.min(8,camera.position.y-dy*.02));
+
 camera.lookAt(0,0,0);
+
 }
+
 });
+
 canvas.addEventListener('pointerup',e=>{
+
 dragging=false;
+
 const rect=canvas.getBoundingClientRect();
+
 pointer.x=((e.clientX-rect.left)/rect.width)*2-1;
 pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;
+
 raycaster.setFromCamera(pointer,camera);
-const hits=raycaster.intersectObjects(objects);
+
+const hits=raycaster.intersectObjects(objects,true);
+
 if(hits.length){
-selectObject(hits[0].object);
+
+const root=hits[0].object.userData.editorRoot||hits[0].object;
+
+selectObject(root);
+
 status('Objeto selecionado.');
+
 }
+
 });
+
 canvas.addEventListener('pointercancel',()=>dragging=false);
 
+/* LOOP DE RENDERIZAÇÃO */
+
 function loop(){
+
 requestAnimationFrame(loop);
-if(animating){
-objects.forEach((o,i)=>{
-o.rotation.y+=.008;
-o.position.y=Math.sin(Date.now()*.002+i)*.15;
-});
+
+const delta=clock.getDelta();
+
+if(mixer){
+mixer.update(delta);
 }
+
 renderer.render(scene,camera);
+
 }
+
 loop();
 
-addObject('box');
-addObject('sphere');
-selectObject(objects[0]);
-status('Estúdio 3D iniciado com sucesso.');
+/* INICIAR */
+
+loadCharacter();
+
+status('Estúdio 3D iniciado. Carregando personagem...');
+
 </script>
 </body>
 </html>
+
 
 
