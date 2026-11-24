@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Estúdio 3D — Ambiente de teste</title>
+<title>Estúdio 3D — Teste</title>
 
 <style>
 *{box-sizing:border-box}
@@ -12,7 +12,7 @@
 body{
   margin:0;
   background:#10131b;
-  color:#fff;
+  color:white;
   font-family:Arial,sans-serif;
 }
 
@@ -24,7 +24,7 @@ header{
   align-items:center;
   justify-content:space-between;
   padding:10px 16px;
-  gap:12px;
+  gap:10px;
 }
 
 header h2{font-size:19px;margin:0}
@@ -65,6 +65,7 @@ input,button{width:100%}
 input[type=range]{accent-color:#6685ff}
 
 button,.upload{
+  display:block;
   background:#29334a;
   color:white;
   border:1px solid #465575;
@@ -104,8 +105,8 @@ input[type=file]{display:none}
 
 .info{
   position:absolute;
-  top:15px;
-  left:15px;
+  top:12px;
+  left:12px;
   background:#20283acc;
   padding:10px 13px;
   border-radius:8px;
@@ -116,7 +117,7 @@ input[type=file]{display:none}
 
 .bottom{
   position:absolute;
-  bottom:14px;
+  bottom:12px;
   left:50%;
   transform:translateX(-50%);
   background:#20283acc;
@@ -152,6 +153,7 @@ input[type=file]{display:none}
   }
 
   .viewer{
+    position:relative;
     min-height:calc(100svh - 210px);
     flex:1;
   }
@@ -162,9 +164,9 @@ input[type=file]{display:none}
 
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   }
 }
 </script>
@@ -185,7 +187,7 @@ input[type=file]{display:none}
   <div>
     <label>Câmera</label>
     <button id="zoomIn">＋ Aproximar</button>
-    <button id="zoomOut">－ Afastar</button>
+    <button id="zoomOut">－ Diminuir zoom</button>
     <button id="reset">↺ Reiniciar visão</button>
   </div>
 
@@ -218,7 +220,7 @@ input[type=file]{display:none}
   </div>
 
   <div class="bottom">
-    Arraste para girar • Use dois dedos para aproximar
+    Arraste para girar • Use dois dedos para zoom
   </div>
 </section>
 
@@ -227,7 +229,7 @@ input[type=file]{display:none}
 <script type="module">
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 const mount = document.querySelector('#scene');
 const status = document.querySelector('#status');
@@ -236,9 +238,27 @@ const modelStatus = document.querySelector('#modelStatus');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x10131b);
 
-const camera = new THREE.PerspectiveCamera(40,1,0.1,100);
-camera.position.set(0,0.1,5.5);
-camera.lookAt(0,0.1,0);
+// CÂMERA
+
+const camera = new THREE.PerspectiveCamera(35,1,0.01,1000);
+
+let cameraDistance = 10;
+let initialCameraDistance = 10;
+let cameraTarget = new THREE.Vector3(0,0,0);
+let minZoom = 2;
+const maxZoom = 60;
+
+function updateCamera(){
+  camera.position.set(
+    cameraTarget.x,
+    cameraTarget.y,
+    cameraTarget.z + cameraDistance
+  );
+
+  camera.lookAt(cameraTarget);
+}
+
+// RENDERIZADOR
 
 const renderer = new THREE.WebGLRenderer({
   antialias:true,
@@ -254,9 +274,13 @@ renderer.toneMappingExposure = 1;
 
 mount.appendChild(renderer.domElement);
 
-// ILUMINAÇÃO
+// LUZES
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x303044,1.7));
+scene.add(new THREE.HemisphereLight(
+  0xffffff,
+  0x303044,
+  1.7
+));
 
 const light = new THREE.DirectionalLight(0xffffff,2.5);
 light.position.set(4,6,5);
@@ -266,7 +290,7 @@ scene.add(light);
 // CHÃO
 
 const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(30,30),
+  new THREE.PlaneGeometry(100,100),
   new THREE.MeshStandardMaterial({
     color:0x202637,
     roughness:0.9
@@ -278,11 +302,14 @@ floor.position.y = -1.5;
 floor.receiveShadow = true;
 scene.add(floor);
 
-const grid = new THREE.GridHelper(20,40,0x58678d,0x30394f);
+const grid = new THREE.GridHelper(
+  30,60,0x58678d,0x30394f
+);
+
 grid.position.y = -1.49;
 scene.add(grid);
 
-// MODELO
+// GRUPO DO PERSONAGEM
 
 const modelRoot = new THREE.Group();
 scene.add(modelRoot);
@@ -298,37 +325,65 @@ let lastY = 0;
 let spin = 0;
 let touchDistance = 0;
 let currentObjectUrl = null;
-let cameraDistance = 5.5;
 let clock = new THREE.Clock();
 
-function frameModel(object){
+let modelHeight = 0;
+let modelWidth = 0;
+let modelDepth = 0;
 
-  const box = new THREE.Box3().setFromObject(object);
+// CALCULAR ENQUADRAMENTO AUTOMATICAMENTE
+
+function fitCharacter(){
+
+  if(!currentModel) return;
+
+  const box = new THREE.Box3().setFromObject(currentModel);
 
   if(box.isEmpty()) return;
 
   const size = box.getSize(new THREE.Vector3());
-  const maxDimension = Math.max(size.x,size.y,size.z);
+  const center = box.getCenter(new THREE.Vector3());
 
-  if(!Number.isFinite(maxDimension) || maxDimension <= 0) return;
+  modelHeight = size.y;
+  modelWidth = size.x;
+  modelDepth = size.z;
 
-  const scale = 3.2/maxDimension;
-  object.scale.setScalar(scale);
+  // A câmera olha para o centro vertical do personagem
+  cameraTarget.set(center.x,center.y,center.z);
 
-  const scaledBox = new THREE.Box3().setFromObject(object);
-  const center = scaledBox.getCenter(new THREE.Vector3());
+  const verticalFov = THREE.MathUtils.degToRad(camera.fov);
 
-  object.position.x -= center.x;
-  object.position.z -= center.z;
-  object.position.y += -1.5-scaledBox.min.y;
+  const horizontalFov = 2*Math.atan(
+    Math.tan(verticalFov/2)*camera.aspect
+  );
 
-  cameraDistance = 5.5;
-  camera.position.set(0,0.1,cameraDistance);
-  camera.lookAt(0,0.1,0);
+  // Distância necessária para caber altura e largura
+  const distanceHeight =
+    (modelHeight/2)/Math.tan(verticalFov/2);
 
-  spin = 0;
-  modelRoot.rotation.set(0,0,0);
+  const distanceWidth =
+    (modelWidth/2)/Math.tan(horizontalFov/2);
+
+  // Margem extra para não cortar cabeça ou pés
+  const requiredDistance = Math.max(
+    distanceHeight,
+    distanceWidth
+  ) + modelDepth/2;
+
+  initialCameraDistance = Math.max(
+    3,
+    requiredDistance*1.35
+  );
+
+  cameraDistance = initialCameraDistance;
+
+  // Permite afastar bastante
+  minZoom = Math.max(1,requiredDistance*0.45);
+
+  updateCamera();
 }
+
+// CARREGAR MODELO
 
 function showModel(gltf,label){
 
@@ -344,6 +399,7 @@ function showModel(gltf,label){
   currentModel = gltf.scene;
 
   currentModel.traverse(item=>{
+
     if(item.isMesh){
       item.castShadow = true;
       item.receiveShadow = true;
@@ -361,9 +417,41 @@ function showModel(gltf,label){
   });
 
   modelRoot.add(currentModel);
-  frameModel(currentModel);
+
+  // Calcula o tamanho real antes de posicionar a câmera
+  const originalBox = new THREE.Box3().setFromObject(currentModel);
+
+  if(!originalBox.isEmpty()){
+
+    const originalSize = originalBox.getSize(new THREE.Vector3());
+
+    const largest = Math.max(
+      originalSize.x,
+      originalSize.y,
+      originalSize.z
+    );
+
+    if(largest>0){
+      currentModel.scale.setScalar(3.2/largest);
+    }
+
+    const scaledBox = new THREE.Box3().setFromObject(currentModel);
+    const scaledSize = scaledBox.getSize(new THREE.Vector3());
+
+    // Centraliza horizontalmente e apoia os pés no chão
+    currentModel.position.x -= scaledBox.getCenter(new THREE.Vector3()).x;
+    currentModel.position.z -= scaledBox.getCenter(new THREE.Vector3()).z;
+    currentModel.position.y += -1.5-scaledBox.min.y;
+
+    // Guarda dimensões após a escala
+    modelHeight = scaledSize.y;
+  }
+
+  modelRoot.rotation.set(0,0,0);
+  spin = 0;
 
   if(gltf.animations && gltf.animations.length){
+
     mixer = new THREE.AnimationMixer(currentModel);
 
     gltf.animations.forEach(animation=>{
@@ -371,11 +459,13 @@ function showModel(gltf,label){
     });
   }
 
+  fitCharacter();
+
   modelStatus.textContent = label;
   status.textContent = '● Modelo 3D carregado';
 }
 
-// CARREGAR PERSONAGEM PADRÃO
+// PERSONAGEM PADRÃO
 
 function loadDefaultCharacter(){
 
@@ -391,14 +481,13 @@ function loadDefaultCharacter(){
     event=>{
       if(event.total){
         const percent = Math.round(event.loaded/event.total*100);
-        status.textContent = '● Carregando personagem '+percent+'%';
+        status.textContent = '● Carregando '+percent+'%';
       }
     },
 
     error=>{
-      console.error('Falha ao carregar personagem:',error);
-
-      modelStatus.textContent = 'Não foi possível carregar o personagem padrão';
+      console.error(error);
+      modelStatus.textContent = 'Erro ao carregar personagem';
       status.textContent = '● Falha ao carregar modelo';
     }
   );
@@ -406,12 +495,16 @@ function loadDefaultCharacter(){
 
 loadDefaultCharacter();
 
-// CONTROLE DE MOVIMENTO
+// ARRASTAR PARA GIRAR
 
 renderer.domElement.addEventListener('pointerdown',event=>{
+
+  if(event.pointerType==='touch' && event.isPrimary===false) return;
+
   dragging = true;
   lastX = event.clientX;
   lastY = event.clientY;
+
   renderer.domElement.setPointerCapture(event.pointerId);
 });
 
@@ -421,14 +514,6 @@ renderer.domElement.addEventListener('pointermove',event=>{
 
   spin += (event.clientX-lastX)*0.01;
   modelRoot.rotation.y = spin;
-
-  camera.position.y = THREE.MathUtils.clamp(
-    camera.position.y+(event.clientY-lastY)*0.01,
-    -1,
-    4
-  );
-
-  camera.lookAt(0,0.1,0);
 
   lastX = event.clientX;
   lastY = event.clientY;
@@ -441,7 +526,7 @@ function stopDragging(){
 renderer.domElement.addEventListener('pointerup',stopDragging);
 renderer.domElement.addEventListener('pointercancel',stopDragging);
 
-// ZOOM POR TOQUE
+// ZOOM COM DOIS DEDOS
 
 renderer.domElement.addEventListener('touchmove',event=>{
 
@@ -453,13 +538,14 @@ renderer.domElement.addEventListener('touchmove',event=>{
   const distance = Math.hypot(dx,dy);
 
   if(touchDistance){
+
     cameraDistance = THREE.MathUtils.clamp(
-      cameraDistance+(touchDistance-distance)*0.015,
-      3,
-      12
+      cameraDistance+(touchDistance-distance)*0.02,
+      minZoom,
+      maxZoom
     );
 
-    camera.position.z = cameraDistance;
+    updateCamera();
   }
 
   touchDistance = distance;
@@ -470,27 +556,47 @@ renderer.domElement.addEventListener('touchend',()=>{
   touchDistance = 0;
 });
 
-// BOTÕES
+// APROXIMAR
 
 document.querySelector('#zoomIn').onclick = ()=>{
-  cameraDistance = Math.max(3,cameraDistance-0.6);
-  camera.position.z = cameraDistance;
+
+  cameraDistance = Math.max(
+    minZoom,
+    cameraDistance-1
+  );
+
+  updateCamera();
 };
 
+// DIMINUIR ZOOM
+
 document.querySelector('#zoomOut').onclick = ()=>{
-  cameraDistance = Math.min(12,cameraDistance+0.6);
-  camera.position.z = cameraDistance;
+
+  cameraDistance = Math.min(
+    maxZoom,
+    cameraDistance+2
+  );
+
+  updateCamera();
 };
+
+// REINICIAR CÂMERA
 
 document.querySelector('#reset').onclick = ()=>{
 
-  cameraDistance = 5.5;
-  camera.position.set(0,0.1,cameraDistance);
-  camera.lookAt(0,0.1,0);
+  cameraDistance = initialCameraDistance;
+
+  if(currentModel){
+    fitCharacter();
+  }else{
+    updateCamera();
+  }
 
   spin = 0;
   modelRoot.rotation.set(0,0,0);
 };
+
+// ILUMINAÇÃO
 
 document.querySelector('#light').oninput = event=>{
   light.intensity = Number(event.target.value);
@@ -499,6 +605,8 @@ document.querySelector('#light').oninput = event=>{
 document.querySelector('#lightColor').oninput = event=>{
   light.color.set(event.target.value);
 };
+
+// ROTAÇÃO AUTOMÁTICA
 
 document.querySelector('#rotate').onclick = event=>{
 
@@ -509,7 +617,7 @@ document.querySelector('#rotate').onclick = event=>{
     : 'Girar modelo: desligado';
 };
 
-// IMPORTAÇÃO DE MODELOS
+// IMPORTAR MODELO
 
 document.querySelector('#modelFile').onchange = event=>{
 
@@ -523,25 +631,28 @@ document.querySelector('#modelFile').onchange = event=>{
 
   currentObjectUrl = URL.createObjectURL(file);
 
+  status.textContent = '● Importando modelo…';
+
   loader.load(
     currentObjectUrl,
 
     gltf=>{
+
       showModel(gltf,'Modelo importado: '+file.name);
 
-      if(currentObjectUrl){
-        URL.revokeObjectURL(currentObjectUrl);
-      }
-
+      URL.revokeObjectURL(currentObjectUrl);
       currentObjectUrl = null;
     },
 
     undefined,
 
     error=>{
-      console.error('Falha ao importar modelo:',error);
 
-      alert('Não foi possível abrir esse modelo. Confira se o arquivo é GLB ou GLTF válido.');
+      console.error(error);
+
+      alert('Não foi possível abrir esse modelo. Confira se é um arquivo GLB ou GLTF válido.');
+
+      status.textContent = '● Erro ao importar modelo';
 
       if(currentObjectUrl){
         URL.revokeObjectURL(currentObjectUrl);
@@ -552,7 +663,7 @@ document.querySelector('#modelFile').onchange = event=>{
   );
 };
 
-// REDIMENSIONAMENTO
+// REDIMENSIONAR TELA
 
 function resize(){
 
@@ -565,12 +676,18 @@ function resize(){
   camera.updateProjectionMatrix();
 
   renderer.setSize(width,height);
+
+  // Recalcula o enquadramento quando muda a tela
+  if(currentModel){
+    fitCharacter();
+  }
 }
 
 const resizeObserver = new ResizeObserver(resize);
 resizeObserver.observe(mount);
 
 window.addEventListener('orientationchange',resize);
+
 resize();
 
 // ANIMAÇÃO
@@ -597,6 +714,3 @@ animate();
 </script>
 </body>
 </html>
-
-
-
