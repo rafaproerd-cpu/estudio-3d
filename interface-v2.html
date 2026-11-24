@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estúdio 3D</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#0b1020;
+ color:white;
+ font-family:Arial,sans-serif;
+}
+header{
+ padding:18px;
+ background:#121a30;
+ border-bottom:1px solid #293653;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+.logo{font-size:21px;font-weight:bold;color:#78a0ff}
+button{
+ border:0;
+ border-radius:9px;
+ padding:11px 15px;
+ background:#4169e1;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+main{padding:16px;max-width:1100px;margin:auto}
+h2{font-size:20px}
+.painel{
+ display:grid;
+ grid-template-columns:1fr 2fr 1fr;
+ gap:12px;
+}
+.card{
+ background:#151e33;
+ border:1px solid #293653;
+ border-radius:13px;
+ padding:15px;
+ min-width:0;
+}
+.item{
+ background:#202d49;
+ padding:12px;
+ margin:9px 0;
+ border-radius:8px;
+ color:#dce5ff;
+}
+.visual{
+ min-height:350px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ flex-direction:column;
+ background:radial-gradient(circle,#263c70,#10172a 70%);
+ border-radius:12px;
+}
+.personagem{
+ width:105px;
+ height:155px;
+ position:relative;
+ animation:flutuar 2s infinite ease-in-out;
+}
+.cabeca{
+ width:65px;height:65px;
+ background:#f0bd98;
+ border-radius:50%;
+ margin:auto;
+ position:relative;
+}
+.cabelo{
+ position:absolute;
+ top:-5px;left:0;
+ width:65px;height:24px;
+ background:#20283c;
+ border-radius:50% 50% 20% 20%;
+}
+.olhos{
+ position:absolute;top:30px;left:17px;
+ width:7px;height:7px;
+ background:#111;border-radius:50%;
+ box-shadow:25px 0 #111;
+}
+.corpo{
+ width:75px;height:65px;
+ background:#527cff;
+ border-radius:22px;
+ margin:auto;
+}
+.pernas{
+ display:flex;
+ justify-content:center;
+ gap:12px;
+}
+.perna{
+ width:19px;height:40px;
+ background:#20283c;
+ border-radius:10px;
+}
+@keyframes flutuar{
+ 50%{transform:translateY(-9px)}
+}
+.acoes{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ margin-top:14px;
+}
+.acoes button{flex:1}
+.propriedade{
+ display:flex;
+ justify-content:space-between;
+ padding:12px 0;
+ border-bottom:1px solid #293653;
+ color:#cbd6ef;
+ font-size:14px;
+}
+input{width:100%;accent-color:#527cff}
+.timeline{
+ margin-top:14px;
+ background:#151e33;
+ padding:15px;
+ border-radius:12px;
+}
+.trilha{
+ height:9px;
+ background:#293653;
+ border-radius:10px;
+ margin-top:12px;
+}
+.trilha div{
+ width:35%;
+ height:100%;
+ background:#527cff;
+ border-radius:10px;
+}
+footer{
+ text-align:center;
+ color:#8998b8;
+ padding:25px;
+ font-size:12px;
+}
+@media(max-width:700px){
+ .painel{grid-template-columns:1fr}
+ .visual{min-height:300px}
+ header{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">ESTÚDIO 3D</div>
+ <button onclick="alert('Projeto criado!')">Novo projeto</button>
+</header>
+
+<main>
+ <h2>Meu espaço de criação</h2>
+
+ <div class="painel">
+
+  <section class="card">
+   <h3>Ferramentas</h3>
+   <div class="item">👤 Personagens</div>
+   <div class="item">🎨 Aparência</div>
+   <div class="item">📦 Objetos 3D</div>
+   <div class="item">💡 Iluminação</div>
+   <div class="item">🎬 Animações</div>
+   <div class="item">🖼️ Cenários</div>
+  </section>
+
+  <section class="card">
+   <h3>Área de visualização</h3>
+   <div class="visual">
+    <div class="personagem">
+     <div class="cabeca">
+      <div class="cabelo"></div>
+      <div class="olhos"></div>
+     </div>
+     <div class="corpo"></div>
+     <div class="pernas">
+      <div class="perna"></div>
+      <div class="perna"></div>
+     </div>
+    </div>
+    <p>Seu personagem 3D</p>
+   </div>
+   <div class="acoes">
+    <button onclick="alert('Personagem selecionado!')">Selecionar</button>
+    <button onclick="alert('Ferramenta de rotação')">Girar</button>
+   </div>
+  </section>
+
+  <section class="card">
+   <h3>Propriedades</h3>
+   <div class="propriedade">
+    <span>Nome</span><span>Personagem 01</span>
+   </div>
+   <div class="propriedade">
+    <span>Posição</span><span>Central</span>
+   </div>
+   <div class="propriedade">
+    <span>Escala</span><span>100%</span>
+   </div>
+   <p>Controle de tamanho</p>
+   <input type="range" min="1" max="200" value="100">
+   <p>Configurações</p>
+   <div class="item">Ambiente: Padrão</div>
+   <div class="item">Iluminação: Ligada</div>
+  </section>
+
+ </div>
+
+ <section class="timeline">
+  <strong>Linha do tempo</strong>
+  <div class="trilha"><div></div></div>
+  <p>Quadro 01 — Animação inicial</p>
+ </section>
+
+ <div class="acoes">
+  <button onclick="alert('Área de importação em desenvolvimento')">Importar modelo</button>
+  <button onclick="window.print()">Salvar visualização</button>
+ </div>
+
+</main>
+
+<footer>
+ ESTÚDIO 3D — Seu espaço de criação
+</footer>
+
+</body>
+</html>
