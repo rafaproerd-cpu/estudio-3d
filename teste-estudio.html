@@ -220,7 +220,7 @@ input[type=file]{display:none}
   </div>
 
   <div class="bottom">
-    Arraste para girar • Use dois dedos para zoom
+    Arraste para orbitar • Use dois dedos para zoom
   </div>
 </section>
 
@@ -238,21 +238,32 @@ const modelStatus = document.querySelector('#modelStatus');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x10131b);
 
-// CÂMERA
+// CÂMERA 3D ORBITAL
 
 const camera = new THREE.PerspectiveCamera(35,1,0.01,1000);
 
 let cameraDistance = 10;
 let initialCameraDistance = 10;
 let cameraTarget = new THREE.Vector3(0,0,0);
+
 let minZoom = 2;
 const maxZoom = 60;
 
+// Ângulo horizontal e vertical da câmera
+let cameraTheta = 0;
+let cameraPhi = Math.PI/2;
+
+const minPhi = 0.12;
+const maxPhi = Math.PI-0.12;
+
 function updateCamera(){
+
+  const sinPhi = Math.sin(cameraPhi);
+
   camera.position.set(
-    cameraTarget.x,
-    cameraTarget.y,
-    cameraTarget.z + cameraDistance
+    cameraTarget.x + cameraDistance*sinPhi*Math.sin(cameraTheta),
+    cameraTarget.y + cameraDistance*Math.cos(cameraPhi),
+    cameraTarget.z + cameraDistance*sinPhi*Math.cos(cameraTheta)
   );
 
   camera.lookAt(cameraTarget);
@@ -319,10 +330,11 @@ const loader = new GLTFLoader();
 let currentModel = null;
 let mixer = null;
 let rotating = true;
+
 let dragging = false;
 let lastX = 0;
 let lastY = 0;
-let spin = 0;
+
 let touchDistance = 0;
 let currentObjectUrl = null;
 let clock = new THREE.Clock();
@@ -331,7 +343,7 @@ let modelHeight = 0;
 let modelWidth = 0;
 let modelDepth = 0;
 
-// CALCULAR ENQUADRAMENTO AUTOMATICAMENTE
+// CALCULAR ENQUADRAMENTO
 
 function fitCharacter(){
 
@@ -348,8 +360,7 @@ function fitCharacter(){
   modelWidth = size.x;
   modelDepth = size.z;
 
-  // A câmera olha para o centro vertical do personagem
-  cameraTarget.set(center.x,center.y,center.z);
+  cameraTarget.copy(center);
 
   const verticalFov = THREE.MathUtils.degToRad(camera.fov);
 
@@ -357,14 +368,12 @@ function fitCharacter(){
     Math.tan(verticalFov/2)*camera.aspect
   );
 
-  // Distância necessária para caber altura e largura
   const distanceHeight =
     (modelHeight/2)/Math.tan(verticalFov/2);
 
   const distanceWidth =
     (modelWidth/2)/Math.tan(horizontalFov/2);
 
-  // Margem extra para não cortar cabeça ou pés
   const requiredDistance = Math.max(
     distanceHeight,
     distanceWidth
@@ -377,7 +386,6 @@ function fitCharacter(){
 
   cameraDistance = initialCameraDistance;
 
-  // Permite afastar bastante
   minZoom = Math.max(1,requiredDistance*0.45);
 
   updateCamera();
@@ -418,7 +426,6 @@ function showModel(gltf,label){
 
   modelRoot.add(currentModel);
 
-  // Calcula o tamanho real antes de posicionar a câmera
   const originalBox = new THREE.Box3().setFromObject(currentModel);
 
   if(!originalBox.isEmpty()){
@@ -436,19 +443,13 @@ function showModel(gltf,label){
     }
 
     const scaledBox = new THREE.Box3().setFromObject(currentModel);
-    const scaledSize = scaledBox.getSize(new THREE.Vector3());
 
-    // Centraliza horizontalmente e apoia os pés no chão
     currentModel.position.x -= scaledBox.getCenter(new THREE.Vector3()).x;
     currentModel.position.z -= scaledBox.getCenter(new THREE.Vector3()).z;
     currentModel.position.y += -1.5-scaledBox.min.y;
-
-    // Guarda dimensões após a escala
-    modelHeight = scaledSize.y;
   }
 
   modelRoot.rotation.set(0,0,0);
-  spin = 0;
 
   if(gltf.animations && gltf.animations.length){
 
@@ -458,6 +459,10 @@ function showModel(gltf,label){
       mixer.clipAction(animation).play();
     });
   }
+
+  // Volta a câmera para a posição frontal
+  cameraTheta = 0;
+  cameraPhi = Math.PI/2;
 
   fitCharacter();
 
@@ -495,13 +500,14 @@ function loadDefaultCharacter(){
 
 loadDefaultCharacter();
 
-// ARRASTAR PARA GIRAR
+// ARRASTAR PARA CONTROLAR A CÂMERA
 
 renderer.domElement.addEventListener('pointerdown',event=>{
 
   if(event.pointerType==='touch' && event.isPrimary===false) return;
 
   dragging = true;
+
   lastX = event.clientX;
   lastY = event.clientY;
 
@@ -512,11 +518,25 @@ renderer.domElement.addEventListener('pointermove',event=>{
 
   if(!dragging) return;
 
-  spin += (event.clientX-lastX)*0.01;
-  modelRoot.rotation.y = spin;
+  const deltaX = event.clientX-lastX;
+  const deltaY = event.clientY-lastY;
+
+  // Movimento horizontal: orbitar ao redor do personagem
+  cameraTheta -= deltaX*0.008;
+
+  // Movimento vertical: olhar de cima ou de baixo
+  cameraPhi += deltaY*0.008;
+
+  cameraPhi = THREE.MathUtils.clamp(
+    cameraPhi,
+    minPhi,
+    maxPhi
+  );
 
   lastX = event.clientX;
   lastY = event.clientY;
+
+  updateCamera();
 });
 
 function stopDragging(){
@@ -556,6 +576,10 @@ renderer.domElement.addEventListener('touchend',()=>{
   touchDistance = 0;
 });
 
+renderer.domElement.addEventListener('touchcancel',()=>{
+  touchDistance = 0;
+});
+
 // APROXIMAR
 
 document.querySelector('#zoomIn').onclick = ()=>{
@@ -580,9 +604,12 @@ document.querySelector('#zoomOut').onclick = ()=>{
   updateCamera();
 };
 
-// REINICIAR CÂMERA
+// REINICIAR VISÃO
 
 document.querySelector('#reset').onclick = ()=>{
+
+  cameraTheta = 0;
+  cameraPhi = Math.PI/2;
 
   cameraDistance = initialCameraDistance;
 
@@ -592,7 +619,6 @@ document.querySelector('#reset').onclick = ()=>{
     updateCamera();
   }
 
-  spin = 0;
   modelRoot.rotation.set(0,0,0);
 };
 
@@ -606,7 +632,7 @@ document.querySelector('#lightColor').oninput = event=>{
   light.color.set(event.target.value);
 };
 
-// ROTAÇÃO AUTOMÁTICA
+// ROTAÇÃO AUTOMÁTICA DO PERSONAGEM
 
 document.querySelector('#rotate').onclick = event=>{
 
@@ -677,7 +703,6 @@ function resize(){
 
   renderer.setSize(width,height);
 
-  // Recalcula o enquadramento quando muda a tela
   if(currentModel){
     fitCharacter();
   }
