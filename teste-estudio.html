@@ -8,178 +8,36 @@
 
 <style>
 *{box-sizing:border-box}
-
-body{
-  margin:0;
-  background:#10131b;
-  color:white;
-  font-family:Arial,sans-serif;
-}
-
-header{
-  min-height:60px;
-  background:#191e2b;
-  border-bottom:1px solid #30384b;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 16px;
-  gap:10px;
-}
-
+body{margin:0;background:#10131b;color:white;font-family:Arial,sans-serif}
+header{min-height:60px;background:#191e2b;border-bottom:1px solid #30384b;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px}
 header h2{font-size:19px;margin:0}
-
-.status{
-  font-size:11px;
-  color:#62e6a5;
-  text-align:right;
-}
-
-main{
-  display:grid;
-  grid-template-columns:230px 1fr;
-  min-height:calc(100vh - 60px);
-}
-
-aside{
-  background:#191e2b;
-  padding:16px;
-  border-right:1px solid #30384b;
-  overflow-y:auto;
-}
-
-h3{
-  font-size:13px;
-  color:#9eacc8;
-  text-transform:uppercase;
-  margin:8px 0 16px;
-}
-
-label{
-  display:block;
-  font-size:13px;
-  margin:15px 0 8px;
-}
-
+.status{font-size:11px;color:#62e6a5;text-align:right}
+main{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 60px)}
+aside{background:#191e2b;padding:16px;border-right:1px solid #30384b;overflow-y:auto}
+h3{font-size:13px;color:#9eacc8;text-transform:uppercase;margin:8px 0 16px}
+label{display:block;font-size:13px;margin:15px 0 8px}
 input,button,select{width:100%}
-
 input[type=range]{accent-color:#6685ff}
-
-button,.upload,select{
-  display:block;
-  background:#29334a;
-  color:white;
-  border:1px solid #465575;
-  border-radius:8px;
-  padding:11px;
-  margin:5px 0;
-  font-size:13px;
-  cursor:pointer;
-  text-align:center;
-}
-
-select{
-  text-align:left;
-}
-
-select option{
-  background:#191e2b;
-  color:white;
-}
-
+button,.upload,select{display:block;background:#29334a;color:white;border:1px solid #465575;border-radius:8px;padding:11px;margin:5px 0;font-size:13px;cursor:pointer;text-align:center}
+select{text-align:left}
+select option{background:#191e2b;color:white}
 button:active{background:#526bff}
-
 .upload{display:block}
-
 input[type=file]{display:none}
-
-.viewer{
-  position:relative;
-  min-width:0;
-  min-height:500px;
-  background:#10131b;
-  overflow:hidden;
-}
-
-#scene{
-  position:absolute;
-  inset:0;
-}
-
-#scene canvas{
-  display:block;
-  width:100%;
-  height:100%;
-  touch-action:none;
-}
-
-.info{
-  position:absolute;
-  top:12px;
-  left:12px;
-  background:#20283acc;
-  padding:10px 13px;
-  border-radius:8px;
-  font-size:12px;
-  pointer-events:none;
-  line-height:1.5;
-}
-
-.bottom{
-  position:absolute;
-  bottom:12px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#20283acc;
-  padding:10px 14px;
-  border-radius:20px;
-  font-size:11px;
-  white-space:nowrap;
-  pointer-events:none;
-}
-
-.library-count{
-  color:#9eacc8;
-  font-size:11px;
-  margin-top:7px;
-}
-
-.danger{
-  background:#482a36;
-  border-color:#754052;
-}
-
+.viewer{position:relative;min-width:0;min-height:500px;background:#10131b;overflow:hidden}
+#scene{position:absolute;inset:0}
+#scene canvas{display:block;width:100%;height:100%;touch-action:none}
+.info{position:absolute;top:12px;left:12px;background:#20283acc;padding:10px 13px;border-radius:8px;font-size:12px;pointer-events:none;line-height:1.5}
+.bottom{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:#20283acc;padding:10px 14px;border-radius:20px;font-size:11px;white-space:nowrap;pointer-events:none}
+.library-count{color:#9eacc8;font-size:11px;margin-top:7px}
+.danger{background:#482a36;border-color:#754052}
 @media(max-width:650px){
-  main{
-    display:flex;
-    flex-direction:column;
-    min-height:calc(100svh - 60px);
-  }
-
-  aside{
-    display:flex;
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    gap:10px;
-    padding:10px;
-    border-right:0;
-    border-bottom:1px solid #30384b;
-  }
-
-  aside h3{display:none}
-
-  aside>div{
-    flex:0 0 155px;
-    min-width:155px;
-  }
-
-  .viewer{
-    position:relative;
-    min-height:calc(100svh - 260px);
-    flex:1;
-  }
-
-  label{margin:8px 0}
+main{display:flex;flex-direction:column;min-height:calc(100svh - 60px)}
+aside{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:10px;padding:10px;border-right:0;border-bottom:1px solid #30384b}
+aside h3{display:none}
+aside>div{flex:0 0 155px;min-width:155px}
+.viewer{position:relative;min-height:calc(100svh - 260px);flex:1}
+label{margin:8px 0}
 }
 </style>
 
@@ -194,733 +52,515 @@ input[type=file]{display:none}
 </head>
 
 <body>
-
 <header>
-  <h2>⚡ ESTÚDIO 3D</h2>
-  <span class="status" id="status">● Preparando ambiente 3D…</span>
+<h2>⚡ ESTÚDIO 3D</h2>
+<span class="status" id="status">● Preparando ambiente 3D…</span>
 </header>
 
 <main>
-
 <aside>
-  <h3>Ferramentas</h3>
+<h3>Ferramentas</h3>
 
-  <div>
-    <label>Câmera</label>
-    <button id="zoomIn">＋ Aproximar</button>
-    <button id="zoomOut">－ Diminuir zoom</button>
-    <button id="reset">↺ Reiniciar visão</button>
-  </div>
+<div>
+<label>Câmera</label>
+<button id="zoomIn">＋ Aproximar</button>
+<button id="zoomOut">－ Diminuir zoom</button>
+<button id="reset">↺ Reiniciar visão</button>
+</div>
 
-  <div>
-    <label>Biblioteca de modelos</label>
-    <select id="modelSelect">
-      <option value="">Carregando modelos…</option>
-    </select>
-    <div class="library-count" id="libraryCount">0 modelos</div>
-    <button id="removeModel" class="danger">Remover modelo selecionado</button>
-  </div>
+<div>
+<label>Biblioteca de modelos</label>
+<select id="modelSelect">
+<option value="">Carregando modelos…</option>
+</select>
+<div class="library-count" id="libraryCount">0 modelos</div>
+<button id="removeModel" class="danger">Remover modelo selecionado</button>
+</div>
 
-  <div>
-    <label>Importar modelos</label>
-    <label class="upload" for="modelFile">＋ Importar GLB / GLTF</label>
-    <input id="modelFile" type="file" accept=".glb,.gltf">
-  </div>
+<div>
+<label>Importar modelos</label>
+<label class="upload" for="modelFile">＋ Importar GLB / GLTF</label>
+<input id="modelFile" type="file" accept=".glb,.gltf">
+</div>
 
-  <div>
-    <label>Iluminação</label>
-    <input id="light" type="range" min="0" max="5" step=".1" value="2.5">
+<div>
+<label>Personalizar corpo</label>
+<label for="bodyHeight">Altura</label>
+<input id="bodyHeight" type="range" min="0.8" max="1.2" step="0.01" value="1">
+<label for="bodyWidth">Largura do corpo</label>
+<input id="bodyWidth" type="range" min="0.8" max="1.2" step="0.01" value="1">
+<label for="headSize">Tamanho da cabeça</label>
+<input id="headSize" type="range" min="0.8" max="1.2" step="0.01" value="1">
+<button id="resetBody">↺ Restaurar corpo original</button>
+</div>
 
-    <label>Cor da luz</label>
-    <input id="lightColor" type="color" value="#ffffff">
-  </div>
+<div>
+<label>Iluminação</label>
+<input id="light" type="range" min="0" max="5" step=".1" value="2.5">
+<label>Cor da luz</label>
+<input id="lightColor" type="color" value="#ffffff">
+</div>
 
-  <div>
-    <label>Animação</label>
-    <button id="rotate">Girar modelo: ligado</button>
-  </div>
+<div>
+<label>Animação</label>
+<button id="rotate">Girar modelo: ligado</button>
+</div>
 </aside>
 
 <section class="viewer">
-  <div id="scene"></div>
-
-  <div class="info">
-    VISUALIZADOR 3D<br>
-    <span id="modelStatus">Carregando personagem…</span>
-  </div>
-
-  <div class="bottom">
-    Arraste para orbitar • Use dois dedos para zoom
-  </div>
+<div id="scene"></div>
+<div class="info">
+VISUALIZADOR 3D<br>
+<span id="modelStatus">Carregando personagem…</span>
+</div>
+<div class="bottom">Arraste para orbitar • Use dois dedos para zoom</div>
 </section>
-
 </main>
 
 <script type="module">
-
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
-const mount = document.querySelector('#scene');
-const status = document.querySelector('#status');
-const modelStatus = document.querySelector('#modelStatus');
-const modelSelect = document.querySelector('#modelSelect');
-const libraryCount = document.querySelector('#libraryCount');
+const mount=document.querySelector('#scene');
+const status=document.querySelector('#status');
+const modelStatus=document.querySelector('#modelStatus');
+const modelSelect=document.querySelector('#modelSelect');
+const libraryCount=document.querySelector('#libraryCount');
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x10131b);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x10131b);
 
 // CÂMERA
-
-const camera = new THREE.PerspectiveCamera(35,1,0.01,1000);
-
-let cameraDistance = 10;
-let initialCameraDistance = 10;
-let cameraTarget = new THREE.Vector3(0,0,0);
-
-let minZoom = 2;
-const maxZoom = 60;
-
-let cameraTheta = 0;
-let cameraPhi = Math.PI/2;
-
-const minPhi = 0.12;
-const maxPhi = Math.PI-0.12;
+const camera=new THREE.PerspectiveCamera(35,1,0.01,1000);
+let cameraDistance=10;
+let initialCameraDistance=10;
+let cameraTarget=new THREE.Vector3(0,0,0);
+let minZoom=2;
+const maxZoom=60;
+let cameraTheta=0;
+let cameraPhi=Math.PI/2;
+const minPhi=0.12;
+const maxPhi=Math.PI-0.12;
 
 function updateCamera(){
-
-  const sinPhi = Math.sin(cameraPhi);
-
-  camera.position.set(
-    cameraTarget.x + cameraDistance*sinPhi*Math.sin(cameraTheta),
-    cameraTarget.y + cameraDistance*Math.cos(cameraPhi),
-    cameraTarget.z + cameraDistance*sinPhi*Math.cos(cameraTheta)
-  );
-
-  camera.lookAt(cameraTarget);
+const sinPhi=Math.sin(cameraPhi);
+camera.position.set(
+cameraTarget.x+cameraDistance*sinPhi*Math.sin(cameraTheta),
+cameraTarget.y+cameraDistance*Math.cos(cameraPhi),
+cameraTarget.z+cameraDistance*sinPhi*Math.cos(cameraTheta)
+);
+camera.lookAt(cameraTarget);
 }
 
 // RENDERIZADOR
-
-const renderer = new THREE.WebGLRenderer({
-  antialias:true,
-  alpha:false
-});
-
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1;
-
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1;
 mount.appendChild(renderer.domElement);
 
 // ILUMINAÇÃO
-
-scene.add(new THREE.HemisphereLight(
-  0xffffff,
-  0x303044,
-  1.7
-));
-
-const light = new THREE.DirectionalLight(0xffffff,2.5);
+scene.add(new THREE.HemisphereLight(0xffffff,0x303044,1.7));
+const light=new THREE.DirectionalLight(0xffffff,2.5);
 light.position.set(4,6,5);
-light.castShadow = true;
+light.castShadow=true;
 scene.add(light);
 
 // CHÃO
-
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(100,100),
-  new THREE.MeshStandardMaterial({
-    color:0x202637,
-    roughness:0.9
-  })
+const floor=new THREE.Mesh(
+new THREE.PlaneGeometry(100,100),
+new THREE.MeshStandardMaterial({color:0x202637,roughness:0.9})
 );
-
-floor.rotation.x = -Math.PI/2;
-floor.position.y = -1.5;
-floor.receiveShadow = true;
+floor.rotation.x=-Math.PI/2;
+floor.position.y=-1.5;
+floor.receiveShadow=true;
 scene.add(floor);
 
-const grid = new THREE.GridHelper(
-  30,60,0x58678d,0x30394f
-);
-
-grid.position.y = -1.49;
+const grid=new THREE.GridHelper(30,60,0x58678d,0x30394f);
+grid.position.y=-1.49;
 scene.add(grid);
 
 // GRUPO DO PERSONAGEM
-
-const modelRoot = new THREE.Group();
+const modelRoot=new THREE.Group();
 scene.add(modelRoot);
+const loader=new GLTFLoader();
 
-const loader = new GLTFLoader();
+let currentModel=null;
+let currentEntry=null;
+let mixer=null;
+let rotating=true;
+let dragging=false;
+let lastX=0;
+let lastY=0;
+let touchDistance=0;
+let clock=new THREE.Clock();
+let modelHeight=0;
+let modelWidth=0;
+let modelDepth=0;
 
-let currentModel = null;
-let currentEntry = null;
-let mixer = null;
+let originalModelScale=null;
+let headBoneScales=[];
 
-let rotating = true;
-let dragging = false;
-
-let lastX = 0;
-let lastY = 0;
-let touchDistance = 0;
-
-let currentObjectUrl = null;
-let clock = new THREE.Clock();
-
-let modelHeight = 0;
-let modelWidth = 0;
-let modelDepth = 0;
-
-// BIBLIOTECA DE MODELOS
-
-const modelLibrary = [];
-let nextModelId = 1;
-
-// ATUALIZAR LISTA
+// BIBLIOTECA
+const modelLibrary=[];
+let nextModelId=1;
 
 function updateLibrary(){
-
-  modelSelect.innerHTML = '';
-
-  if(modelLibrary.length===0){
-
-    const option = document.createElement('option');
-    option.value = '';
-    option.textContent = 'Nenhum modelo disponível';
-
-    modelSelect.appendChild(option);
-
-  }else{
-
-    modelLibrary.forEach(entry=>{
-
-      const option = document.createElement('option');
-
-      option.value = String(entry.id);
-      option.textContent = entry.name;
-
-      modelSelect.appendChild(option);
-    });
-  }
-
-  libraryCount.textContent =
-    modelLibrary.length +
-    (modelLibrary.length===1 ? ' modelo na biblioteca' : ' modelos na biblioteca');
-
-  modelSelect.disabled = modelLibrary.length===0;
-
-  document.querySelector('#removeModel').disabled =
-    modelLibrary.length===0;
+modelSelect.innerHTML='';
+if(modelLibrary.length===0){
+const option=document.createElement('option');
+option.value='';
+option.textContent='Nenhum modelo disponível';
+modelSelect.appendChild(option);
+}else{
+modelLibrary.forEach(entry=>{
+const option=document.createElement('option');
+option.value=String(entry.id);
+option.textContent=entry.name;
+modelSelect.appendChild(option);
+});
+}
+libraryCount.textContent=modelLibrary.length+
+(modelLibrary.length===1?' modelo na biblioteca':' modelos na biblioteca');
+modelSelect.disabled=modelLibrary.length===0;
+document.querySelector('#removeModel').disabled=modelLibrary.length===0;
 }
 
-// PREPARAR MODELO IMPORTADO
-
+// PREPARAR MODELO
 function prepareModel(gltf){
-
-  const model = gltf.scene;
-
-  model.traverse(item=>{
-
-    if(item.isMesh){
-
-      item.castShadow = true;
-      item.receiveShadow = true;
-
-      if(item.material){
-
-        const materials = Array.isArray(item.material)
-          ? item.material
-          : [item.material];
-
-        materials.forEach(material=>{
-          material.needsUpdate = true;
-        });
-      }
-    }
-  });
-
-  const originalBox = new THREE.Box3().setFromObject(model);
-
-  if(!originalBox.isEmpty()){
-
-    const originalSize = originalBox.getSize(new THREE.Vector3());
-
-    const largest = Math.max(
-      originalSize.x,
-      originalSize.y,
-      originalSize.z
-    );
-
-    if(largest>0){
-      model.scale.setScalar(3.2/largest);
-    }
-
-    const scaledBox = new THREE.Box3().setFromObject(model);
-
-    model.position.x -= scaledBox.getCenter(new THREE.Vector3()).x;
-    model.position.z -= scaledBox.getCenter(new THREE.Vector3()).z;
-    model.position.y += -1.5-scaledBox.min.y;
-  }
-
-  return model;
+const model=gltf.scene;
+model.traverse(item=>{
+if(item.isMesh){
+item.castShadow=true;
+item.receiveShadow=true;
+if(item.material){
+const materials=Array.isArray(item.material)?item.material:[item.material];
+materials.forEach(material=>{material.needsUpdate=true;});
+}
+}
+});
+const originalBox=new THREE.Box3().setFromObject(model);
+if(!originalBox.isEmpty()){
+const originalSize=originalBox.getSize(new THREE.Vector3());
+const largest=Math.max(originalSize.x,originalSize.y,originalSize.z);
+if(largest>0) model.scale.setScalar(3.2/largest);
+const scaledBox=new THREE.Box3().setFromObject(model);
+model.position.x-=scaledBox.getCenter(new THREE.Vector3()).x;
+model.position.z-=scaledBox.getCenter(new THREE.Vector3()).z;
+model.position.y+=-1.5-scaledBox.min.y;
+}
+return model;
 }
 
 // ENQUADRAR PERSONAGEM
-
 function fitCharacter(){
-
-  if(!currentModel) return;
-
-  const box = new THREE.Box3().setFromObject(currentModel);
-
-  if(box.isEmpty()) return;
-
-  const size = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-
-  modelHeight = size.y;
-  modelWidth = size.x;
-  modelDepth = size.z;
-
-  cameraTarget.copy(center);
-
-  const verticalFov = THREE.MathUtils.degToRad(camera.fov);
-
-  const horizontalFov = 2*Math.atan(
-    Math.tan(verticalFov/2)*camera.aspect
-  );
-
-  const distanceHeight =
-    (modelHeight/2)/Math.tan(verticalFov/2);
-
-  const distanceWidth =
-    (modelWidth/2)/Math.tan(horizontalFov/2);
-
-  const requiredDistance = Math.max(
-    distanceHeight,
-    distanceWidth
-  ) + modelDepth/2;
-
-  initialCameraDistance = Math.max(
-    3,
-    requiredDistance*1.35
-  );
-
-  cameraDistance = initialCameraDistance;
-  minZoom = Math.max(1,requiredDistance*0.45);
-
-  updateCamera();
+if(!currentModel)return;
+const box=new THREE.Box3().setFromObject(currentModel);
+if(box.isEmpty())return;
+const size=box.getSize(new THREE.Vector3());
+const center=box.getCenter(new THREE.Vector3());
+modelHeight=size.y;
+modelWidth=size.x;
+modelDepth=size.z;
+cameraTarget.copy(center);
+const verticalFov=THREE.MathUtils.degToRad(camera.fov);
+const horizontalFov=2*Math.atan(Math.tan(verticalFov/2)*camera.aspect);
+const distanceHeight=(modelHeight/2)/Math.tan(verticalFov/2);
+const distanceWidth=(modelWidth/2)/Math.tan(horizontalFov/2);
+const requiredDistance=Math.max(distanceHeight,distanceWidth)+modelDepth/2;
+initialCameraDistance=Math.max(3,requiredDistance*1.35);
+cameraDistance=initialCameraDistance;
+minZoom=Math.max(1,requiredDistance*0.45);
+updateCamera();
 }
 
 // ATIVAR MODELO
-
 function activateModel(entry){
+if(!entry)return;
+if(mixer){mixer.stopAllAction();mixer=null;}
+modelRoot.clear();
+currentEntry=entry;
+currentModel=entry.scene;
 
-  if(!entry) return;
+originalModelScale=currentModel.scale.clone();
+headBoneScales=[];
 
-  if(mixer){
-    mixer.stopAllAction();
-    mixer = null;
-  }
+currentModel.traverse(item=>{
+if(item.isBone && /head|neckhead/i.test(item.name)){
+headBoneScales.push({bone:item,scale:item.scale.clone()});
+}
+});
 
-  modelRoot.clear();
+document.querySelector('#bodyHeight').value='1';
+document.querySelector('#bodyWidth').value='1';
+document.querySelector('#headSize').value='1';
 
-  currentEntry = entry;
-  currentModel = entry.scene;
+modelRoot.add(currentModel);
+modelRoot.rotation.set(0,0,0);
 
-  modelRoot.add(currentModel);
-
-  modelRoot.rotation.set(0,0,0);
-
-  if(entry.animations && entry.animations.length){
-
-    mixer = new THREE.AnimationMixer(currentModel);
-
-    entry.animations.forEach(animation=>{
-      mixer.clipAction(animation).play();
-    });
-  }
-
-  cameraTheta = 0;
-  cameraPhi = Math.PI/2;
-
-  fitCharacter();
-
-  modelStatus.textContent = entry.name;
-  status.textContent = '● Modelo 3D carregado';
-
-  modelSelect.value = String(entry.id);
+if(entry.animations&&entry.animations.length){
+mixer=new THREE.AnimationMixer(currentModel);
+entry.animations.forEach(animation=>{
+mixer.clipAction(animation).play();
+});
 }
 
-// ADICIONAR MODELO À BIBLIOTECA
+cameraTheta=0;
+cameraPhi=Math.PI/2;
+fitCharacter();
+modelStatus.textContent=entry.name;
+status.textContent='● Modelo 3D carregado';
+modelSelect.value=String(entry.id);
+}
 
+// ADICIONAR MODELO
 function addModel(gltf,name){
-
-  const preparedScene = prepareModel(gltf);
-
-  const entry = {
-    id:nextModelId++,
-    name:name,
-    scene:preparedScene,
-    animations:gltf.animations || []
-  };
-
-  modelLibrary.push(entry);
-
-  updateLibrary();
-  activateModel(entry);
+const preparedScene=prepareModel(gltf);
+const entry={
+id:nextModelId++,
+name:name,
+scene:preparedScene,
+animations:gltf.animations||[]
+};
+modelLibrary.push(entry);
+updateLibrary();
+activateModel(entry);
 }
+
+// PERSONALIZAÇÃO DO CORPO
+function applyBodyCustomization(){
+if(!currentModel||!originalModelScale)return;
+
+const height=Number(document.querySelector('#bodyHeight').value);
+const width=Number(document.querySelector('#bodyWidth').value);
+const head=Number(document.querySelector('#headSize').value);
+
+currentModel.scale.set(
+originalModelScale.x*width,
+originalModelScale.y*height,
+originalModelScale.z*width
+);
+
+headBoneScales.forEach(item=>{
+item.bone.scale.copy(item.scale).multiplyScalar(head);
+});
+
+fitCharacter();
+}
+
+document.querySelector('#bodyHeight').addEventListener('input',applyBodyCustomization);
+document.querySelector('#bodyWidth').addEventListener('input',applyBodyCustomization);
+document.querySelector('#headSize').addEventListener('input',applyBodyCustomization);
+
+document.querySelector('#resetBody').addEventListener('click',()=>{
+['#bodyHeight','#bodyWidth','#headSize'].forEach(selector=>{
+document.querySelector(selector).value='1';
+});
+applyBodyCustomization();
+});
 
 // PERSONAGEM PADRÃO
-
 function loadDefaultCharacter(){
-
-  status.textContent = '● Carregando personagem…';
-
-  loader.load(
-    './man-base-character-rigged.glb',
-
-    gltf=>{
-
-      addModel(gltf,'Personagem original');
-
-      modelStatus.textContent = 'Personagem original carregado';
-    },
-
-    event=>{
-
-      if(event.total){
-
-        const percent = Math.round(
-          event.loaded/event.total*100
-        );
-
-        status.textContent = '● Carregando '+percent+'%';
-      }
-    },
-
-    error=>{
-
-      console.error(error);
-
-      modelStatus.textContent = 'Erro ao carregar personagem';
-      status.textContent = '● Falha ao carregar modelo';
-    }
-  );
+status.textContent='● Carregando personagem…';
+loader.load(
+'./man-base-character-rigged.glb',
+gltf=>{
+addModel(gltf,'Personagem original');
+modelStatus.textContent='Personagem original carregado';
+},
+event=>{
+if(event.total){
+const percent=Math.round(event.loaded/event.total*100);
+status.textContent='● Carregando '+percent+'%';
+}
+},
+error=>{
+console.error(error);
+modelStatus.textContent='Erro ao carregar personagem';
+status.textContent='● Falha ao carregar modelo';
+}
+);
 }
 
 loadDefaultCharacter();
 
-// SELECIONAR MODELO DA BIBLIOTECA
-
+// SELECIONAR MODELO
 modelSelect.addEventListener('change',()=>{
-
-  const id = Number(modelSelect.value);
-
-  const entry = modelLibrary.find(item=>item.id===id);
-
-  if(entry){
-    activateModel(entry);
-  }
+const id=Number(modelSelect.value);
+const entry=modelLibrary.find(item=>item.id===id);
+if(entry)activateModel(entry);
 });
 
-// REMOVER MODELO SELECIONADO
+// REMOVER MODELO
+document.querySelector('#removeModel').onclick=()=>{
+if(!currentEntry)return;
+const removedIndex=modelLibrary.findIndex(item=>item.id===currentEntry.id);
+if(removedIndex===-1)return;
+const removedName=currentEntry.name;
+if(mixer){mixer.stopAllAction();mixer=null;}
+modelRoot.clear();
+currentModel=null;
+currentEntry=null;
+originalModelScale=null;
+headBoneScales=[];
+modelLibrary.splice(removedIndex,1);
+updateLibrary();
 
-document.querySelector('#removeModel').onclick = ()=>{
-
-  if(!currentEntry) return;
-
-  const removedIndex = modelLibrary.findIndex(
-    item=>item.id===currentEntry.id
-  );
-
-  if(removedIndex===-1) return;
-
-  const removedName = currentEntry.name;
-
-  if(mixer){
-    mixer.stopAllAction();
-    mixer = null;
-  }
-
-  modelRoot.clear();
-
-  currentModel = null;
-  currentEntry = null;
-
-  modelLibrary.splice(removedIndex,1);
-
-  updateLibrary();
-
-  if(modelLibrary.length>0){
-
-    const nextIndex = Math.min(
-      removedIndex,
-      modelLibrary.length-1
-    );
-
-    activateModel(modelLibrary[nextIndex]);
-
-  }else{
-
-    modelStatus.textContent = 'Nenhum modelo selecionado';
-    status.textContent = '● Biblioteca vazia';
-
-    cameraTarget.set(0,0,0);
-    cameraDistance = 10;
-    updateCamera();
-  }
-
-  console.log('Modelo removido:',removedName);
+if(modelLibrary.length>0){
+const nextIndex=Math.min(removedIndex,modelLibrary.length-1);
+activateModel(modelLibrary[nextIndex]);
+}else{
+modelStatus.textContent='Nenhum modelo selecionado';
+status.textContent='● Biblioteca vazia';
+cameraTarget.set(0,0,0);
+cameraDistance=10;
+updateCamera();
+}
+console.log('Modelo removido:',removedName);
 };
 
 // IMPORTAR MODELOS
+document.querySelector('#modelFile').onchange=event=>{
+const files=Array.from(event.target.files||[]);
+if(!files.length)return;
+let processed=0;
 
-document.querySelector('#modelFile').onchange = event=>{
+files.forEach(file=>{
+const objectUrl=URL.createObjectURL(file);
+status.textContent='● Importando '+file.name+'…';
 
-  const files = Array.from(event.target.files || []);
-
-  if(!files.length) return;
-
-  let processed = 0;
-
-  files.forEach(file=>{
-
-    const objectUrl = URL.createObjectURL(file);
-
-    status.textContent = '● Importando '+file.name+'…';
-
-    loader.load(
-
-      objectUrl,
-
-      gltf=>{
-
-        addModel(gltf,file.name);
-
-        URL.revokeObjectURL(objectUrl);
-
-        processed++;
-
-        if(processed===files.length){
-          status.textContent = '● Importação concluída';
-        }
-      },
-
-      undefined,
-
-      error=>{
-
-        console.error(error);
-
-        URL.revokeObjectURL(objectUrl);
-
-        processed++;
-
-        status.textContent = '● Erro ao importar '+file.name;
-
-        if(processed===files.length){
-          alert('Um ou mais modelos não puderam ser importados. Verifique os arquivos.');
-        }
-      }
-    );
-  });
-
-  // Permite selecionar o mesmo arquivo novamente
-  event.target.value = '';
+loader.load(
+objectUrl,
+gltf=>{
+addModel(gltf,file.name);
+URL.revokeObjectURL(objectUrl);
+processed++;
+if(processed===files.length)status.textContent='● Importação concluída';
+},
+undefined,
+error=>{
+console.error(error);
+URL.revokeObjectURL(objectUrl);
+processed++;
+status.textContent='● Erro ao importar '+file.name;
+if(processed===files.length){
+alert('Um ou mais modelos não puderam ser importados. Verifique os arquivos.');
+}
+}
+);
+});
+event.target.value='';
 };
 
 // CONTROLE DA CÂMERA
-
 renderer.domElement.addEventListener('pointerdown',event=>{
-
-  if(event.pointerType==='touch' && event.isPrimary===false) return;
-
-  dragging = true;
-
-  lastX = event.clientX;
-  lastY = event.clientY;
-
-  renderer.domElement.setPointerCapture(event.pointerId);
+if(event.pointerType==='touch'&&event.isPrimary===false)return;
+dragging=true;
+lastX=event.clientX;
+lastY=event.clientY;
+renderer.domElement.setPointerCapture(event.pointerId);
 });
 
 renderer.domElement.addEventListener('pointermove',event=>{
-
-  if(!dragging) return;
-
-  const deltaX = event.clientX-lastX;
-  const deltaY = event.clientY-lastY;
-
-  cameraTheta -= deltaX*0.008;
-  cameraPhi += deltaY*0.008;
-
-  cameraPhi = THREE.MathUtils.clamp(
-    cameraPhi,
-    minPhi,
-    maxPhi
-  );
-
-  lastX = event.clientX;
-  lastY = event.clientY;
-
-  updateCamera();
+if(!dragging)return;
+const deltaX=event.clientX-lastX;
+const deltaY=event.clientY-lastY;
+cameraTheta-=deltaX*0.008;
+cameraPhi+=deltaY*0.008;
+cameraPhi=THREE.MathUtils.clamp(cameraPhi,minPhi,maxPhi);
+lastX=event.clientX;
+lastY=event.clientY;
+updateCamera();
 });
 
-function stopDragging(){
-  dragging = false;
-}
-
+function stopDragging(){dragging=false;}
 renderer.domElement.addEventListener('pointerup',stopDragging);
 renderer.domElement.addEventListener('pointercancel',stopDragging);
 
 // ZOOM COM DOIS DEDOS
-
 renderer.domElement.addEventListener('touchmove',event=>{
-
-  if(event.touches.length!==2) return;
-
-  const dx = event.touches[0].clientX-event.touches[1].clientX;
-  const dy = event.touches[0].clientY-event.touches[1].clientY;
-
-  const distance = Math.hypot(dx,dy);
-
-  if(touchDistance){
-
-    cameraDistance = THREE.MathUtils.clamp(
-      cameraDistance+(touchDistance-distance)*0.02,
-      minZoom,
-      maxZoom
-    );
-
-    updateCamera();
-  }
-
-  touchDistance = distance;
-
+if(event.touches.length!==2)return;
+const dx=event.touches[0].clientX-event.touches[1].clientX;
+const dy=event.touches[0].clientY-event.touches[1].clientY;
+const distance=Math.hypot(dx,dy);
+if(touchDistance){
+cameraDistance=THREE.MathUtils.clamp(
+cameraDistance+(touchDistance-distance)*0.02,
+minZoom,maxZoom
+);
+updateCamera();
+}
+touchDistance=distance;
 },{passive:true});
 
-renderer.domElement.addEventListener('touchend',()=>{
-  touchDistance = 0;
-});
+renderer.domElement.addEventListener('touchend',()=>{touchDistance=0;});
+renderer.domElement.addEventListener('touchcancel',()=>{touchDistance=0;});
 
-renderer.domElement.addEventListener('touchcancel',()=>{
-  touchDistance = 0;
-});
-
-// APROXIMAR
-
-document.querySelector('#zoomIn').onclick = ()=>{
-
-  cameraDistance = Math.max(
-    minZoom,
-    cameraDistance-1
-  );
-
-  updateCamera();
+// ZOOM
+document.querySelector('#zoomIn').onclick=()=>{
+cameraDistance=Math.max(minZoom,cameraDistance-1);
+updateCamera();
 };
 
-// DIMINUIR ZOOM
-
-document.querySelector('#zoomOut').onclick = ()=>{
-
-  cameraDistance = Math.min(
-    maxZoom,
-    cameraDistance+2
-  );
-
-  updateCamera();
+document.querySelector('#zoomOut').onclick=()=>{
+cameraDistance=Math.min(maxZoom,cameraDistance+2);
+updateCamera();
 };
 
 // REINICIAR VISÃO
-
-document.querySelector('#reset').onclick = ()=>{
-
-  cameraTheta = 0;
-  cameraPhi = Math.PI/2;
-
-  if(currentModel){
-    fitCharacter();
-  }else{
-    cameraDistance = initialCameraDistance;
-    updateCamera();
-  }
-
-  modelRoot.rotation.set(0,0,0);
+document.querySelector('#reset').onclick=()=>{
+cameraTheta=0;
+cameraPhi=Math.PI/2;
+if(currentModel)fitCharacter();
+else{
+cameraDistance=initialCameraDistance;
+updateCamera();
+}
+modelRoot.rotation.set(0,0,0);
 };
 
 // ILUMINAÇÃO
-
-document.querySelector('#light').oninput = event=>{
-  light.intensity = Number(event.target.value);
+document.querySelector('#light').oninput=event=>{
+light.intensity=Number(event.target.value);
 };
-
-document.querySelector('#lightColor').oninput = event=>{
-  light.color.set(event.target.value);
+document.querySelector('#lightColor').oninput=event=>{
+light.color.set(event.target.value);
 };
 
 // ROTAÇÃO AUTOMÁTICA
-
-document.querySelector('#rotate').onclick = event=>{
-
-  rotating = !rotating;
-
-  event.target.textContent = rotating
-    ? 'Girar modelo: ligado'
-    : 'Girar modelo: desligado';
+document.querySelector('#rotate').onclick=event=>{
+rotating=!rotating;
+event.target.textContent=rotating?'Girar modelo: ligado':'Girar modelo: desligado';
 };
 
 // REDIMENSIONAR TELA
-
 function resize(){
-
-  const width = mount.clientWidth;
-  const height = mount.clientHeight;
-
-  if(!width || !height) return;
-
-  camera.aspect = width/height;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(width,height);
-
-  if(currentModel){
-    fitCharacter();
-  }
+const width=mount.clientWidth;
+const height=mount.clientHeight;
+if(!width||!height)return;
+camera.aspect=width/height;
+camera.updateProjectionMatrix();
+renderer.setSize(width,height);
+if(currentModel)fitCharacter();
 }
 
-const resizeObserver = new ResizeObserver(resize);
+const resizeObserver=new ResizeObserver(resize);
 resizeObserver.observe(mount);
-
 window.addEventListener('orientationchange',resize);
-
 resize();
 
 // ANIMAÇÃO
-
 function animate(){
-
-  requestAnimationFrame(animate);
-
-  const delta = clock.getDelta();
-
-  if(mixer){
-    mixer.update(delta);
-  }
-
-  if(rotating && currentModel && !dragging){
-    modelRoot.rotation.y += 0.003;
-  }
-
-  renderer.render(scene,camera);
+requestAnimationFrame(animate);
+const delta=clock.getDelta();
+if(mixer)mixer.update(delta);
+if(rotating&&currentModel&&!dragging)modelRoot.rotation.y+=0.003;
+renderer.render(scene,camera);
 }
-
 animate();
-
 </script>
 </body>
 </html>
