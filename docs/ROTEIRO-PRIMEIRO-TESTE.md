@@ -49,11 +49,13 @@ Resultado esperado: o estado salvo volta sem duplicar ou perder instâncias, man
 
 ## Etapa D — exportação
 
-- [ ] Exportar um personagem selecionado em GLB.
+- [ ] Exportar um personagem GLB que tenha pelo menos um clipe de animação.
+- [ ] Reimportar esse GLB em uma cena de teste ou abrir no Blender e confirmar que os clipes aparecem e podem ser reproduzidos.
+- [ ] Exportar um personagem sem animações e confirmar que o GLB continua válido.
 - [ ] Exportar a cena completa em GLB.
 - [ ] Abrir os arquivos exportados em um visualizador GLB ou em Blender.
 - [ ] Conferir geometria, materiais, escala, orientação e presença de todos os itens visíveis.
-- [ ] Verificar separadamente as animações: a exportação da cena completa ainda precisa de validação específica de clipes e não deve ser considerada aprovada apenas porque o arquivo abre.
+- [ ] Na cena completa, verificar separadamente os clipes: essa exportação ainda não inclui garantia de animações independentes por instância e não deve ser considerada aprovada apenas porque o arquivo abre.
 
 ## Como registrar um problema
 
