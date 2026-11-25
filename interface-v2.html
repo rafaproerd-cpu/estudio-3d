@@ -1163,7 +1163,7 @@ function generateCharacterPrototype(options = {}) {
   selectObject(group);
   updateList();
   status('Protótipo 3D gerado para ' + record.category + '. Você já pode exportar a malha em GLB; rigging e animações deste protótipo ainda não estão disponíveis.');
-  persistEditorState();
+  if (!addToScene) persistEditorState();
 }
 
 document.querySelector('#generateCharacter3D').onclick = () => generateCharacterPrototype();
