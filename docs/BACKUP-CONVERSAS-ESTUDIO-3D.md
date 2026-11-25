@@ -182,3 +182,12 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Foram adicionados testes de regressão para confirmar que a validação acontece antes das alterações da cena e que o catálogo validado é aplicado sem nova normalização.
 - GitHub Actions: workflow de testes 45635004153, commit b0c820cddb627e7a974e00b4fd55b112ae376c75, conclusão success.
 - Limite mantido: o JSON guarda cadastro, transformações e configurações, mas não incorpora os bytes de modelos GLB externos; esses arquivos precisam continuar disponíveis separadamente.
+
+## 25/11/2026 — Importação de modelos GLB externos e manifesto de assets
+
+- A interface agora oferece a ação **Importar personagem GLB**, permitindo selecionar um arquivo `.glb` do dispositivo e carregá-lo diretamente na cena com o GLTFLoader.
+- O modelo importado substitui o personagem visual anterior, é associado ao cadastro selecionado (ou cria um cadastro quando nenhum está selecionado) e registra nome do arquivo, formato e origem externa.
+- Se o GLB contiver animações, os clipes são disponibilizados nos controles existentes; modelos sem animações mantêm esses controles desativados.
+- A exportação JSON agora inclui `assetManifest`, com ID do personagem, identificador/nome do arquivo, formato e indicação explícita de que o binário não está incorporado.
+- Limitação intencional desta etapa: o GLB continua sendo um arquivo separado. Ao transferir o projeto, mantenha o `.glb` junto do JSON; a importação JSON ainda não procura nem religa automaticamente esses arquivos. Empacotamento ZIP com assets incorporados fica para uma etapa posterior.
+- Foram acrescentados testes automatizados para a interface de importação GLB e para o manifesto. Resultado do GitHub Actions será registrado após a conclusão do workflow.
