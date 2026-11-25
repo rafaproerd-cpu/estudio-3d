@@ -585,7 +585,8 @@ select.appendChild(option);
 
 });
 
-mixer=new THREE.AnimationMixer(character);
+registerCharacterAnimations(character, animationActions);
+activateCharacterAnimations(character);
 
 select.disabled=false;
 document.querySelector('#animate').disabled=false;
@@ -906,6 +907,9 @@ function generateCharacterPrototype(options = {}) {
 
   // O editor mantém um personagem principal por vez: evita duplicatas ao regenerar.
   if (!addToScene && character) {
+    const previousState = characterAnimationStates.get(character);
+    if (previousState && previousState.mixer) previousState.mixer.stopAllAction();
+    characterAnimationStates.delete(character);
     scene.remove(character);
     const previousIndex = objects.indexOf(character);
     if (previousIndex >= 0) objects.splice(previousIndex, 1);
@@ -1050,9 +1054,8 @@ function generateCharacterPrototype(options = {}) {
   objects.push(group);
   character = group;
   selected = group;
-  mixer = null;
-  animationActions = [];
-  activeAction = null;
+  registerCharacterAnimations(group, []);
+  activateCharacterAnimations(group);
   document.querySelector('#animationSelect').innerHTML = '<option>Protótipo sem animações</option>';
   document.querySelector('#animationSelect').disabled = true;
   document.querySelector('#animate').disabled = true;
@@ -1800,6 +1803,9 @@ document.querySelector('#bundleFile').onchange = async (event) => {
     }
     if (activeAsset) {
       if (character) {
+        const oldState = characterAnimationStates.get(character);
+        if (oldState && oldState.mixer) oldState.mixer.stopAllAction();
+        characterAnimationStates.delete(character);
         scene.remove(character);
         const oldIndex = objects.indexOf(character);
         if (oldIndex >= 0) objects.splice(oldIndex, 1);
@@ -1841,7 +1847,8 @@ document.querySelector('#bundleFile').onchange = async (event) => {
           option.textContent = clip.name || 'Animação ' + (index + 1);
           select.appendChild(option);
         });
-        mixer = new THREE.AnimationMixer(root);
+        registerCharacterAnimations(root, animationActions);
+        activateCharacterAnimations(root);
         select.disabled = false;
         document.querySelector('#animate').disabled = false;
         document.querySelector('#pauseAnimation').disabled = false;
@@ -1855,6 +1862,34 @@ document.querySelector('#bundleFile').onchange = async (event) => {
       if (activeRecord) syncCharacterForm(activeRecord);
       selectObject(root);
     }
+
+    // Recria também os demais personagens GLB registrados na cena, cada um
+    // com seu próprio mixer e transformação, sem tocar no personagem ativo.
+    (Array.isArray(project.sceneCharacters) ? project.sceneCharacters : [])
+      .filter(instance => instance && !instance.active && instance.source === 'external_file')
+      .forEach(instance => {
+        const asset = preparedAssets.get(instance.recordId);
+        if (!asset) return;
+        const root = asset.gltf.scene;
+        root.name = asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado';
+        root.userData.type = 'personagem';
+        root.userData.isCharacter = true;
+        root.userData.characterRecordId = instance.recordId;
+        root.traverse(child => {
+          if (!child.isMesh) return;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.userData.editorRoot = root;
+          if (child.material) child.material.side = THREE.DoubleSide;
+        });
+        const transform = instance.transform || {};
+        if (Array.isArray(transform.position)) root.position.fromArray(transform.position);
+        if (Array.isArray(transform.rotation)) root.rotation.fromArray(transform.rotation);
+        if (Array.isArray(transform.scale)) root.scale.fromArray(transform.scale);
+        scene.add(root);
+        objects.push(root);
+        registerCharacterAnimations(root, asset.gltf.animations || []);
+      });
 
     renderCharacterCatalog();
     updateList();
