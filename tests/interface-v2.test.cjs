@@ -131,3 +131,17 @@ test('salvar cadastro e gerar protótipo usam o cadastro selecionado separadamen
   assert.match(generator, /characterRecordId = selectedCatalogRecordId/);
   assert.match(html, /updateCharacter\(characterRecordId, patch\)/);
 });
+
+
+test('gerar protótipo procedural limpa ações de animação do modelo anterior', () => {
+  const start = html.indexOf('function generateCharacterPrototype()');
+  const end = html.indexOf("document.querySelector('#generateCharacter3D').onclick", start);
+  const generator = html.slice(start, end);
+  assert.match(generator, /if \(mixer\) mixer\.stopAllAction\(\)/);
+  assert.match(generator, /mixer = null/);
+  assert.match(generator, /activeAction = null/);
+  assert.match(generator, /animationActions = \[\]/);
+  assert.match(generator, /#animationSelect/);
+  assert.match(generator, /#animate/);
+  assert.match(generator, /#pauseAnimation/);
+});
