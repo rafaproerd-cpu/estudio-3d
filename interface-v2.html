@@ -3232,8 +3232,13 @@ window.addEventListener('pagehide', () => {
   }
 });
 
-/* Piscada procedural simples para personagens com detalhes faciais. */
+/* Piscadas procedurais manuais e automáticas para personagens com detalhes faciais. */
 const activeCharacterBlinks = new Set();
+const automaticBlinkTimers = new Map();
+
+function nextAutomaticBlinkDelay() {
+  return 2.8 + Math.random() * 2.7;
+}
 
 function triggerCharacterBlink(characterGroup = selected) {
   if (!characterGroup || !characterGroup.userData.supportsFaceDetails) return;
@@ -3253,8 +3258,9 @@ function triggerCharacterBlink(characterGroup = selected) {
 }
 
 function updateCharacterBlinks(delta) {
+  const safeDelta = Math.max(0, Math.min(delta, 0.1));
   for (const state of Array.from(activeCharacterBlinks)) {
-    state.elapsed += Math.max(0, Math.min(delta, 0.1));
+    state.elapsed += safeDelta;
     const progress = Math.min(1, state.elapsed / state.duration);
     const openness = 1 - 0.92 * Math.sin(Math.PI * progress);
     state.eyes.forEach(({ node, baseScaleY }) => {
@@ -3267,6 +3273,31 @@ function updateCharacterBlinks(delta) {
       activeCharacterBlinks.delete(state);
     }
   }
+
+  /* Cada personagem da cena recebe seu próprio intervalo de piscada. */
+  const liveCharacters = new Set(objects.filter(group =>
+    group && group.userData && group.userData.supportsFaceDetails
+  ));
+  for (const group of Array.from(automaticBlinkTimers.keys())) {
+    if (!liveCharacters.has(group)) automaticBlinkTimers.delete(group);
+  }
+  liveCharacters.forEach(group => {
+    if (!automaticBlinkTimers.has(group)) {
+      automaticBlinkTimers.set(group, nextAutomaticBlinkDelay());
+    }
+    const remaining = automaticBlinkTimers.get(group) - safeDelta;
+    if (remaining <= 0) {
+      const alreadyBlinking = Array.from(activeCharacterBlinks).some(state => state.group === group);
+      if (!alreadyBlinking) {
+        triggerCharacterBlink(group);
+        automaticBlinkTimers.set(group, nextAutomaticBlinkDelay());
+      } else {
+        automaticBlinkTimers.set(group, 0.15);
+      }
+    } else {
+      automaticBlinkTimers.set(group, remaining);
+    }
+  });
 }
 
 document.querySelector('#faceBlinkNow').addEventListener('click', () => {
