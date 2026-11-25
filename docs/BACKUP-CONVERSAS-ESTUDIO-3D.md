@@ -138,3 +138,14 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Corrigido o caminho de importação antes do carregamento do GLB: o carregador verifica o ID importado e atualiza o cadastro existente em vez de criar uma cópia.
 - Testes automatizados aprovados: 32/32 no GitHub Actions, workflow run `45633183501`, commit `65c69f8bbafe22af77afe13ab89088287528413a`.
 - Limitação conhecida para a próxima etapa: a persistência local do núcleo guarda o catálogo, mas a restauração automática completa da cena ativa (modelo, objetos, cenário e transformações) após recarregar o navegador ainda precisa ser integrada e testada.
+
+
+## 25/11/2026 — Persistência local da cena do editor
+
+- O estado de trabalho do editor agora é gravado em `Estudio3DCore.settings.editorState`, mantendo as configurações existentes do projeto.
+- São persistidos: ID do personagem ativo, posição/rotação/escala do personagem, objetos primitivos da cena e suas cores/transformações, cor de fundo e intensidade da luz.
+- Ao reabrir o editor, a restauração valida os dados antes de reconstruir objetos suportados, reaplica cenário e iluminação e recupera o personagem ativo pelo ID do catálogo.
+- Quando o personagem salvo é um protótipo procedural, o editor reconstrói o protótipo em vez de associar incorretamente o GLB-base; transformações são reaplicadas.
+- Salvamento é local ao navegador/dispositivo via localStorage. Não é sincronização em nuvem e limpar os dados do navegador pode apagar esse estado. Exportar JSON continua sendo o meio portátil de backup.
+- Testes automatizados aprovados: 35/35 no GitHub Actions, workflow run `45633679675`, commit `39da595866e442bf8829a6f89d76f0617d549fcf`.
+- Próxima revisão: validar casos de cena vazia, falha/ausência do GLB-base e restauração de projetos com modelos externos; a aplicação ainda não guarda os bytes dos GLBs importados dentro do localStorage.
