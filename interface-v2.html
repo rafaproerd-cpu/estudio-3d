@@ -36,14 +36,25 @@ input[type=range]{padding:0}
 #objectList button{display:block;width:100%;text-align:left;margin:5px 0}
 footer{font-size:10px;color:#8090ad;margin-top:15px;line-height:1.5}
 #animate,#pauseAnimation{width:100%;margin-top:6px}
+#mobileCustomizerToggle{display:none}
 @media(max-width:700px){
-.layout{grid-template-columns:115px minmax(0,1fr);height:calc(100vh - 58px)}
-aside{padding:8px}
-.right{grid-column:1/3;grid-row:2;border:0;border-top:1px solid #30394c;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-height:240px}
-#viewport{grid-column:2;grid-row:1}
-.toolbar{grid-template-columns:1fr}
-.toolbar button{padding:9px 4px;font-size:11px}
+header{height:52px;padding:0 10px}
+header strong{font-size:15px}
+#mobileCustomizerToggle{display:inline-block;padding:8px 10px}
+.layout{display:block;height:calc(100dvh - 52px);height:calc(100vh - 52px)}
+.layout>aside:first-child{display:none}
+#viewport{position:absolute;inset:52px 0 0 0;height:calc(100dvh - 52px);height:calc(100vh - 52px);width:100%;z-index:1}
+#scene{width:100%;height:100%;display:block}
+.right{display:none}
+.layout.show-customizer .right{display:block;position:fixed;z-index:5;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto;max-height:68dvh;overflow-y:auto;overscroll-behavior:contain;background:#171d29;border:1px solid #52617c;border-radius:14px;padding:12px;box-shadow:0 12px 36px #000b}
+.right>.section,.right>div{min-width:0}
+.right .section{padding:10px 0}
+.right .actions{grid-template-columns:1fr 1fr}
+.toolbar{grid-template-columns:1fr 1fr}
+.toolbar button{padding:9px 6px;font-size:12px}
 h3{font-size:11px}
+#hint{bottom:calc(12px + env(safe-area-inset-bottom));max-width:calc(100% - 24px);white-space:normal;text-align:center}
+.layout.show-customizer #hint{display:none}
 }
 </style>
 
@@ -60,7 +71,7 @@ h3{font-size:11px}
 <body>
 <header>
 <strong>✦ ESTÚDIO 3D</strong>
-<button id="reset">Nova cena</button>
+<div style="display:flex;align-items:center;gap:8px"><button id="mobileCustomizerToggle" type="button" aria-expanded="false">Personalizar</button><button id="reset">Nova cena</button></div>
 </header>
 
 <div class="layout">
@@ -213,6 +224,16 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
 
 const canvas=document.querySelector('#scene');
+const mobileCustomizerToggle=document.querySelector('#mobileCustomizerToggle');
+if(mobileCustomizerToggle){
+  mobileCustomizerToggle.addEventListener('click',()=>{
+    const layout=document.querySelector('.layout');
+    const open=layout.classList.toggle('show-customizer');
+    mobileCustomizerToggle.setAttribute('aria-expanded',String(open));
+    mobileCustomizerToggle.textContent=open?'Fechar painel':'Personalizar';
+    requestAnimationFrame(()=>{ if(typeof resize==='function') resize(); });
+  });
+}
 
 const renderer=new THREE.WebGLRenderer({
 canvas,
