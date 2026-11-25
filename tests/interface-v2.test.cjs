@@ -443,3 +443,11 @@ test('modelos GLB importados ficam vinculados ao ID do cadastro no catálogo', (
   assert.match(html, /importedCharacter\.userData\.characterRecordId = record\.id/);
   assert.match(html, /root\.userData\.characterRecordId = activeId/);
 });
+
+
+test('instâncias múltiplas ainda não substituem modelos GLB externos por protótipos', () => {
+  assert.match(html, /const canAddProcedural = !record\.model/);
+  assert.match(html, /addButton\.disabled = !canAddProcedural/);
+  assert.match(html, /Instâncias de modelos 3D externos serão habilitadas em uma próxima etapa/);
+  assert.match(html, /A inclusão de múltiplas instâncias de modelos GLB externos será habilitada em uma próxima etapa/);
+});
