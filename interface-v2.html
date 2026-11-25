@@ -1319,6 +1319,24 @@ if(data.version && ![2,3,4].includes(data.version)){
 throw new Error('Versão de projeto não suportada.');
 }
 
+// Um projeto sem personagem ativo deve substituir também o personagem da cena atual.
+if (!data.character && character) {
+  scene.remove(character);
+  const currentIndex = objects.indexOf(character);
+  if (currentIndex >= 0) objects.splice(currentIndex, 1);
+  character = null;
+  characterRecordId = null;
+  selectedCatalogRecordId = null;
+  if (mixer) mixer.stopAllAction();
+  mixer = null;
+  activeAction = null;
+  animationActions = [];
+  document.querySelector('#animationSelect').innerHTML = '<option>Sem personagem</option>';
+  document.querySelector('#animationSelect').disabled = true;
+  document.querySelector('#animate').disabled = true;
+  document.querySelector('#pauseAnimation').disabled = true;
+}
+
 objects.filter(o=>!o.userData.isCharacter).forEach(o=>scene.remove(o));
 
 for(let i=objects.length-1;i>=0;i--){
