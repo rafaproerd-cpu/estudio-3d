@@ -552,3 +552,27 @@ test('selecionar objetos comuns desativa os controles de animação de personage
   assert.match(html, /function activateCharacterAnimations\(root\)/);
   assert.match(html, /select\.disabled = true/);
 });
+
+test('controle de visibilidade permite ocultar e mostrar instâncias selecionadas', () => {
+  assert.match(html, /id="toggleSceneVisibility"/);
+  assert.match(html, /selected\.visible = !selected\.visible/);
+  assert.match(html, /selected\.visible \? 'Ocultar' : 'Mostrar'/);
+  assert.match(html, /persistEditorState\(\);\s*status\(selected\.visible/);
+  assert.match(html, /obj\.visible \? '' : '◌ '/);
+});
+
+test('visibilidade e nomes personalizados são persistidos para personagens e objetos', () => {
+  assert.match(html, /sceneCharacters: objects\.filter\(obj => obj\.userData\.isCharacter\)[\s\S]*?visible: obj\.visible/);
+  assert.match(html, /objects: objects\.filter\(obj => !obj\.userData\.isCharacter\)[\s\S]*?visible: obj\.visible/);
+  assert.match(html, /if \(typeof item\.visible === 'boolean'\) obj\.visible = item\.visible/);
+});
+
+test('visibilidade é restaurada para instâncias procedurais e GLB em ZIP e JSON', () => {
+  assert.match(html, /if \(character && typeof instance\.visible === 'boolean'\) character\.visible = instance\.visible/);
+  assert.match(html, /if \(typeof instance\.visible === 'boolean'\) root\.visible = instance\.visible/);
+  assert.match(html, /if \(typeof activeInstance\.visible === 'boolean'\) character\.visible = activeInstance\.visible/);
+});
+
+test('exportação da cena ignora objetos ocultos', () => {
+  assert.match(html, /objects\.filter\(obj => obj && obj\.visible\)/);
+});
