@@ -696,3 +696,16 @@ test('detalhes faciais incluem barba, bigode e sobrancelhas configuráveis', () 
   assert.match(html, /face-eyebrow/);
   assert.match(html, /facialHairColor/);
 });
+
+
+test('formato do rosto e orelhas são personalizáveis e persistidos', () => {
+  for (const id of ['faceWidthScale', 'faceHeightScale', 'faceEarScale', 'faceEarStyle']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /earStyle = \['round', 'pointed', 'long'\]/);
+  assert.match(html, /face-ear/);
+  assert.match(html, /widthScale: controlId === 'faceWidthScale'/);
+  assert.match(html, /heightScale: controlId === 'faceHeightScale'/);
+  assert.match(html, /headMesh\.scale\.set\(headScale \* faceWidthScale, headScale \* faceHeightScale, headScale\)/);
+  assert.match(html, /faceEarScale: 'earScale', faceEarStyle: 'earStyle'/);
+});
