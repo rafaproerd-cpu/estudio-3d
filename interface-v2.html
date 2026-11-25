@@ -1312,7 +1312,8 @@ document.querySelector('#exportBundle').onclick = async () => {
       const stored = externalModelAssets.get(asset.characterId);
       const safeName = String(stored.fileName || asset.fileName || 'model.glb')
         .replace(/[^a-z0-9._-]/gi, '_');
-      const archivePath = 'assets/' + asset.characterId + '/' + safeName;
+      const safeCharacterId = String(asset.characterId).replace(/[^a-z0-9_-]/gi, '_');
+      const archivePath = 'assets/' + safeCharacterId + '/' + safeName;
       zip.file(archivePath, stored.data);
       return { ...asset, fileName: safeName, archivePath, embedded: true };
     });
