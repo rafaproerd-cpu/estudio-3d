@@ -763,7 +763,12 @@ function renderCharacterCatalog() {
     const addButton = document.createElement('button');
     addButton.type = 'button';
     addButton.textContent = '＋';
-    addButton.title = 'Adicionar uma cópia deste personagem à cena';
+    const canAddProcedural = !record.model || !record.model.source ||
+      record.model.source === 'not_created' || record.model.source === 'procedural_preview';
+    addButton.title = canAddProcedural
+      ? 'Adicionar uma cópia deste personagem à cena'
+      : 'Instâncias de modelos 3D externos serão habilitadas em uma próxima etapa';
+    addButton.disabled = !canAddProcedural;
     addButton.style.cssText = 'width:38px;flex:0 0 38px';
     addButton.onclick = () => addCharacterInstance(record.id);
     const deleteButton = document.createElement('button');
@@ -1033,6 +1038,11 @@ function addCharacterInstance(recordId, transform = null, options = {}) {
     status('Cadastro não encontrado. Atualize o catálogo e tente novamente.');
     return;
   }
+  if (record.model && record.model.source &&
+      !['not_created', 'procedural_preview'].includes(record.model.source)) {
+    status('A inclusão de múltiplas instâncias de modelos GLB externos será habilitada em uma próxima etapa.');
+    return;
+  }
   selectedCatalogRecordId = recordId;
   syncCharacterForm(record);
   generateCharacterPrototype({ addToScene: true });
@@ -1041,8 +1051,9 @@ function addCharacterInstance(recordId, transform = null, options = {}) {
   if (transform && Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
   if (transform && Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
   character.userData.characterRecordId = recordId;
-  if (options.offset !== false) {
-    character.position.x += objects.filter(obj => obj.userData.isCharacter).length > 1 && !transform ? 1.8 : 0;
+  if (options.offset !== false && !transform) {
+    const instanceCount = objects.filter(obj => obj.userData.isCharacter).length;
+    character.position.x += Math.max(0, instanceCount - 1) * 1.8;
   }
   selectObject(character);
   renderCharacterCatalog();
