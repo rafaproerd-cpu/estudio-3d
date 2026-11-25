@@ -501,17 +501,77 @@ horn.position.set(side*0.22*ageScale,2.62*ageScale,0);horn.castShadow=true;group
 group.position.y=-1.5;
 return group;
 }
+function disposeCharacterModel(root){
+if(!root)return;
+root.traverse(item=>{
+if(item.isMesh){
+if(item.geometry)item.geometry.dispose();
+if(item.material){
+const materials=Array.isArray(item.material)?item.material:[item.material];
+materials.forEach(material=>{
+if(material.map)material.map.dispose();
+material.dispose();
+});
+}
+}
+});
+}
 function showCreatedCharacter(character){
 if(!character)return;
+let entry=modelLibrary.find(item=>item.characterId===character.id);
 const model=createCharacterPreview(character);
-const entry={id:nextModelId++,name:character.name+' (criado)',scene:model,animations:[],characterId:character.id};
-modelLibrary.push(entry);
-updateLibrary();
-activateModel(entry);
-modelStatus.textContent='Prévia 3D: '+character.name;
-status.textContent='● Personagem criado no visualizador 3D';
+if(entry){
+const wasActive=currentEntry===entry;
+if(wasActive){
+if(mixer){mixer.stopAllAction();mixer=null;}
+modelRoot.clear();
+currentModel=null;
+currentEntry=null;
 }
-window.Estúdio3DViewer={showCharacter:showCreatedCharacter};
+disposeCharacterModel(entry.scene);
+entry.scene=model;
+entry.name=character.name+' (criado)';
+entry.animations=[];
+if(wasActive)activateModel(entry);
+else if(!currentEntry)activateModel(entry);
+}else{
+entry={id:nextModelId++,name:character.name+' (criado)',scene:model,animations:[],characterId:character.id};
+modelLibrary.push(entry);
+activateModel(entry);
+}
+updateLibrary();
+modelSelect.value=String(entry.id);
+modelStatus.textContent='Prévia 3D: '+character.name;
+status.textContent='● Personagem atualizado no visualizador 3D';
+}
+function removeCreatedCharacter(characterId){
+const index=modelLibrary.findIndex(item=>item.characterId===characterId);
+if(index<0)return false;
+const entry=modelLibrary[index];
+const wasActive=currentEntry===entry;
+if(wasActive){
+if(mixer){mixer.stopAllAction();mixer=null;}
+modelRoot.clear();
+currentModel=null;
+currentEntry=null;
+}
+disposeCharacterModel(entry.scene);
+modelLibrary.splice(index,1);
+updateLibrary();
+if(wasActive){
+if(modelLibrary.length)activateModel(modelLibrary[0]);
+else{
+modelStatus.textContent='Nenhum personagem selecionado';
+status.textContent='● Biblioteca sem personagem criado';
+cameraTarget.set(0,0,0);
+cameraDistance=10;
+updateCamera();
+updateZoomControl();
+}
+}
+return true;
+}
+window.Estúdio3DViewer={showCharacter:showCreatedCharacter,removeCharacter:removeCreatedCharacter};
 
 
 // PERSONALIZAÇÃO DO CORPO
@@ -928,6 +988,7 @@ animate();
     if (!item) { message('Selecione um personagem.'); return; }
     if (!window.confirm('Excluir "' + item.name + '" deste projeto?')) return;
     characters.removeCharacter(id);
+    if (window.Estúdio3DViewer) window.Estúdio3DViewer.removeCharacter(id);
     refreshList();
     clearForm();
     message('Personagem excluído.');
