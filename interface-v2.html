@@ -1712,7 +1712,7 @@ document.querySelector('#exportSceneGLB').onclick = () => {
   const exportRoot = new THREE.Group();
   exportRoot.name = 'Estudio3D-Scene';
   sceneCharacters.forEach((obj, index) => {
-    const copy = obj.clone(true);
+    const copy = cloneSkeleton(obj);
     copy.name = obj.name || 'Objeto-' + (index + 1);
     copy.position.copy(obj.position);
     copy.quaternion.copy(obj.quaternion);
