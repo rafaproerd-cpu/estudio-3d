@@ -507,7 +507,7 @@ test('exportação GLB da cena completa inclui todas as instâncias e objetos se
   assert.match(html, /document\.querySelector\('#exportSceneGLB'\)\.onclick/);
   assert.match(html, /const sceneCharacters = objects\.filter\(obj => obj && obj\.visible\)/);
   assert.match(html, /const exportRoot = new THREE\.Group\(\)/);
-  assert.match(html, /const copy = cloneSkeleton\(obj\)/);
+  assert.match(html, /const copy = cloneSkeletonSafe\(obj, false\)/);
   assert.match(html, /exportRoot\.add\(copy\)/);
   assert.match(html, /estudio-3d-cena-completa\.glb/);
   assert.match(html, /clipes de animação precisam de validação\/exportação específica/);
@@ -524,7 +524,7 @@ test('gerenciador da cena permite renomear e duplicar instâncias', () => {
 
 test('duplicação de GLB usa clonagem segura de esqueleto e mixer independente', () => {
   assert.match(html, /three\/addons\/utils\/SkeletonUtils\.js/);
-  assert.match(html, /const copy = cloneSkeleton\(source\)/);
+  assert.match(html, /const copy = cloneSkeletonSafe\(source\)/);
   assert.match(html, /registerCharacterAnimations\(copy, sourceAnimationState \? sourceAnimationState\.clips : \[\]\)/);
   assert.match(html, /characterAnimationStates\.set\(root, state\)/);
 });
@@ -536,7 +536,7 @@ test('nomes personalizados das instâncias são preservados na persistência loc
 });
 
 test('importação ZIP clona esqueleto por instância GLB restaurada', () => {
-  assert.match(html, /const root = cloneSkeleton\(asset\.gltf\.scene\)/);
+  assert.match(html, /const root = cloneSkeletonSafe\(asset\.gltf\.scene\)/);
   assert.match(html, /root\.userData\.instanceName = root\.name/);
 });
 
