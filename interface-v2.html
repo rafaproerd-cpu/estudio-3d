@@ -443,6 +443,12 @@ try {
     characterRecordId = record.id;
     selectedCatalogRecordId = record.id;
     syncCharacterForm(record);
+    if (!restoreProcedural && restoredProceduralTransform) {
+      const t = restoredProceduralTransform;
+      if (Array.isArray(t.position)) character.position.fromArray(t.position);
+      if (Array.isArray(t.rotation)) character.rotation.fromArray(t.rotation);
+      if (Array.isArray(t.scale)) character.scale.fromArray(t.scale);
+    }
     const savedResult = window.Estudio3DCore.saveProject();
     if (savedEditorState) restoreEditorState(savedEditorState);
     if (restoreProcedural) {
