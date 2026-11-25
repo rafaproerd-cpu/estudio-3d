@@ -172,6 +172,7 @@ h3{font-size:11px}
 <h3>Projeto</h3>
 <div class="actions">
 <button id="export">Exportar JSON</button>
+<button id="exportBundle">Exportar projeto completo (.zip)</button>
 <button id="exportGLB">Exportar personagem GLB</button>
 <button id="importGLB">Importar personagem GLB</button>
 <button id="import">Importar JSON</button>
@@ -192,6 +193,7 @@ Carregamento de personagem GLB.
 
 <script src="./estudio-core.js"></script>
 <script src="./character-system.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script type="module">
 import * as THREE from 'three';
@@ -252,6 +254,8 @@ let character=null;
 let characterRecordId=null;
 let selectedCatalogRecordId=null;
 let pendingCharacterImport=null;
+// Mantém em memória os binários GLB importados para incluí-los no pacote portátil.
+const externalModelAssets = new Map();
 let mixer=null;
 let animationActions=[];
 let activeAction=null;
@@ -1289,6 +1293,49 @@ status('Projeto exportado em JSON com objetos, cenário, cadastro e transformaç
 
 };
 
+// Cria um pacote portátil com o projeto JSON e todos os modelos GLB externos.
+document.querySelector('#exportBundle').onclick = async () => {
+  try {
+    if (!window.JSZip) throw new Error('A biblioteca de compactação não foi carregada. Verifique sua conexão e tente novamente.');
+    const project = saveProject();
+    const requiredAssets = project.assetManifest || [];
+    const missingAssets = requiredAssets.filter(asset => !externalModelAssets.has(asset.characterId));
+    if (missingAssets.length) {
+      const names = missingAssets.map(asset => asset.fileName || asset.assetId).join(', ');
+      throw new Error('Antes de criar o pacote, importe novamente estes modelos GLB para anexar os arquivos originais: ' + names);
+    }
+
+    const zip = new window.JSZip();
+    const bundledProject = JSON.parse(JSON.stringify(project));
+    const assetFolder = zip.folder('assets');
+    bundledProject.assetManifest = bundledProject.assetManifest.map(asset => {
+      const stored = externalModelAssets.get(asset.characterId);
+      const safeName = String(stored.fileName || asset.fileName || 'model.glb')
+        .replace(/[^a-z0-9._-]/gi, '_');
+      const archivePath = 'assets/' + asset.characterId + '/' + safeName;
+      zip.file(archivePath, stored.data);
+      return { ...asset, fileName: safeName, archivePath, embedded: true };
+    });
+    zip.file('project.json', JSON.stringify(bundledProject, null, 2));
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 }
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'meu-projeto-3d-completo.zip';
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    status('Pacote ZIP criado com o projeto e todos os modelos GLB associados.');
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha ao criar pacote ZIP:', error);
+    status('Não foi possível criar o pacote completo: ' + error.message);
+  }
+};
+
 
 // Importa um modelo GLB local e associa o arquivo ao cadastro selecionado.
 document.querySelector('#importGLB').onclick = () => {
@@ -1354,6 +1401,7 @@ document.querySelector('#glbFile').onchange = async (event) => {
           });
         }
 
+        externalModelAssets.set(record.id, { fileName: file.name, data: buffer });
         character = importedCharacter;
         characterRecordId = record.id;
         selectedCatalogRecordId = record.id;
