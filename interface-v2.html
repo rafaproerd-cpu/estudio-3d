@@ -119,6 +119,11 @@ h3{font-size:11px}
 <label>Descrição</label>
 <input id="characterDescription" type="text" maxlength="300" placeholder="Descreva o personagem">
 <button id="saveCharacterData" style="width:100%;margin-top:10px">Salvar cadastro</button>
+<button id="newCharacterRecord" style="width:100%;margin-top:8px">＋ Novo personagem no catálogo</button>
+<div style="margin-top:12px">
+<label>Catálogo de personagens</label>
+<div id="characterCatalog" style="display:grid;gap:6px"></div>
+</div>
 </div>
 
 <div>
@@ -538,26 +543,101 @@ function syncCharacterForm(record) {
     record.visualDirection && record.visualDirection.style
       ? record.visualDirection.style : 'definido pelo contexto';
   document.querySelector('#characterDescription').value = record.description || '';
+  renderCharacterCatalog();
 }
 
-document.querySelector('#saveCharacterData').onclick = () => {
-  if (!character || !characterRecordId || !window.Estudio3DCharacters) {
-    status('Carregue e selecione um personagem antes de salvar o cadastro.');
+function getCharacterFormData() {
+  return {
+    name: document.querySelector('#characterName').value.trim() || 'Novo personagem',
+    category: document.querySelector('#characterCategory').value,
+    ageStage: document.querySelector('#characterAge').value,
+    rigType: document.querySelector('#characterRig').value,
+    description: document.querySelector('#characterDescription').value.trim(),
+    visualDirection: {
+      style: document.querySelector('#characterStyle').value
+    }
+  };
+}
+
+function renderCharacterCatalog() {
+  const container = document.querySelector('#characterCatalog');
+  if (!container || !window.Estudio3DCharacters) return;
+  const records = window.Estudio3DCharacters.getCharacters();
+  container.innerHTML = '';
+  if (!records.length) {
+    const empty = document.createElement('p');
+    empty.textContent = 'Nenhum personagem cadastrado ainda.';
+    empty.style.opacity = '.7';
+    container.appendChild(empty);
+    return;
+  }
+  records.forEach(record => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:6px;align-items:center';
+    const selectButton = document.createElement('button');
+    selectButton.type = 'button';
+    selectButton.textContent = record.name + ' · ' + record.category;
+    selectButton.style.cssText = 'flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis';
+    selectButton.classList.toggle('active', record.id === characterRecordId);
+    selectButton.onclick = () => {
+      characterRecordId = record.id;
+      syncCharacterForm(record);
+      renderCharacterCatalog();
+      status(record.model && record.model.assetId
+        ? 'Cadastro selecionado. O modelo 3D associado pode ser carregado no editor.'
+        : 'Cadastro selecionado. Modelo 3D ainda não associado.');
+    };
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.textContent = '×';
+    deleteButton.title = 'Excluir cadastro';
+    deleteButton.style.cssText = 'width:38px;flex:0 0 38px';
+    deleteButton.onclick = () => {
+      const removed = window.Estudio3DCharacters.removeCharacter(record.id);
+      if (removed) {
+        if (characterRecordId === record.id) characterRecordId = null;
+        renderCharacterCatalog();
+        status('Cadastro removido do catálogo. O modelo 3D da cena não foi apagado.');
+      }
+    };
+    row.append(selectButton, deleteButton);
+    container.appendChild(row);
+  });
+}
+
+document.querySelector('#newCharacterRecord').onclick = () => {
+  if (!window.Estudio3DCharacters || !window.Estudio3DCore) {
+    status('Sistema de personagens ainda não está disponível.');
     return;
   }
   try {
-    const updated = window.Estudio3DCharacters.updateCharacter(characterRecordId, {
-      name: document.querySelector('#characterName').value.trim() || 'Novo personagem',
-      category: document.querySelector('#characterCategory').value,
-      ageStage: document.querySelector('#characterAge').value,
-      rigType: document.querySelector('#characterRig').value,
-      description: document.querySelector('#characterDescription').value.trim(),
-      visualDirection: {
-        style: document.querySelector('#characterStyle').value
-      }
+    const created = window.Estudio3DCharacters.addCharacterToProject({
+      ...getCharacterFormData(),
+      model: { source: 'not_created', format: '', assetId: '' }
     });
+    characterRecordId = created.id;
+    window.Estudio3DCore.saveProject();
+    syncCharacterForm(created);
+    renderCharacterCatalog();
+    status('Personagem cadastrado. O modelo 3D poderá ser criado ou associado depois.');
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha ao criar cadastro:', error);
+    status('Não foi possível criar o cadastro: ' + error.message);
+  }
+};
+
+document.querySelector('#saveCharacterData').onclick = () => {
+  if (!characterRecordId || !window.Estudio3DCharacters) {
+    status('Selecione um cadastro ou crie um novo personagem no catálogo.');
+    return;
+  }
+  try {
+    const updated = window.Estudio3DCharacters.updateCharacter(
+      characterRecordId, getCharacterFormData()
+    );
     const saved = window.Estudio3DCore.saveProject();
     syncCharacterForm(updated);
+    renderCharacterCatalog();
     status(saved.ok
       ? 'Cadastro do personagem salvo no projeto.'
       : 'Cadastro atualizado, mas não foi possível salvar no navegador.');
@@ -1055,6 +1135,7 @@ loop();
 
 if (window.Estudio3DCore) window.Estudio3DCore.loadProject();
 loadCharacter();
+renderCharacterCatalog();
 
 status('Estúdio 3D iniciado. Carregando personagem...');
 
