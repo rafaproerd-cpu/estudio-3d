@@ -49,3 +49,14 @@ test('JavaScript da interface passa pela análise sintática', () => {
   const source = match[1].replace(/^import .*;\s*$/gm, '');
   assert.doesNotThrow(() => new Function(source));
 });
+
+test('regenerar protótipo substitui o personagem anterior em vez de duplicá-lo', () => {
+  assert.match(html, /if \(character\) \{\s*scene\.remove\(character\);\s*const previousIndex = objects\.indexOf\(character\);\s*if \(previousIndex >= 0\) objects\.splice\(previousIndex, 1\);\s*\}/);
+  assert.match(html, /selected = group;/);
+});
+
+test('cor primária salva no cadastro é reaplicada ao reconstruir o protótipo', () => {
+  assert.match(html, /record\.appearance && record\.appearance\.colors/);
+  assert.match(html, /record\.appearance\.colors\.primary/);
+  assert.match(html, /savedPrimaryColor && \/\^#[0-9a-f\]\{6\}\$\/i\.test\(savedPrimaryColor\)/);
+});
