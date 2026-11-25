@@ -667,3 +667,18 @@ test('acessórios procedurais permitem óculos, chapéus, brincos e colares com 
   assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ accessories: settings \} \}\)/);
   assert.match(html, /const accessories = record\.appearance && record\.appearance\.accessories \|\| \{\}/);
 });
+
+
+test('detalhes faciais procedurais permitem personalizar olhos, nariz e expressão da boca', () => {
+  for (const id of ['faceEyeColor', 'faceNoseScale', 'faceMouthStyle']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /function applyProceduralFaceDetails\(characterGroup, settings = \{\}\)/);
+  assert.match(html, /procedural-face-details/);
+  assert.match(html, /supportsFaceDetails = true/);
+  assert.match(html, /applyProceduralFaceDetails\(group, record\.appearance && record\.appearance\.face \|\| \{\}\)/);
+  assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ face: \{ \[key\]: settings\[key\] \} \} \}\)/);
+  assert.match(html, /face\.eyeColor/);
+  assert.match(html, /face\.noseScale/);
+  assert.match(html, /face\.mouthStyle/);
+});
