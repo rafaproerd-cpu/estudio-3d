@@ -363,3 +363,11 @@ Commits conhecidos na branch `main`:
 - Os objetos sem animação continuam sendo incluídos; objetos ocultos continuam fora da exportação.
 - Testes automatizados e verificação de sintaxe aprovados no workflow `45670279720`, commit `47a56746f5ed231768436468e06a8389d0b1fe26`.
 - Ainda é necessária validação manual com dois ou mais GLBs reais animados: abrir o arquivo resultante no Blender/visualizador, confirmar todos os clipes, reprodução e integridade dos esqueletos. Os testes atuais verificam a estrutura do código, não o round-trip real.
+
+
+## 25/11/2026 — Primeiros controles de personalização facial
+
+- O protótipo humanoide recebeu controles para volume da cabeça, tamanho dos olhos e distância entre os olhos.
+- Os valores são armazenados em `appearance.face`, aplicados em tempo real às malhas identificadas e reaplicados ao regenerar o protótipo.
+- A alteração se aplica ao protótipo humanoide atual (humanos, alienígenas, criaturas e categorias que usam essa base). Não representa ainda um sistema completo de escultura facial nem altera modelos GLB importados.
+- Foram adicionados testes estruturais para os três controles e sua persistência. A validação visual no navegador ainda é necessária.
