@@ -145,7 +145,7 @@ label{margin:8px 0}
 <div id="scene"></div>
 <div class="info">
 VISUALIZADOR 3D<br>
-<span id="modelStatus">Carregando personagem…</span>
+<span id="modelStatus">Carregando personagem…</span><br><span id="rigStatus" style="color:#9eacc8">Analisando estrutura do modelo…</span>
 </div>
 <div class="bottom">Arraste para orbitar • Use dois dedos ou a barra para zoom</div>
 </section>
@@ -345,6 +345,16 @@ updateCamera();
 updateZoomControl();
 }
 
+// DIAGNÓSTICO DA ESTRUTURA DO MODELO
+function updateRigStatus(entry){
+const target=document.querySelector('#rigStatus');
+if(!target)return;
+if(!window.Estudio3DRig){target.textContent='Diagnóstico de rig indisponível';return;}
+const report=window.Estudio3DRig.inspect(entry&&entry.scene,entry&&entry.animations);
+target.textContent=window.Estudio3DRig.getStatusLabel(report)+' • '+report.boneCount+' ossos • '+report.skinnedMeshCount+' malhas vinculadas • '+report.animationCount+' animações';
+target.title=report.recommendations.join(' ');
+}
+
 // ATIVAR MODELO
 function activateModel(entry){
 if(!entry)return;
@@ -388,6 +398,7 @@ cameraPhi=Math.PI/2;
 fitCharacter();
 
 modelStatus.textContent=entry.name;
+updateRigStatus(entry);
 status.textContent = (window.Estudio3DCore && window.Estudio3DCharacters) ? '● Modelo 3D + módulos conectados' : '● Modelo 3D carregado';
 modelSelect.value=String(entry.id);
 }
@@ -862,6 +873,7 @@ animate();
 
 <!-- SISTEMA DE PERSONAGENS: CARREGAR DEPOIS DO NÚCLEO -->
 <script src="./character-system.js"></script>
+<script src="./rig-system.js"></script>
 
 <!-- VERIFICAÇÃO DA CONEXÃO DOS MÓDULOS -->
 <script>
