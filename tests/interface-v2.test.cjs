@@ -145,3 +145,37 @@ test('gerar protótipo procedural limpa ações de animação do modelo anterior
   assert.match(generator, /#animate/);
   assert.match(generator, /#pauseAnimation/);
 });
+
+
+test('exportação JSON inclui o catálogo completo de personagens', () => {
+  const start = html.indexOf('function saveProject()');
+  const end = html.indexOf("document.querySelector('#export').onclick", start);
+  const exporter = html.slice(start, end);
+  assert.match(exporter, /version:4/);
+  assert.match(exporter, /characters: window\.Estudio3DCharacters/);
+  assert.match(exporter, /getCharacters\(\)/);
+  assert.match(exporter, /character: characterData \? \{/);
+});
+
+test('importação valida e restaura o catálogo inteiro preservando IDs', () => {
+  const start = html.indexOf("document.querySelector('#file').onchange");
+  const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
+  const importer = html.slice(start, end);
+  assert.match(importer, /\[2,3,4\]/);
+  assert.match(importer, /Array\.isArray\(data\.characters\)/);
+  assert.match(importer, /createCharacter\(source\)/);
+  assert.match(importer, /validateCharacter\(normalized\)/);
+  assert.match(importer, /new Set\(ids\)\.size !== ids\.length/);
+  assert.match(importer, /updateProject\(\{ characters: normalizedRecords \}\)/);
+  assert.match(importer, /getCharacter\(imported\.id\)/);
+  assert.match(importer, /addCharacterToProject\(\{ \.\.\.patch, id: imported\.id \}\)/);
+});
+
+test('importação pendente antes do carregamento do GLB não duplica cadastro', () => {
+  const start = html.indexOf('function loadCharacter()');
+  const end = html.indexOf('/* OBJETOS */', start);
+  const loader = html.slice(start, end);
+  assert.match(loader, /const existingImported = imported\.id \? api\.getCharacter\(imported\.id\) : null/);
+  assert.match(loader, /api\.updateCharacter\(imported\.id, importedData\)/);
+  assert.match(loader, /api\.addCharacterToProject\(importedData\)/);
+});
