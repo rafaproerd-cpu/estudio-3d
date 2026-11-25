@@ -327,3 +327,20 @@ test('exportação JSON inclui manifesto de arquivos 3D externos', () => {
   assert.match(exporter, /embedded: false/);
   assert.match(exporter, /required: true/);
 });
+
+
+test('exportação de pacote ZIP inclui projeto e modelos GLB externos', () => {
+  assert.match(html, /id="exportBundle"/);
+  assert.match(html, /jszip@3\.10\.1/);
+  assert.match(html, /const externalModelAssets = new Map\(\)/);
+  assert.match(html, /externalModelAssets\.set\(record\.id, \{ fileName: file\.name, data: buffer \}\)/);
+  assert.match(html, /new window\.JSZip\(\)/);
+  assert.match(html, /zip\.file\('project\.json'/);
+  assert.match(html, /zip\.file\(archivePath, stored\.data\)/);
+  assert.match(html, /archivePath, embedded: true/);
+});
+
+test('pacote ZIP não é criado quando faltam binários GLB obrigatórios', () => {
+  assert.match(html, /const missingAssets = requiredAssets\.filter\(asset => !externalModelAssets\.has\(asset\.characterId\)\)/);
+  assert.match(html, /Antes de criar o pacote, importe novamente estes modelos GLB/);
+});
