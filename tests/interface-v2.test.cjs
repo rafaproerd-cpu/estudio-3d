@@ -391,3 +391,10 @@ test('importação de projeto impede que o carregamento inicial do GLB sobrescre
   assert.match(html, /if \(loadRevision !== projectImportRevision\) return/);
   assert.match(html, /projectImportRevision \+= 1/);
 });
+
+
+test('manifesto ZIP vincula cada GLB ao ID correto e exige todos os modelos externos', () => {
+  assert.match(html, /asset\.archivePath\.startsWith\('assets\/' \+ safeCharacterId \+ '\/'\)/);
+  assert.match(html, /manifestPaths\.has\(asset\.archivePath\)/);
+  assert.match(html, /externalRecords\.some\(record => !manifestIds\.has\(record\.id\)\)/);
+});
