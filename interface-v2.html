@@ -248,6 +248,7 @@ let lastX=0,lastY=0;
 
 let character=null;
 let characterRecordId=null;
+let selectedCatalogRecordId=null;
 let pendingCharacterImport=null;
 let mixer=null;
 let animationActions=[];
@@ -361,6 +362,7 @@ try {
           });
     }
     characterRecordId = record.id;
+    selectedCatalogRecordId = record.id;
     syncCharacterForm(record);
     const savedResult = window.Estudio3DCore.saveProject();
     if (restoreProcedural) {
@@ -481,6 +483,7 @@ selected=obj;
 if(!obj)return;
 
 if (obj.userData.isCharacter && characterRecordId && window.Estudio3DCharacters) {
+  selectedCatalogRecordId = characterRecordId;
   syncCharacterForm(window.Estudio3DCharacters.getCharacter(characterRecordId));
 }
 
@@ -606,9 +609,9 @@ function renderCharacterCatalog() {
     selectButton.type = 'button';
     selectButton.textContent = record.name + ' · ' + record.category;
     selectButton.style.cssText = 'flex:1;min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis';
-    selectButton.classList.toggle('active', record.id === characterRecordId);
+    selectButton.classList.toggle('active', record.id === selectedCatalogRecordId);
     selectButton.onclick = () => {
-      characterRecordId = record.id;
+      selectedCatalogRecordId = record.id;
       syncCharacterForm(record);
       renderCharacterCatalog();
       status(record.model && record.model.assetId
@@ -623,6 +626,7 @@ function renderCharacterCatalog() {
     deleteButton.onclick = () => {
       const removed = window.Estudio3DCharacters.removeCharacter(record.id);
       if (removed) {
+        if (selectedCatalogRecordId === record.id) selectedCatalogRecordId = null;
         if (characterRecordId === record.id) characterRecordId = null;
         const saved = window.Estudio3DCore.saveProject();
         renderCharacterCatalog();
@@ -646,7 +650,7 @@ document.querySelector('#newCharacterRecord').onclick = () => {
       ...getCharacterFormData(),
       model: { source: 'not_created', format: '', assetId: '' }
     });
-    characterRecordId = created.id;
+    selectedCatalogRecordId = created.id;
     window.Estudio3DCore.saveProject();
     syncCharacterForm(created);
     renderCharacterCatalog();
@@ -658,13 +662,13 @@ document.querySelector('#newCharacterRecord').onclick = () => {
 };
 
 document.querySelector('#saveCharacterData').onclick = () => {
-  if (!characterRecordId || !window.Estudio3DCharacters) {
+  if (!selectedCatalogRecordId || !window.Estudio3DCharacters) {
     status('Selecione um cadastro ou crie um novo personagem no catálogo.');
     return;
   }
   try {
     const updated = window.Estudio3DCharacters.updateCharacter(
-      characterRecordId, getCharacterFormData()
+      selectedCatalogRecordId, getCharacterFormData()
     );
     const saved = window.Estudio3DCore.saveProject();
     syncCharacterForm(updated);
@@ -681,16 +685,19 @@ document.querySelector('#saveCharacterData').onclick = () => {
 
 // Geração procedural inicial: malha 3D de pré-visualização conforme a categoria.
 function generateCharacterPrototype() {
-  if (!window.Estudio3DCharacters || !characterRecordId) {
+  if (!window.Estudio3DCharacters || !selectedCatalogRecordId) {
     status('Crie ou selecione um personagem no catálogo antes de gerar o protótipo.');
     return;
   }
 
-  const record = window.Estudio3DCharacters.getCharacter(characterRecordId);
+  const record = window.Estudio3DCharacters.getCharacter(selectedCatalogRecordId);
   if (!record) {
     status('Cadastro não encontrado. Selecione novamente o personagem.');
     return;
   }
+
+  // A associação visual só muda quando o protótipo do cadastro selecionado é gerado.
+  characterRecordId = selectedCatalogRecordId;
 
   // O editor mantém um personagem principal por vez: evita duplicatas ao regenerar.
   if (character) {
@@ -1258,6 +1265,7 @@ if(data.character && data.character.record){
       ? window.Estudio3DCharacters.updateCharacter(characterRecordId, patch)
       : window.Estudio3DCharacters.addCharacterToProject(patch);
     characterRecordId = restored.id;
+    selectedCatalogRecordId = restored.id;
     const transform = data.character.transform || {};
     if (imported.model && imported.model.source === 'procedural_preview') {
       if (character) {
