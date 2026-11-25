@@ -188,3 +188,41 @@ test('importação rejeita cadastros inválidos e mantém ID gerado para formato
   assert.match(importer, /!source \|\| typeof source !== 'object' \|\| Array\.isArray\(source\)/);
   assert.match(importer, /data\.character\.record\.id = normalized\.id/);
 });
+
+
+test('estado local da cena salva personagem ativo, cenário, luz e objetos', () => {
+  const start = html.indexOf('function persistEditorState()');
+  const end = html.indexOf('function restoreEditorState(editorState)', start);
+  const saver = html.slice(start, end);
+  assert.match(saver, /activeCharacter/);
+  assert.match(saver, /characterRecordId/);
+  assert.match(saver, /position: character\.position\.toArray\(\)/);
+  assert.match(saver, /settings: \{ \.\.\.\(project\.settings \|\| \{\}\), editorState \}/);
+  assert.match(saver, /core\.saveProject\(\)/);
+  assert.match(saver, /background:/);
+  assert.match(saver, /light:/);
+  assert.match(saver, /objects: objects\.filter/);
+});
+
+test('restauração local valida e reconstrói objetos e configurações da cena', () => {
+  const start = html.indexOf('function restoreEditorState(editorState)');
+  const end = html.indexOf('/* CARREGAMENTO DO PERSONAGEM */', start);
+  const restore = html.slice(start, end);
+  assert.match(restore, /editorState\.background/);
+  assert.match(restore, /editorState\.light/);
+  assert.match(restore, /Array\.isArray\(editorState\.objects\)/);
+  assert.match(restore, /\['box', 'sphere', 'cylinder', 'torus'\]/);
+  assert.match(restore, /addObject\(item\.type, false\)/);
+  assert.match(restore, /item\.position\.every\(Number\.isFinite\)/);
+});
+
+test('carregamento local seleciona personagem salvo e reconstrói preview procedural', () => {
+  const start = html.indexOf('function loadCharacter()');
+  const end = html.indexOf('/* OBJETOS */', start);
+  const loader = html.slice(start, end);
+  assert.match(loader, /settings \|\| \{\}\)\.editorState/);
+  assert.match(loader, /savedEditorState\.activeCharacter\.id/);
+  assert.match(loader, /savedActive\.model\.source === 'procedural_preview'/);
+  assert.match(loader, /restoreEditorState\(savedEditorState\)/);
+  assert.match(loader, /persistEditorState\(\)/);
+});
