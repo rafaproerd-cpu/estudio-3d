@@ -200,6 +200,7 @@ h3{font-size:11px}
 <select id="faceEyeStyle"><option value="round">Arredondados</option><option value="almond">Amendoados</option><option value="wide">Alongados</option></select>
 <label>Abertura dos olhos</label>
 <input type="range" id="faceEyeOpenness" min="0.35" max="1.4" step="0.05" value="1">
+<button type="button" id="faceBlinkNow">Piscar agora</button>
 <label>Distância entre os olhos</label>
 <input type="range" id="faceEyeSpacing" min="0.7" max="1.4" step="0.05" value="1">
 <label>Cor dos olhos</label>
@@ -3231,6 +3232,47 @@ window.addEventListener('pagehide', () => {
   }
 });
 
+/* Piscada procedural simples para personagens com detalhes faciais. */
+const activeCharacterBlinks = new Set();
+
+function triggerCharacterBlink(characterGroup = selected) {
+  if (!characterGroup || !characterGroup.userData.supportsFaceDetails) return;
+  const eyes = [];
+  characterGroup.traverse(node => {
+    if (node.userData && node.userData.facialFeature === 'eye') eyes.push(node);
+  });
+  if (!eyes.length) return;
+  const existing = Array.from(activeCharacterBlinks).find(state => state.group === characterGroup);
+  if (existing) activeCharacterBlinks.delete(existing);
+  activeCharacterBlinks.add({
+    group: characterGroup,
+    eyes: eyes.map(node => ({ node, baseScaleY: node.scale.y })),
+    elapsed: 0,
+    duration: 0.18
+  });
+}
+
+function updateCharacterBlinks(delta) {
+  for (const state of Array.from(activeCharacterBlinks)) {
+    state.elapsed += Math.max(0, Math.min(delta, 0.1));
+    const progress = Math.min(1, state.elapsed / state.duration);
+    const openness = 1 - 0.92 * Math.sin(Math.PI * progress);
+    state.eyes.forEach(({ node, baseScaleY }) => {
+      if (node.parent) node.scale.y = baseScaleY * openness;
+    });
+    if (progress >= 1) {
+      state.eyes.forEach(({ node, baseScaleY }) => {
+        if (node.parent) node.scale.y = baseScaleY;
+      });
+      activeCharacterBlinks.delete(state);
+    }
+  }
+}
+
+document.querySelector('#faceBlinkNow').addEventListener('click', () => {
+  triggerCharacterBlink();
+});
+
 /* LOOP DE RENDERIZAÇÃO */
 
 function loop(){
@@ -3238,6 +3280,7 @@ function loop(){
 requestAnimationFrame(loop);
 
 const delta=clock.getDelta();
+updateCharacterBlinks(delta);
 
 const updatedMixers = new Set();
 characterAnimationStates.forEach(state => {
