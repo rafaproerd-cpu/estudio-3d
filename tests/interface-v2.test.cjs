@@ -74,3 +74,12 @@ test('reaplica a cor dos detalhes salva ao reconstruir o protótipo', () => {
   assert.ok(html.includes("savedAccentColor && /^#[0-9a-f]{6}$/i.test(savedAccentColor)"));
   assert.match(html, /accentMaterialFound/);
 });
+
+test('cor principal não sobrescreve o material independente dos detalhes', () => {
+  const handlerStart = html.indexOf("document.querySelector('#color').oninput");
+  const handlerEnd = html.indexOf("document.querySelector('#accentColor').oninput", handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'controles de cor não encontrados');
+  const primaryColorHandler = html.slice(handlerStart, handlerEnd);
+  assert.match(primaryColorHandler, /material\.color && material\.name!=='character-accent'/);
+  assert.match(primaryColorHandler, /material\.color\.set\(e\.target\.value\)/);
+});
