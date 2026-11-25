@@ -99,3 +99,38 @@ test('remove personagem existente e informa quando ele não existe', () => {
   assert.equal(api.removeCharacter(character.id), false);
   assert.equal(api.getCharacters().length, 0);
 });
+
+test('mantém aparência estruturada e mescla ajustes sem apagar detalhes', () => {
+  const window = loadCharacterSystem();
+  const api = window.Estudio3DCharacters;
+  const created = api.addCharacterToProject({
+    name: 'Luna',
+    appearance: {
+      body: { height: 1.7, build: 'atlética' },
+      face: { eyeShape: 'amendoado', nose: 'pequeno' },
+      hair: { style: 'cacheado', color: 'castanho' },
+      wardrobe: { outfit: 'jaqueta' },
+      colors: { skin: '#b87954' },
+      features: ['sardas', 'covinha'],
+      notes: 'Personagem de aventura'
+    }
+  });
+
+  const updated = api.updateCharacter(created.id, {
+    appearance: {
+      face: { eyeColor: 'verde' },
+      hair: { color: 'preto' },
+      features: ['sardas', 'cicatriz']
+    }
+  });
+
+  assert.equal(updated.appearance.body.height, 1.7);
+  assert.equal(updated.appearance.face.eyeShape, 'amendoado');
+  assert.equal(updated.appearance.face.eyeColor, 'verde');
+  assert.equal(updated.appearance.hair.style, 'cacheado');
+  assert.equal(updated.appearance.hair.color, 'preto');
+  assert.equal(updated.appearance.wardrobe.outfit, 'jaqueta');
+  assert.equal(updated.appearance.colors.skin, '#b87954');
+  assert.deepEqual(Array.from(updated.appearance.features), ['sardas', 'cicatriz']);
+  assert.equal(updated.appearance.notes, 'Personagem de aventura');
+});
