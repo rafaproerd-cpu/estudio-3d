@@ -190,6 +190,10 @@ h3{font-size:11px}
 <input type="range" id="faceEyeScale" min="0.6" max="1.6" step="0.05" value="1">
 <label>Distância entre os olhos</label>
 <input type="range" id="faceEyeSpacing" min="0.7" max="1.4" step="0.05" value="1">
+<label>Estilo do cabelo</label>
+<select id="hairStyle"><option value="none">Sem cabelo</option><option value="short">Curto</option><option value="long">Comprido</option><option value="spiky">Arrepiado</option></select>
+<label>Cor do cabelo</label>
+<input type="color" id="hairColor" value="#30251f">
 </div>
 
 <label>Posição horizontal</label>
@@ -1065,6 +1069,9 @@ function syncCharacterForm(record) {
   document.querySelector('#characterDescription').value = record.description || '';
   const body = record.appearance && record.appearance.body || {};
   const face = record.appearance && record.appearance.face || {};
+  const hair = record.appearance && record.appearance.hair || {};
+  document.querySelector('#hairStyle').value = hair.style || 'short';
+  document.querySelector('#hairColor').value = /^#[0-9a-f]{6}$/i.test(hair.color || '') ? hair.color : '#30251f';
   document.querySelector('#faceHeadScale').value = Number.isFinite(Number(face.headScale)) ? face.headScale : 1;
   document.querySelector('#faceEyeScale').value = Number.isFinite(Number(face.eyeScale)) ? face.eyeScale : 1;
   document.querySelector('#faceEyeSpacing').value = Number.isFinite(Number(face.eyeSpacing)) ? face.eyeSpacing : 1;
@@ -1188,6 +1195,44 @@ document.querySelector('#saveCharacterData').onclick = () => {
 
 
 // Geração procedural inicial: malha 3D de pré-visualização conforme a categoria.
+function applyProceduralHair(characterGroup, settings = {}) {
+  if (!characterGroup || !characterGroup.userData.supportsHair) return;
+  const previous = characterGroup.getObjectByName('procedural-hair');
+  if (previous) {
+    characterGroup.remove(previous);
+    previous.traverse(node => { if (node.geometry) node.geometry.dispose(); if (node.material) node.material.dispose(); });
+  }
+  const style = ['none', 'short', 'long', 'spiky'].includes(settings.style) ? settings.style : 'short';
+  if (style === 'none') return;
+  const color = /^#[0-9a-f]{6}$/i.test(settings.color || '') ? settings.color : '#30251f';
+  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
+  const hair = new THREE.Group();
+  hair.name = 'procedural-hair';
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.455, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.58), material);
+  cap.position.set(0, 1.05, 0);
+  cap.scale.set(1.02, 1.05, 1.02);
+  cap.castShadow = true;
+  hair.add(cap);
+  if (style === 'long') {
+    for (const side of [-1, 1]) {
+      const lock = new THREE.Mesh(new THREE.CapsuleGeometry(0.095, 0.55, 4, 8), material);
+      lock.position.set(side * 0.37, 0.78, 0.02);
+      lock.castShadow = true;
+      hair.add(lock);
+    }
+  } else if (style === 'spiky') {
+    for (let i = 0; i < 5; i++) {
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.105, 0.32, 8), material);
+      spike.position.set((i - 2) * 0.14, 1.43 - Math.abs(i - 2) * 0.035, 0);
+      spike.rotation.z = (2 - i) * 0.12;
+      spike.castShadow = true;
+      hair.add(spike);
+    }
+  }
+  hair.traverse(node => { node.userData.editorRoot = characterGroup; });
+  characterGroup.add(hair);
+}
+
 function generateCharacterPrototype(options = {}) {
   const addToScene = options.addToScene === true;
   if (!window.Estudio3DCharacters || !selectedCatalogRecordId) {
@@ -1316,6 +1361,7 @@ function generateCharacterPrototype(options = {}) {
     limb(0.25, -0.72, 0, 0.3, -1.25, 0, 0.13);
   } else {
     // Humanoide base para humanos, alienígenas, criaturas e outras categorias.
+    group.userData.supportsHair = true;
     const faceSettings = record.appearance && record.appearance.face || {};
     const headScale = Number.isFinite(Number(faceSettings.headScale)) ? Math.max(0.75, Math.min(1.35, Number(faceSettings.headScale))) : 1;
     const eyeScale = Number.isFinite(Number(faceSettings.eyeScale)) ? Math.max(0.6, Math.min(1.6, Number(faceSettings.eyeScale))) : 1;
@@ -1341,6 +1387,7 @@ function generateCharacterPrototype(options = {}) {
       part(new THREE.ConeGeometry(0.12, 0.48, 12), material, -0.36, 1.62, 0);
       part(new THREE.ConeGeometry(0.12, 0.48, 12), material, 0.36, 1.62, 0);
     }
+    applyProceduralHair(group, record.appearance && record.appearance.hair || {});
   }
 
   // Restaura ajustes de transformação salvos no cadastro; na ausência deles,
@@ -1539,6 +1586,20 @@ const record = selected.userData.isCharacter && characterRecordId
 }
 
 };
+
+['hairStyle', 'hairColor'].forEach(controlId => {
+  const control = document.querySelector('#' + controlId);
+  const updateHair = () => {
+    if (!selected || !selected.userData.supportsHair || !characterRecordId) return;
+    const style = document.querySelector('#hairStyle').value;
+    const color = document.querySelector('#hairColor').value;
+    applyProceduralHair(selected, { style, color });
+    persistSelectedCharacter({ appearance: { hair: { style, color } } });
+    persistEditorState();
+  };
+  control.addEventListener('input', updateHair);
+  control.addEventListener('change', updateHair);
+});
 
 ['faceHeadScale', 'faceEyeScale', 'faceEyeSpacing'].forEach((controlId) => {
   document.querySelector('#' + controlId).oninput = (event) => {
