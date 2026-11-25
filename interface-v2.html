@@ -2275,13 +2275,21 @@ if (Array.isArray(data.sceneCharacters)) {
         if (Array.isArray(instance.transform.position)) character.position.fromArray(instance.transform.position);
         if (Array.isArray(instance.transform.rotation)) character.rotation.fromArray(instance.transform.rotation);
         if (Array.isArray(instance.transform.scale)) character.scale.fromArray(instance.transform.scale);
+        if (typeof instance.visible === 'boolean') character.visible = instance.visible;
       }
       return;
     }
     if (instance.source !== 'procedural_preview') return;
     const instanceRecord = window.Estudio3DCharacters &&
       window.Estudio3DCharacters.getCharacter(instance.recordId);
-    if (instanceRecord) addCharacterInstance(instance.recordId, instance.transform, { offset: false, persist: false });
+    if (instanceRecord) {
+      addCharacterInstance(instance.recordId, instance.transform, { offset: false, persist: false });
+      if (character && typeof instance.instanceName === 'string' && instance.instanceName.trim()) {
+        character.userData.instanceName = instance.instanceName.slice(0, 80);
+        character.name = character.userData.instanceName;
+      }
+      if (character && typeof instance.visible === 'boolean') character.visible = instance.visible;
+    }
   });
   character = importedActiveRoot;
   characterRecordId = importedActiveRecordId;
