@@ -93,3 +93,16 @@ test('excluir cadastro do catálogo persiste a alteração no projeto', () => {
   assert.match(deleteHandler, /Estudio3DCore\.saveProject\(\)/);
   assert.ok(deleteHandler.includes('status(saved.ok'), 'resultado do salvamento deve ser informado');
 });
+
+test('protótipo restaura escala, posição e rotação salvas no cadastro', () => {
+  const start = html.indexOf('function generateCharacterPrototype()');
+  const end = html.indexOf("document.querySelector('#generateCharacter3D').onclick", start);
+  assert.ok(start >= 0 && end > start, 'geração procedural não encontrada');
+  const generator = html.slice(start, end);
+  assert.match(generator, /savedBody\.editorScale/);
+  assert.match(generator, /savedBody\.editorPositionX/);
+  assert.match(generator, /savedBody\.editorRotationY/);
+  assert.match(generator, /group\.position\.set\(/);
+  assert.match(generator, /group\.rotation\.y = Number\.isFinite\(savedEditorRotationY\)/);
+  assert.match(generator, /savedEditorScale > 0/);
+});
