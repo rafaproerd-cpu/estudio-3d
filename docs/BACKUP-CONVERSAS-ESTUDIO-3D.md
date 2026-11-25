@@ -172,3 +172,13 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Importar um projeto sem personagem ativo remove o personagem visual anterior e limpa sua associação/animações, sem confundir isso com os demais cadastros do catálogo.
 - Protótipos procedurais salvos são reconstruídos diretamente a partir do cadastro e do estado local, sem exigir o GLB-base; objetos e cenário também são restaurados nesse caminho.
 - Testes automatizados aprovados: 39/39 no GitHub Actions, workflow run `45634504138`, commit `3e784fa8c9e5d949edfb54b65fef81089eac86d8`.
+
+
+## 25/11/2026 — Validação prévia e segura na importação de projetos
+
+- A importação agora valida previamente as transformações dos objetos (posição, rotação e escala), as cores e todos os cadastros do catálogo antes de remover ou substituir elementos da cena atual.
+- Catálogos com dados inválidos ou IDs duplicados são rejeitados antes da alteração do projeto aberto, reduzindo o risco de deixar a cena parcialmente substituída por um arquivo defeituoso.
+- A normalização dos personagens ocorre uma única vez durante a validação; somente depois o catálogo validado é aplicado ao projeto.
+- Foram adicionados testes de regressão para confirmar que a validação acontece antes das alterações da cena e que o catálogo validado é aplicado sem nova normalização.
+- GitHub Actions: workflow de testes 45635004153, commit b0c820cddb627e7a974e00b4fd55b112ae376c75, conclusão success.
+- Limite mantido: o JSON guarda cadastro, transformações e configurações, mas não incorpora os bytes de modelos GLB externos; esses arquivos precisam continuar disponíveis separadamente.
