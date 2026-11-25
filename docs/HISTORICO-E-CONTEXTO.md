@@ -338,3 +338,11 @@ Commits conhecidos na branch `main`:
 - Ajustada a persistência: ao criar/restaurar uma instância procedural adicional, o gerador não grava um estado intermediário antes da transformação final ser aplicada; a rotina chamadora persiste o estado completo.
 - Testes automatizados: workflow `45645110588`, commit `7490e8fbf6701fa01b9589ce783ad73d9a9a26fc`, **72/72 aprovados, 0 falhas**. Cobrem estrutura e regressões, não substituem execução visual real no navegador.
 - Ainda falta o primeiro teste visual/manual com GLBs reais, incluindo ao menos dois modelos animados, duplicação, seleção, exclusão, exportação/importação ZIP e exportação da cena completa. Também é necessário verificar os arquivos resultantes em um visualizador/engine 3D.
+
+## 25/11/2026 — Controle de visibilidade da cena
+
+- Adicionado controle `Ocultar/Mostrar` para a instância selecionada no painel de objetos. Itens ocultos continuam selecionáveis pela lista e são marcados visualmente.
+- A visibilidade é persistida por instância para personagens e objetos comuns, restaurada no estado local e nas importações JSON/ZIP (incluindo instâncias procedurais e GLB), e respeitada pela exportação da cena completa, que inclui somente objetos visíveis.
+- Corrigida também a restauração da visibilidade do personagem ativo, além das instâncias adicionais.
+- Testes automatizados: workflow `45645750205`, commit `6370fcf1d1ec3e367d7336d9aeee6dd8fb97c100`, **76/76 aprovados, 0 falhas**.
+- Limite de validação: ainda são testes estruturais/automatizados. O teste visual real no navegador e o round-trip com arquivos GLB reais continuam pendentes antes de declarar a etapa validada.
