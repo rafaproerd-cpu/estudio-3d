@@ -271,3 +271,13 @@ Commits conhecidos na branch `main`:
 - Foram acrescentados testes automatizados para a interface de importação GLB e para o manifesto. Resultado do GitHub Actions será registrado após a conclusão do workflow.
 
 - Validação final desta etapa: GitHub Actions run `45636001811`, commit `a3961a1ee23bd2df32d6470d24d3f469ae0f89f7`, **43/43 testes aprovados** (0 falhas). A checagem sintática do JavaScript da interface também passou. A importação/exportação GLB ainda requer teste visual manual em navegador com um arquivo real.
+
+## 25/11/2026 — Pacote ZIP portátil do projeto
+
+- Adicionado o comando **Exportar projeto completo (.zip)**. O pacote inclui `project.json` e os modelos GLB externos associados em `assets/<id-do-personagem>/<arquivo>.glb`.
+- Ao importar um GLB na sessão, seus bytes são mantidos em memória para permitir que o pacote inclua o arquivo original, além dos metadados.
+- O manifesto dentro do pacote aponta para `archivePath` e marca `embedded: true`. Os caminhos internos dos assets são sanitizados.
+- O exportador impede criar um ZIP incompleto: se houver um modelo externo no catálogo cujo binário não foi importado nesta sessão, informa quais arquivos precisam ser carregados novamente.
+- A compactação usa JSZip 3.10.1 via CDN. A criação do ZIP requer conexão para carregar essa biblioteca. O JSON simples continua disponível como antes.
+- Escopo atual: exportação do pacote completo implementada; reimportação automática do ZIP com restauração dos GLBs ainda será a próxima etapa. Os arquivos não ficam guardados permanentemente no navegador pelo cache em memória.
+- Testes automatizados adicionados para a inclusão do projeto e dos GLBs, além da proteção contra pacotes com arquivos ausentes. Aguardar resultado do workflow para registrar a validação.
