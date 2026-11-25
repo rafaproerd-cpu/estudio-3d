@@ -50,8 +50,10 @@ test('JavaScript da interface passa pela análise sintática', () => {
   assert.doesNotThrow(() => new Function(source));
 });
 
-test('regenerar protótipo substitui o personagem anterior em vez de duplicá-lo', () => {
-  assert.match(html, /if \(character\) \{\s*scene\.remove\(character\);\s*const previousIndex = objects\.indexOf\(character\);\s*if \(previousIndex >= 0\) objects\.splice\(previousIndex, 1\);\s*\}/);
+test('regenerar protótipo substitui o personagem anterior sem afetar adições intencionais', () => {
+  assert.match(html, /if \(!addToScene && character\) \{/);
+  assert.match(html, /characterAnimationStates\.delete\(character\)/);
+  assert.match(html, /const previousIndex = objects\.indexOf\(character\)/);
   assert.match(html, /selected = group;/);
 });
 
@@ -137,10 +139,9 @@ test('gerar protótipo procedural limpa ações de animação do modelo anterior
   const start = html.indexOf('function generateCharacterPrototype(');
   const end = html.indexOf("document.querySelector('#generateCharacter3D').onclick", start);
   const generator = html.slice(start, end);
-  assert.match(generator, /if \(mixer\) mixer\.stopAllAction\(\)/);
-  assert.match(generator, /mixer = null/);
-  assert.match(generator, /activeAction = null/);
-  assert.match(generator, /animationActions = \[\]/);
+  assert.match(generator, /if \(!addToScene && mixer\) mixer\.stopAllAction\(\)/);
+  assert.match(generator, /registerCharacterAnimations\(group, \[\]\)/);
+  assert.match(generator, /activateCharacterAnimations\(group\)/);
   assert.match(generator, /#animationSelect/);
   assert.match(generator, /#animate/);
   assert.match(generator, /#pauseAnimation/);
