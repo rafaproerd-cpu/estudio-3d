@@ -37,16 +37,26 @@ input[type=range]{padding:0}
 footer{font-size:10px;color:#8090ad;margin-top:15px;line-height:1.5}
 #animate,#pauseAnimation{width:100%;margin-top:6px}
 #mobileCustomizerToggle{display:none}
+
+/* Tablets e notebooks compactos */
+@media(min-width:701px) and (max-width:1100px){
+  .layout{grid-template-columns:minmax(145px,18vw) minmax(0,1fr) minmax(175px,21vw)}
+  aside{padding:10px}
+  .toolbar{gap:5px}
+  .toolbar button,.actions button{padding:8px 6px;font-size:11px}
+  h3{font-size:12px}
+}
+
 @media(max-width:700px){
 header{height:52px;padding:0 10px}
 header strong{font-size:15px}
 #mobileCustomizerToggle{display:inline-block;padding:8px 10px}
-.layout{display:block;height:calc(100dvh - 52px);height:calc(100vh - 52px)}
+.layout{display:block;height:calc(100vh - 52px);height:calc(100dvh - 52px)}
 .layout>aside:first-child{display:none}
-#viewport{position:absolute;inset:52px 0 0 0;height:calc(100dvh - 52px);height:calc(100vh - 52px);width:100%;z-index:1}
+#viewport{position:absolute;inset:52px 0 0 0;height:calc(100vh - 52px);height:calc(100dvh - 52px);width:100%;z-index:1}
 #scene{width:100%;height:100%;display:block}
 .right{display:none!important}
-.layout.show-customizer .right{display:block!important;position:fixed;z-index:5;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto;max-height:68dvh;max-height:68vh;overflow-y:auto;overscroll-behavior:contain;background:#171d29;border:1px solid #52617c;border-radius:14px;padding:12px;box-shadow:0 12px 36px #000b}
+.layout.show-customizer .right{display:block!important;position:fixed;z-index:5;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto;max-height:68vh;max-height:68dvh;overflow-y:auto;overscroll-behavior:contain;background:#171d29;border:1px solid #52617c;border-radius:14px;padding:12px;box-shadow:0 12px 36px #000b}
 .right>.section,.right>div{min-width:0}
 .right .section{padding:10px 0}
 .right .actions{grid-template-columns:1fr 1fr}
@@ -55,6 +65,13 @@ header strong{font-size:15px}
 h3{font-size:11px}
 #hint{bottom:calc(12px + env(safe-area-inset-bottom));max-width:calc(100% - 24px);white-space:normal;text-align:center}
 .layout.show-customizer #hint{display:none}
+}
+
+@media(max-width:700px) and (orientation:landscape) and (max-height:500px){
+  .layout.show-customizer .right{max-height:76vh;max-height:76dvh}
+  .right{padding:8px}
+  .right .section{padding:6px 0}
+  .right label{margin:5px 0 3px}
 }
 </style>
 
