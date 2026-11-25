@@ -446,3 +446,10 @@ Commits conhecidos na branch `main`:
 - Adicionado controle para aumentar ou reduzir o tamanho das pupilas no protótipo humanoide.
 - Cada olho recebe íris colorida e pupila escura em grupo facial independente; a escala da pupila é aplicada ao vivo e persistida em `appearance.face`.
 - A configuração é restaurada ao selecionar o personagem e ao regenerar o protótipo. O recurso usa geometrias simples e ainda depende de inspeção visual no navegador para conferir alinhamento e proporções.
+
+
+## 25/11/2026 — Direção do olhar
+
+- Adicionados controles de deslocamento horizontal e vertical do olhar no protótipo humanoide, movimentando íris e pupilas em conjunto.
+- Os valores são limitados a uma faixa pequena para manter os olhos próximos da região ocular e são persistidos em `appearance.face`.
+- A direção é restaurada ao selecionar o personagem e ao regenerar o protótipo. O recurso usa geometrias simples e precisa de inspeção visual para validar o alinhamento em diferentes proporções de cabeça.
