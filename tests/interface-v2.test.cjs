@@ -83,3 +83,13 @@ test('cor principal não sobrescreve o material independente dos detalhes', () =
   assert.match(primaryColorHandler, /material\.color && material\.name!=='character-accent'/);
   assert.match(primaryColorHandler, /material\.color\.set\(e\.target\.value\)/);
 });
+
+test('excluir cadastro do catálogo persiste a alteração no projeto', () => {
+  const handlerStart = html.indexOf("deleteButton.onclick = () => {");
+  const handlerEnd = html.indexOf("container.appendChild(row);", handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'ação de excluir cadastro não encontrada');
+  const deleteHandler = html.slice(handlerStart, handlerEnd);
+  assert.match(deleteHandler, /removeCharacter\(record\.id\)/);
+  assert.match(deleteHandler, /Estudio3DCore\.saveProject\(\)/);
+  assert.match(deleteHandler, /!saved\.ok/);
+});
