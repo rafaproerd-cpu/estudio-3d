@@ -303,3 +303,26 @@ test('catálogo validado é aplicado sem repetir a normalização depois da troc
   assert.match(importer, /updateProject\(\{ characters: normalizedRecords \}\)/);
   assert.doesNotMatch(importer, /const normalizedRecords = sourceRecords\.map/);
 });
+
+
+test('interface permite importar modelos GLB externos', () => {
+  assert.match(html, /id="importGLB"/);
+  assert.match(html, /id="glbFile" accept="\.glb,model\/gltf-binary"/);
+  assert.match(html, /document\.querySelector\('#glbFile'\)\.onchange/);
+  assert.match(html, /loader\.parse\(buffer, ''/);
+  assert.match(html, /source: 'external_file'/);
+  assert.match(html, /fileName: file\.name/);
+  assert.match(html, /embedded: false/);
+});
+
+test('exportação JSON inclui manifesto de arquivos 3D externos', () => {
+  const start = html.indexOf('function saveProject()');
+  const end = html.indexOf("document.querySelector('#export').onclick", start);
+  assert.ok(start >= 0 && end > start, 'função de exportação do projeto não encontrada');
+  const exporter = html.slice(start, end);
+  assert.match(exporter, /assetManifest:/);
+  assert.match(exporter, /characterId: record\.id/);
+  assert.match(exporter, /fileName: record\.model\.fileName \|\| record\.model\.assetId/);
+  assert.match(exporter, /embedded: false/);
+  assert.match(exporter, /required: true/);
+});
