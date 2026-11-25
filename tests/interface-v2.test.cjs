@@ -107,3 +107,26 @@ test('protótipo restaura escala, posição e rotação salvas no cadastro', () 
   assert.match(generator, /THREE\.MathUtils\.degToRad\(savedEditorRotationY\)/);
   assert.match(generator, /savedEditorScale > 0/);
 });
+
+
+test('seleção no catálogo não troca a associação do personagem ativo na cena', () => {
+  assert.match(html, /let characterRecordId=null;\\s*let selectedCatalogRecordId=null;/);
+  const catalogStart = html.indexOf('function renderCharacterCatalog()');
+  const catalogEnd = html.indexOf("document.querySelector('#newCharacterRecord')", catalogStart);
+  const catalog = html.slice(catalogStart, catalogEnd);
+  assert.match(catalog, /record.id === selectedCatalogRecordId/);
+  assert.match(catalog, /selectedCatalogRecordId = record.id/);
+  assert.doesNotMatch(catalog, /characterRecordId = record.id/);
+});
+
+test('salvar cadastro e gerar protótipo usam o cadastro selecionado separadamente da cena', () => {
+  const saveStart = html.indexOf("document.querySelector('#saveCharacterData')");
+  const generateStart = html.indexOf('function generateCharacterPrototype()');
+  const persistStart = html.indexOf('function persistSelectedCharacter(patch)');
+  const saveHandler = html.slice(saveStart, generateStart);
+  const generator = html.slice(generateStart, persistStart);
+  assert.match(saveHandler, /selectedCatalogRecordId, getCharacterFormData\(\)/);
+  assert.match(generator, /getCharacter\(selectedCatalogRecordId\)/);
+  assert.match(generator, /characterRecordId = selectedCatalogRecordId/);
+  assert.match(html, /updateCharacter\(characterRecordId, patch\)/);
+});
