@@ -105,3 +105,8 @@ O usuário pediu para continuar a partir do backup e do ponto em que o projeto h
 ## 10. 25/11/2026 — Exclusão segura do cadastro
 
 Foi identificado que a exclusão de um personagem no catálogo não persistia a remoção no armazenamento local. A interface agora chama saveProject após remover o cadastro e apresenta o resultado do salvamento. O modelo 3D na cena continua preservado. Arquivos alterados: interface-v2.html e tests/interface-v2.test.cjs. Commits: a515b1b, 067b0e4 e 182d9e1. O workflow automatizado concluiu com sucesso no commit 182d9e1. O salvamento é local ao navegador; não é sincronização remota do conteúdo criado no editor.
+
+
+## 11. 25/11/2026 — Ajuste na restauração da rotação do personagem
+
+Durante a continuidade do editor, foi identificado que o ângulo salvo no cadastro procedural é armazenado em graus, enquanto o Three.js espera radianos na propriedade `rotation.y`. A reconstrução agora converte o valor usando `THREE.MathUtils.degToRad`. A mudança foi registrada em `interface-v2.html` (commit `7070209`) e recebeu teste de regressão em `tests/interface-v2.test.cjs` (commit `7077ca6`). O resultado do workflow automatizado do commit de teste ainda está pendente neste registro; não considerar a validação concluída até confirmar o workflow.
