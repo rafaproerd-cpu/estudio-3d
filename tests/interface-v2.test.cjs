@@ -110,7 +110,7 @@ test('protótipo restaura escala, posição e rotação salvas no cadastro', () 
 
 
 test('seleção no catálogo não troca a associação do personagem ativo na cena', () => {
-  assert.match(html, /let characterRecordId=null;\\s*let selectedCatalogRecordId=null;/);
+  assert.match(html, /let characterRecordId=null;\s*let selectedCatalogRecordId=null;/);
   const catalogStart = html.indexOf('function renderCharacterCatalog()');
   const catalogEnd = html.indexOf("document.querySelector('#newCharacterRecord')", catalogStart);
   const catalog = html.slice(catalogStart, catalogEnd);
