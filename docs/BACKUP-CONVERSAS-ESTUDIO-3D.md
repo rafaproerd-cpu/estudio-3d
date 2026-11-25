@@ -100,3 +100,8 @@ O usuário pediu para continuar a partir do backup e do ponto em que o projeto h
 - **Commits:** 36f7bd9 e 9c0572f.
 - **Testes:** workflow automatizado concluído com sucesso no commit 9c0572f.
 - **Ainda pendente:** teste visual/funcional manual no navegador. Não registrar essa validação como concluída até o usuário testar.
+
+
+## 10. 25/11/2026 — Exclusão segura do cadastro
+
+Foi identificado que a exclusão de um personagem no catálogo não persistia a remoção no armazenamento local. A interface agora chama saveProject após remover o cadastro e apresenta o resultado do salvamento. O modelo 3D na cena continua preservado. Arquivos alterados: interface-v2.html e tests/interface-v2.test.cjs. Commits: a515b1b, 067b0e4 e 182d9e1. O workflow automatizado concluiu com sucesso no commit 182d9e1. O salvamento é local ao navegador; não é sincronização remota do conteúdo criado no editor.
