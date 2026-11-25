@@ -1518,7 +1518,8 @@ const record = selected.userData.isCharacter && characterRecordId
     if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
     const record = window.Estudio3DCharacters.getCharacter(characterRecordId);
     const body = record && record.appearance && record.appearance.body || {};
-    const baseScale = Number(body.editorScale) > 0 ? Number(body.editorScale) : 1;
+    const ageScale = { baby: 0.68, child: 0.82, teen: 0.94, adult: 1, senior: 0.97 };
+    const baseScale = Number(body.editorScale) > 0 ? Number(body.editorScale) : (ageScale[record && record.ageStage] || 1);
     const width = controlId === 'bodyWidth' ? Number(event.target.value) : (Number(body.width) || 1);
     const height = controlId === 'bodyHeight' ? Number(event.target.value) : (Number(body.height) || 1);
     const depth = controlId === 'bodyDepth' ? Number(event.target.value) : (Number(body.depth) || 1);
