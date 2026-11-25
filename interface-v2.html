@@ -154,6 +154,9 @@ Carregamento de personagem GLB.
 </aside>
 </div>
 
+<script src="./estudio-core.js"></script>
+<script src="./character-system.js"></script>
+
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -209,6 +212,7 @@ let dragging=false;
 let lastX=0,lastY=0;
 
 let character=null;
+let characterRecordId=null;
 let mixer=null;
 let animationActions=[];
 let activeAction=null;
@@ -274,6 +278,36 @@ character.position.set(
 
 scene.add(character);
 objects.push(character);
+
+// Registra o modelo visual no cadastro universal do projeto.
+try {
+  const api = window.Estudio3DCharacters;
+  if (api) {
+    const saved = api.getCharacters().find(item =>
+      item.model && item.model.assetId === 'man-base-character-rigged.glb'
+    );
+    const record = saved
+      ? api.updateCharacter(saved.id, {
+          model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
+        })
+      : api.addCharacterToProject({
+          name: 'Meu personagem',
+          category: 'human',
+          ageStage: 'adult',
+          rigType: 'humanoid',
+          description: 'Personagem carregado no editor 3D',
+          model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
+        });
+    characterRecordId = record.id;
+    const savedResult = window.Estudio3DCore.saveProject();
+    status(savedResult.ok
+      ? 'Personagem carregado e cadastrado no projeto.'
+      : 'Personagem carregado; não foi possível salvar no navegador.');
+  }
+} catch (error) {
+  console.error('[Estúdio 3D] Falha ao registrar personagem:', error);
+  status('Personagem carregado, mas houve falha ao registrar seus dados.');
+}
 
 gltf.animations.forEach((clip)=>{
 
@@ -440,6 +474,16 @@ document.querySelector('#rotate').onclick=()=>setMode('rotate');
 document.querySelector('#scale').onclick=()=>setMode('scale');
 
 /* APARÊNCIA */
+function persistSelectedCharacter(patch) {
+  if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
+  try {
+    window.Estudio3DCharacters.updateCharacter(characterRecordId, patch);
+    window.Estudio3DCore.saveProject();
+  } catch (error) {
+    console.error('[Estúdio 3D] Não foi possível salvar os ajustes:', error);
+    status('Ajuste aplicado no visor, mas não foi salvo no cadastro.');
+  }
+}
 
 document.querySelector('#color').oninput=e=>{
 
@@ -461,12 +505,14 @@ material.color.set(e.target.value);
 
 });
 
+persistSelectedCharacter({ appearance: { colors: { primary: e.target.value } } });
 };
 
 document.querySelector('#size').oninput=e=>{
 
 if(selected){
 selected.scale.setScalar(Number(e.target.value));
+  persistSelectedCharacter({ appearance: { body: { editorScale: Number(e.target.value) } } });
 }
 
 };
@@ -475,6 +521,7 @@ document.querySelector('#position').oninput=e=>{
 
 if(selected){
 selected.position.x=Number(e.target.value);
+  persistSelectedCharacter({ appearance: { body: { editorPositionX: Number(e.target.value) } } });
 }
 
 };
@@ -483,6 +530,7 @@ document.querySelector('#rotation').oninput=e=>{
 
 if(selected){
 selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
+  persistSelectedCharacter({ appearance: { body: { editorRotationY: Number(e.target.value) } } });
 }
 
 };
@@ -857,6 +905,7 @@ loop();
 
 /* INICIAR */
 
+if (window.Estudio3DCore) window.Estudio3DCore.loadProject();
 loadCharacter();
 
 status('Estúdio 3D iniciado. Carregando personagem...');
