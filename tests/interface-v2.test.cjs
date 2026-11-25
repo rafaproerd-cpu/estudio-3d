@@ -62,6 +62,18 @@ test('controles de proporção corporal são persistidos e reaplicados ao protó
   assert.match(html, /ageScale\[record && record\.ageStage\]/);
 });
 
+test('controles faciais do protótipo humanoide são persistidos e reaplicados', () => {
+  assert.match(html, /id="faceHeadScale"/);
+  assert.match(html, /id="faceEyeScale"/);
+  assert.match(html, /id="faceEyeSpacing"/);
+  assert.match(html, /faceSettings\.headScale/);
+  assert.match(html, /faceSettings\.eyeScale/);
+  assert.match(html, /faceSettings\.eyeSpacing/);
+  assert.match(html, /userData\.facialFeature = 'head'/);
+  assert.match(html, /userData\.facialFeature = 'eye'/);
+  assert.match(html, /appearance: \{ face: \{ \[key\]: Number\(event\.target\.value\) \} \}/);
+});
+
 test('regenerar protótipo substitui o personagem anterior sem afetar adições intencionais', () => {
   assert.match(html, /if \(!addToScene && character\) \{/);
   assert.match(html, /characterAnimationStates\.delete\(character\)/);
