@@ -1462,10 +1462,17 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
   nose.userData.editorRoot = characterGroup;
   details.add(nose);
   const eyeStyle = ['round', 'almond', 'wide'].includes(settings.eyeStyle) ? settings.eyeStyle : 'round';
+  const eyeScale = Number.isFinite(Number(settings.eyeScale)) ? Math.max(0.6, Math.min(1.6, Number(settings.eyeScale))) : 1;
+  const eyeSpacing = Number.isFinite(Number(settings.eyeSpacing)) ? Math.max(0.7, Math.min(1.4, Number(settings.eyeSpacing))) : 1;
   characterGroup.traverse(node => {
     if (node.userData.facialFeature === 'eye') {
-      node.scale.y = eyeStyle === 'almond' ? 0.62 : eyeStyle === 'wide' ? 0.78 : 1;
-      node.scale.x = eyeStyle === 'wide' ? 1.2 : 1;
+      node.scale.set(
+        eyeScale * (eyeStyle === 'wide' ? 1.2 : 1),
+        eyeScale * (eyeStyle === 'almond' ? 0.62 : eyeStyle === 'wide' ? 0.78 : 1),
+        eyeScale
+      );
+      if (node.name === 'face-eye-left') node.position.x = -0.16 * eyeSpacing;
+      if (node.name === 'face-eye-right') node.position.x = 0.16 * eyeSpacing;
     }
   });
   const earScale = Number.isFinite(Number(settings.earScale)) ? Math.max(0.5, Math.min(1.8, Number(settings.earScale))) : 1;
