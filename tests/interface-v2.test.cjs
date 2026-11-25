@@ -95,7 +95,7 @@ test('excluir cadastro do catálogo persiste a alteração no projeto', () => {
 });
 
 test('protótipo restaura escala, posição e rotação salvas no cadastro', () => {
-  const start = html.indexOf('function generateCharacterPrototype()');
+  const start = html.indexOf('function generateCharacterPrototype(');
   const end = html.indexOf("document.querySelector('#generateCharacter3D').onclick", start);
   assert.ok(start >= 0 && end > start, 'geração procedural não encontrada');
   const generator = html.slice(start, end);
@@ -122,7 +122,7 @@ test('seleção no catálogo não troca a associação do personagem ativo na ce
 
 test('salvar cadastro e gerar protótipo usam o cadastro selecionado separadamente da cena', () => {
   const saveStart = html.indexOf("document.querySelector('#saveCharacterData')");
-  const generateStart = html.indexOf('function generateCharacterPrototype()');
+  const generateStart = html.indexOf('function generateCharacterPrototype(');
   const persistStart = html.indexOf('function persistSelectedCharacter(patch)');
   const saveHandler = html.slice(saveStart, generateStart);
   const generator = html.slice(generateStart, persistStart);
@@ -134,7 +134,7 @@ test('salvar cadastro e gerar protótipo usam o cadastro selecionado separadamen
 
 
 test('gerar protótipo procedural limpa ações de animação do modelo anterior', () => {
-  const start = html.indexOf('function generateCharacterPrototype()');
+  const start = html.indexOf('function generateCharacterPrototype(');
   const end = html.indexOf("document.querySelector('#generateCharacter3D').onclick", start);
   const generator = html.slice(start, end);
   assert.match(generator, /if \(mixer\) mixer\.stopAllAction\(\)/);
