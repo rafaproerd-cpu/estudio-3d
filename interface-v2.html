@@ -1050,7 +1050,7 @@ document.querySelector('#exportGLB').onclick = () => {
         const safeName = (selected.name || 'personagem')
           .toLowerCase()
           .normalize('NFD')
-          .replace(/[\\u0300-\\u036f]/g, '')
+          .replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9_-]+/g, '-')
           .replace(/^-+|-+$/g, '') || 'personagem';
         anchor.download = safeName + '.glb';
