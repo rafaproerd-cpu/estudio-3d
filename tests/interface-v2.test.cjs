@@ -507,7 +507,7 @@ test('exportação GLB da cena completa inclui todas as instâncias e objetos se
   assert.match(html, /document\.querySelector\('#exportSceneGLB'\)\.onclick/);
   assert.match(html, /const sceneCharacters = objects\.filter\(obj => obj && obj\.visible\)/);
   assert.match(html, /const exportRoot = new THREE\.Group\(\)/);
-  assert.match(html, /const copy = obj\.clone\(true\)/);
+  assert.match(html, /const copy = cloneSkeleton\(obj\)/);
   assert.match(html, /exportRoot\.add\(copy\)/);
   assert.match(html, /estudio-3d-cena-completa\.glb/);
   assert.match(html, /clipes de animação precisam de validação\/exportação específica/);
