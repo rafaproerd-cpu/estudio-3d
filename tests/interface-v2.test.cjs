@@ -226,3 +226,17 @@ test('carregamento local seleciona personagem salvo e reconstrói preview proced
   assert.match(loader, /restoreEditorState\(savedEditorState\)/);
   assert.match(loader, /persistEditorState\(\)/);
 });
+
+
+test('cena salva intencionalmente sem personagem não carrega GLB-base ao reabrir', () => {
+  const saverStart = html.indexOf('function persistEditorState()');
+  const saverEnd = html.indexOf('function restoreEditorState(editorState)', saverStart);
+  const saver = html.slice(saverStart, saverEnd);
+  assert.match(saver, /hasCharacter: !!activeCharacter/);
+  const loaderStart = html.indexOf('function loadCharacter()');
+  const loaderEnd = html.indexOf('/* OBJETOS */', loaderStart);
+  const loader = html.slice(loaderStart, loaderEnd);
+  assert.match(loader, /startupEditorState\.hasCharacter === false/);
+  assert.match(loader, /restoreEditorState\(startupEditorState\)/);
+  assert.match(loader, /return;/);
+});
