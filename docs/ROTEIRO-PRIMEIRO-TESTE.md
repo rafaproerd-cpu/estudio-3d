@@ -40,9 +40,12 @@ Resultado esperado: instâncias independentes; animações por personagem sem mi
 - [ ] Recarregar a página.
 - [ ] Importar o ZIP exportado.
 - [ ] Conferir personagens, objetos, nomes, transformações, visibilidade e clipes disponíveis.
+- [ ] Criar ou renomear objetos primitivos, ocultar um deles e confirmar nome e visibilidade após importar o ZIP.
+- [ ] Deixar uma animação em execução, exportar o ZIP e confirmar que ela retoma no clipe e no tempo aproximado salvos.
+- [ ] Repetir com a animação pausada e confirmar que ela continua pausada após a restauração.
 - [ ] Confirmar se todos os GLBs externos foram restaurados a partir do pacote, sem depender de arquivos soltos no computador.
 
-Resultado esperado: o estado salvo volta sem duplicar ou perder instâncias.
+Resultado esperado: o estado salvo volta sem duplicar ou perder instâncias, mantendo nomes, visibilidade e estado das animações.
 
 ## Etapa D — exportação
 
