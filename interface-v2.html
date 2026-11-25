@@ -1583,6 +1583,7 @@ document.querySelector('#bundleFile').onchange = async (event) => {
     const records = Array.isArray(project.characters) ? project.characters : [];
     const recordIds = new Set(records.map(record => record && record.id));
     const manifestIds = new Set();
+    const manifestPaths = new Set();
     const preparedAssets = new Map();
     let totalAssetBytes = 0;
 
@@ -1598,6 +1599,11 @@ document.querySelector('#bundleFile').onchange = async (event) => {
           !/^assets\/[a-z0-9_-]+\/[a-z0-9._-]+\.glb$/i.test(asset.archivePath)) {
         throw new Error('O manifesto contém um caminho ou formato de modelo inválido.');
       }
+      const safeCharacterId = asset.characterId.replace(/[^a-z0-9_-]/gi, '_');
+      if (!asset.archivePath.startsWith('assets/' + safeCharacterId + '/') || manifestPaths.has(asset.archivePath)) {
+        throw new Error('O caminho do modelo não corresponde ao personagem ou está duplicado.');
+      }
+      manifestPaths.add(asset.archivePath);
       const entry = zip.file(asset.archivePath);
       if (!entry || entry.dir) throw new Error('Modelo obrigatório ausente: ' + asset.fileName);
       if (entry._data && Number.isFinite(entry._data.uncompressedSize) &&
@@ -1614,6 +1620,12 @@ document.querySelector('#bundleFile').onchange = async (event) => {
         data: buffer,
         gltf
       });
+    }
+
+    const externalRecords = records.filter(record => record && record.model &&
+      record.model.source === 'external_file' && record.model.assetId);
+    if (externalRecords.some(record => !manifestIds.has(record.id))) {
+      throw new Error('O manifesto não inclui todos os modelos externos obrigatórios do catálogo.');
     }
 
     // O importador JSON existente faz a validação do catálogo e das transformações.
