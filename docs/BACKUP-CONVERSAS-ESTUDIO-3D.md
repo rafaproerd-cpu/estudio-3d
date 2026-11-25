@@ -88,3 +88,15 @@ Sempre que uma conversa trouxer algo relevante para o projeto:
 - **Trabalho realizado e commit:**
 - **Testes/validação:**
 - **Próxima etapa:**
+
+
+## 9. 25/11/2026 — Retomada do desenvolvimento
+
+O usuário pediu para continuar a partir do backup e do ponto em que o projeto havia parado. O histórico e o backup foram consultados no GitHub antes de alterar o código.
+
+- **Tarefa retomada:** revisão da independência entre cor principal e cor de detalhes.
+- **Achado:** o seletor principal alterava todos os materiais, incluindo o material reservado aos detalhes.
+- **Alteração realizada:** o seletor principal passou a ignorar o material character-accent; foi adicionado teste automatizado de regressão.
+- **Commits:** 36f7bd9 e 9c0572f.
+- **Testes:** workflow automatizado concluído com sucesso no commit 9c0572f.
+- **Ainda pendente:** teste visual/funcional manual no navegador. Não registrar essa validação como concluída até o usuário testar.
