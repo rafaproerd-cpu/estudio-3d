@@ -460,3 +460,11 @@ Commits conhecidos na branch `main`:
 - Adicionado controle para ajustar a abertura vertical dos olhos no protótipo humanoide, combinado ao formato e ao tamanho já existentes.
 - A configuração é salva em `appearance.face`, restaurada ao selecionar o personagem e reaplicada ao regenerar o protótipo.
 - O ajuste atua na escala vertical das geometrias oculares; não representa pálpebras articuladas, piscadas ou rig facial animado. A inspeção visual no navegador continua necessária.
+
+## 25/11/2026 — Piscada procedural manual
+
+- Adicionado o botão **Piscar agora** ao painel de detalhes faciais.
+- A piscada anima temporariamente a escala vertical dos elementos oculares já existentes, com fechamento e retorno suaves em aproximadamente 0,18 s.
+- A animação é atualizada pelo loop de renderização existente; não cria timers nem loops paralelos.
+- A ação é transitória e não altera as configurações faciais persistidas do personagem.
+- Limitação conhecida: trata-se de uma simulação procedural por escala dos olhos, não de pálpebras modeladas, rig facial ou blendshapes profissionais. A validação visual no navegador continua necessária.
