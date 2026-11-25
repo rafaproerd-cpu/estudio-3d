@@ -203,3 +203,4 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - A compactação usa JSZip 3.10.1 via CDN. A criação do ZIP requer conexão para carregar essa biblioteca. O JSON simples continua disponível como antes.
 - Escopo atual: exportação do pacote completo implementada; reimportação automática do ZIP com restauração dos GLBs ainda será a próxima etapa. Os arquivos não ficam guardados permanentemente no navegador pelo cache em memória.
 - Testes automatizados adicionados para a inclusão do projeto e dos GLBs, além da proteção contra pacotes com arquivos ausentes. Aguardar resultado do workflow para registrar a validação.
+- Validação do pacote ZIP: GitHub Actions run `45637936743`, commit `422d03851baa43d7436a782bb93fa86866138147`, **45/45 testes aprovados** (0 falhas). O workflow de publicação do Pages para o backup mais recente ainda estava em execução na última consulta.
