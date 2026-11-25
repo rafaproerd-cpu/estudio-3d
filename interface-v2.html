@@ -45,8 +45,8 @@ header strong{font-size:15px}
 .layout>aside:first-child{display:none}
 #viewport{position:absolute;inset:52px 0 0 0;height:calc(100dvh - 52px);height:calc(100vh - 52px);width:100%;z-index:1}
 #scene{width:100%;height:100%;display:block}
-.right{display:none}
-.layout.show-customizer .right{display:block;position:fixed;z-index:5;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto;max-height:68dvh;overflow-y:auto;overscroll-behavior:contain;background:#171d29;border:1px solid #52617c;border-radius:14px;padding:12px;box-shadow:0 12px 36px #000b}
+.right{display:none!important}
+.layout.show-customizer .right{display:block!important;position:fixed;z-index:5;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));top:auto;max-height:68dvh;max-height:68vh;overflow-y:auto;overscroll-behavior:contain;background:#171d29;border:1px solid #52617c;border-radius:14px;padding:12px;box-shadow:0 12px 36px #000b}
 .right>.section,.right>div{min-width:0}
 .right .section{padding:10px 0}
 .right .actions{grid-template-columns:1fr 1fr}
@@ -215,6 +215,23 @@ Carregamento de personagem GLB.
 
 <script src="./estudio-core.js"></script>
 <script src="./character-system.js"></script>
+<script>
+// Controle mobile independente do módulo Three.js, para continuar funcional
+// mesmo se a biblioteca 3D demorar ou falhar ao carregar no navegador.
+(function(){
+  const toggle=document.getElementById('mobileCustomizerToggle');
+  const layout=document.querySelector('.layout');
+  if(!toggle||!layout||toggle.dataset.bound==='true') return;
+  toggle.dataset.bound='true';
+  toggle.addEventListener('click',function(){
+    const open=layout.classList.toggle('show-customizer');
+    toggle.setAttribute('aria-expanded',String(open));
+    toggle.textContent=open?'Fechar painel':'Personalizar';
+    window.dispatchEvent(new Event('resize'));
+  });
+})();
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script type="module">
@@ -224,17 +241,6 @@ import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
 
 const canvas=document.querySelector('#scene');
-const mobileCustomizerToggle=document.querySelector('#mobileCustomizerToggle');
-if(mobileCustomizerToggle){
-  mobileCustomizerToggle.addEventListener('click',()=>{
-    const layout=document.querySelector('.layout');
-    const open=layout.classList.toggle('show-customizer');
-    mobileCustomizerToggle.setAttribute('aria-expanded',String(open));
-    mobileCustomizerToggle.textContent=open?'Fechar painel':'Personalizar';
-    requestAnimationFrame(()=>{ if(typeof resize==='function') resize(); });
-  });
-}
-
 const renderer=new THREE.WebGLRenderer({
 canvas,
 antialias:true,
