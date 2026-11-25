@@ -724,7 +724,7 @@ function generateCharacterPrototype() {
   const ageScale = {
     baby: 0.68, child: 0.82, teen: 0.94, adult: 1, senior: 0.97
   };
-  if (record.category === 'avian') {
+  if (record.category === 'avian' || (record.category === 'animal' && record.rigType === 'avian')) {
     // Protótipo de ave: corpo, cabeça, bico, asas, cauda e pernas.
     part(new THREE.SphereGeometry(0.58, 24, 18), material, 0, 0.12, 0);
     part(new THREE.SphereGeometry(0.34, 20, 16), material, 0, 0.55, 0.42);
