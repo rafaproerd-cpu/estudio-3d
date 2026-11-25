@@ -811,8 +811,26 @@ function generateCharacterPrototype() {
     }
   }
 
-  group.scale.setScalar(ageScale[record.ageStage] || 1);
-  group.position.set(0, 0, 0);
+  // Restaura ajustes de transformação salvos no cadastro; na ausência deles,
+  // mantém a escala padrão correspondente à fase da vida.
+  const savedBody = record.appearance && record.appearance.body
+    ? record.appearance.body
+    : {};
+  const savedEditorScale = Number(savedBody.editorScale);
+  const savedEditorPositionX = Number(savedBody.editorPositionX);
+  const savedEditorRotationY = Number(savedBody.editorRotationY);
+
+  group.scale.setScalar(
+    Number.isFinite(savedEditorScale) && savedEditorScale > 0
+      ? savedEditorScale
+      : (ageScale[record.ageStage] || 1)
+  );
+  group.position.set(
+    Number.isFinite(savedEditorPositionX) ? savedEditorPositionX : 0,
+    0,
+    0
+  );
+  group.rotation.y = Number.isFinite(savedEditorRotationY) ? savedEditorRotationY : 0;
   scene.add(group);
   objects.push(group);
   character = group;
