@@ -358,7 +358,7 @@ function getCharacterAnimationSnapshot(root) {
     clipIndex: state.clips.indexOf(state.activeAction.getClip()),
     time: Number.isFinite(state.activeAction.time) ? state.activeAction.time : 0,
     timeScale: Number.isFinite(state.mixer.timeScale) ? state.mixer.timeScale : 1,
-    playing: state.activeAction.isRunning()
+    playing: state.activeAction.isScheduled()
   };
 }
 
