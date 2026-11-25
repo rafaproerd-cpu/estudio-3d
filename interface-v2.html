@@ -257,6 +257,7 @@ let characterRecordId=null;
 let selectedCatalogRecordId=null;
 let pendingCharacterImport=null;
 let lastProjectImportSucceeded = false;
+let projectImportRevision = 0;
 // Mantém em memória os binários GLB importados para incluí-los no pacote portátil.
 const externalModelAssets = new Map();
 let mixer=null;
@@ -329,6 +330,7 @@ function restoreEditorState(editorState) {
 
 function loadCharacter(){
 
+const loadRevision = projectImportRevision;
 const startupEditorState = window.Estudio3DCore
   ? (window.Estudio3DCore.getProject().settings || {}).editorState
   : null;
@@ -368,6 +370,7 @@ loader.load(
 
 (gltf)=>{
 
+if (loadRevision !== projectImportRevision) return;
 character=gltf.scene;
 character.userData.type='personagem';
 character.userData.isCharacter=true;
@@ -1771,6 +1774,9 @@ if (window.Estudio3DCharacters && window.Estudio3DCore) {
     throw new Error('O catálogo importado contém identificadores duplicados.');
   }
 }
+
+// Invalida um carregamento inicial que ainda esteja em andamento antes de alterar a cena.
+projectImportRevision += 1;
 
 // Um projeto sem personagem ativo deve substituir também o personagem da cena atual.
 if (!data.character && character) {
