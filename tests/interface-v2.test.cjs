@@ -654,3 +654,16 @@ test('personalização procedural de roupas oferece peças, cores e persistênci
   assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ outfit: settings \} \}\)/);
   assert.match(html, /const outfit = record\.appearance && record\.appearance\.outfit \|\| \{\}/);
 });
+
+
+test('acessórios procedurais permitem óculos, chapéus, brincos e colares com cor e persistência', () => {
+  for (const id of ['accessoryGlasses', 'accessoryHat', 'accessoryEarrings', 'accessoryNecklace', 'accessoryColor']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /function applyProceduralAccessories\(characterGroup, settings = \{\}\)/);
+  assert.match(html, /procedural-accessories/);
+  assert.match(html, /supportsAccessories = true/);
+  assert.match(html, /applyProceduralAccessories\(group, record\.appearance && record\.appearance\.accessories \|\| \{\}\)/);
+  assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ accessories: settings \} \}\)/);
+  assert.match(html, /const accessories = record\.appearance && record\.appearance\.accessories \|\| \{\}/);
+});
