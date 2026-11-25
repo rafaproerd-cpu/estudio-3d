@@ -232,3 +232,11 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - A publicação do GitHub Pages associada ao commit mais recente ainda estava em execução na última consulta. Os testes são automatizados e não substituem validação visual real no navegador.
 
 - Atualização de publicação: GitHub Pages run `45641787596` concluiu com sucesso nos jobs de build e deploy para o código desta etapa. As alterações de documentação posteriores também possuem workflows próprios em andamento.
+
+## 25/11/2026 — Correção da exclusão de instâncias e regressões
+
+- Ao excluir um personagem da cena, o editor agora remove somente a instância selecionada. Se ela era a ativa, escolhe outra instância de personagem que permaneça na cena e atualiza o vínculo do cadastro; se era outra instância, preserva o personagem ativo.
+- Os controles de animação são desativados quando a instância ativa é removida, evitando manter ações/mixer ligados ao objeto excluído. A recuperação automática de animações de outra instância GLB ainda depende da futura arquitetura de mixers independentes.
+- Quatro assertivas do bloco de múltiplas instâncias foram ajustadas para verificar o comportamento implementado e aceitar a ordem válida das opções `offset` e `persist`; a falha anterior era causada por testes excessivamente rígidos, não por falha do código de restauração.
+- Testes automatizados: GitHub Actions run `45642777003`, commit `b2346b82e6d511d47de405962906ad69dc6dafb5`, **60/60 aprovados, 0 falhas**.
+- A validação é automatizada e estática/estrutural; não substitui teste visual real no navegador com vários modelos e animações.
