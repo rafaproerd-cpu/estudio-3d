@@ -308,3 +308,5 @@ Commits conhecidos na branch `main`:
 - Segurança de escopo: o botão de adicionar fica desativado para modelos GLB externos ou outros modelos não procedurais, para não substituir indevidamente o vínculo original do arquivo. Múltiplas instâncias de GLB, mixers/animações independentes e exportação de toda a cena em GLB ficam para etapas seguintes.
 - Validação automatizada: GitHub Actions run `45641787409`, commit `8120f7000b5d15f444867f2414799beefae26c3b`, **59/59 testes aprovados, 0 falhas**.
 - A publicação do GitHub Pages associada ao commit mais recente ainda estava em execução na última consulta. Os testes são automatizados e não substituem validação visual real no navegador.
+
+- Atualização de publicação: GitHub Pages run `45641787596` concluiu com sucesso nos jobs de build e deploy para o código desta etapa. As alterações de documentação posteriores também possuem workflows próprios em andamento.
