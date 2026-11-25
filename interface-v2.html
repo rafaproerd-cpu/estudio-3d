@@ -857,7 +857,8 @@ const materials=Array.isArray(child.material)?child.material:[child.material];
 
 materials.forEach(material=>{
 
-if(material.color){
+// A cor principal não deve sobrescrever o material reservado aos detalhes.
+if(material.color && material.name!=='character-accent'){
 material.color.set(e.target.value);
 }
 
