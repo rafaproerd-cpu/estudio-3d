@@ -88,7 +88,7 @@ h3{font-size:11px}
 <body>
 <header>
 <strong>✦ ESTÚDIO 3D</strong>
-<div style="display:flex;align-items:center;gap:8px"><button id="mobileCustomizerToggle" type="button" aria-expanded="false">Personalizar</button><button id="reset">Nova cena</button></div>
+<div style="display:flex;align-items:center;gap:8px"><button id="mobileCustomizerToggle" type="button" aria-expanded="false" aria-controls="customizerPanel">Personalizar</button><button id="reset">Nova cena</button></div>
 </header>
 
 <div class="layout">
@@ -129,7 +129,7 @@ h3{font-size:11px}
 <div id="hint">Personagem 3D • Arraste para girar a câmera</div>
 </main>
 
-<aside class="right">
+<aside class="right" id="customizerPanel">
 
 <div class="section">
 <h3>Cadastro universal</h3>
@@ -240,11 +240,20 @@ Carregamento de personagem GLB.
   const layout=document.querySelector('.layout');
   if(!toggle||!layout||toggle.dataset.bound==='true') return;
   toggle.dataset.bound='true';
-  toggle.addEventListener('click',function(){
-    const open=layout.classList.toggle('show-customizer');
+  function setPanelOpen(open){
+    layout.classList.toggle('show-customizer',open);
     toggle.setAttribute('aria-expanded',String(open));
     toggle.textContent=open?'Fechar painel':'Personalizar';
     window.dispatchEvent(new Event('resize'));
+  }
+  toggle.addEventListener('click',function(){
+    setPanelOpen(!layout.classList.contains('show-customizer'));
+  });
+  document.addEventListener('keydown',function(event){
+    if(event.key==='Escape' && layout.classList.contains('show-customizer')){
+      setPanelOpen(false);
+      toggle.focus();
+    }
   });
 })();
 </script>
