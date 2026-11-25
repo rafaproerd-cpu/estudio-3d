@@ -1268,9 +1268,16 @@ if (window.Estudio3DCharacters && window.Estudio3DCore) {
     ? data.characters
     : (data.character && data.character.record ? [data.character.record] : []);
   const normalizedRecords = sourceRecords.map((source) => {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) {
+      throw new Error('O catálogo contém um cadastro inválido.');
+    }
     const normalized = window.Estudio3DCharacters.createCharacter(source);
     const validation = window.Estudio3DCharacters.validateCharacter(normalized);
     if (!validation.valid) throw new Error(validation.errors.join(' '));
+    // Compatibilidade com arquivos antigos que não possuíam ID no cadastro.
+    if (data.character && data.character.record === source) {
+      data.character.record.id = normalized.id;
+    }
     return normalized;
   });
   const ids = normalizedRecords.map(record => record.id);
