@@ -624,8 +624,11 @@ function renderCharacterCatalog() {
       const removed = window.Estudio3DCharacters.removeCharacter(record.id);
       if (removed) {
         if (characterRecordId === record.id) characterRecordId = null;
+        const saved = window.Estudio3DCore.saveProject();
         renderCharacterCatalog();
-        status('Cadastro removido do catálogo. O modelo 3D da cena não foi apagado.');
+        status(saved.ok
+          ? 'Cadastro removido e projeto salvo. O modelo 3D da cena não foi apagado.'
+          : 'Cadastro removido nesta sessão, mas não foi possível salvar no navegador.');
       }
     };
     row.append(selectButton, deleteButton);
