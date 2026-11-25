@@ -13,11 +13,31 @@
     p{margin:0;color:#b9c2d5;font-size:14px}
     .hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:2;background:#20283acc;border:1px solid #ffffff24;border-radius:999px;padding:10px 15px;color:#dce5f7;font-size:12px;white-space:nowrap}
     .error{position:fixed;inset:auto 16px 70px;background:#512b35;color:#fff;padding:12px;border-radius:12px;display:none;z-index:3}
+    .editor{position:fixed;z-index:4;right:18px;top:88px;width:min(290px,calc(100vw - 36px));padding:18px;border:1px solid #ffffff20;border-radius:18px;background:#171e2ddd;backdrop-filter:blur(18px);box-shadow:0 18px 55px #0006}
+    .editor h2{font-size:16px;margin:0 0 14px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;color:#b9c2d5}
+    .field input[type=text]{width:100%;border:1px solid #ffffff24;border-radius:9px;padding:10px;background:#0e1420;color:#fff;font:inherit}
+    .field input[type=color]{width:100%;height:38px;border:0;background:none;cursor:pointer}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+    .editor button{border:1px solid #ffffff20;border-radius:10px;padding:10px;background:#283653;color:#fff;font-weight:650;cursor:pointer}
+    .editor button.primary{background:#526fff;border-color:#526fff;grid-column:1/-1}
+    .editor button:active{transform:scale(.98)}.editor small{display:block;color:#8996ae;font-size:10px;line-height:1.45;margin-top:10px}
+    @media(max-width:600px){.editor{top:auto;bottom:62px;right:12px;width:210px;padding:12px}.editor h2{margin-bottom:8px}.field{margin:7px 0;gap:3px}.field input[type=color]{height:27px}.editor button{padding:8px;font-size:11px}.panel{left:12px;top:12px}.hint{bottom:15px;font-size:10px}}
   </style>
 </head>
 <body>
   <div id="scene"></div>
   <header class="panel"><h1>Estúdio 3D</h1><p>Protótipo inicial • personagem animado</p></header>
+  <section class="editor" aria-label="Personalização do personagem">
+    <h2>Personalizar personagem</h2>
+    <div class="field"><label for="characterName">Nome</label><input id="characterName" type="text" value="Personagem 01" maxlength="32"></div>
+    <div class="field"><label for="skinColor">Tom de pele</label><input id="skinColor" type="color" value="#f0bd98"></div>
+    <div class="field"><label for="outfitColor">Cor da roupa</label><input id="outfitColor" type="color" value="#527cff"></div>
+    <div class="actions">
+      <button id="randomize">Aleatorizar</button><button id="resetView">Centralizar</button>
+      <button class="primary" id="exportCharacter">Exportar ficha JSON</button>
+    </div>
+    <small>O JSON salva nome, cores e transformações básicas. A exportação do modelo 3D em GLB será adicionada numa próxima etapa.</small>
+  </section>
   <div class="hint">Arraste para girar • aproxime com dois dedos</div>
   <div id="error" class="error">Não foi possível carregar o motor 3D. Verifique sua conexão e recarregue a página.</div>
   <script type="module">
@@ -91,6 +111,34 @@
     // aro decorativo
     const ring=new THREE.Mesh(new THREE.TorusGeometry(1.35,.012,8,100),new THREE.MeshBasicMaterial({color:0x536bff,transparent:true,opacity:.65}));
     ring.rotation.x=Math.PI/2; ring.position.y=-1.48; character.add(ring);
+
+    // Controles iniciais de personalização
+    const nameInput=document.querySelector('#characterName');
+    const skinInput=document.querySelector('#skinColor');
+    const outfitInput=document.querySelector('#outfitColor');
+    skinInput.addEventListener('input',()=>skin.color.set(skinInput.value));
+    outfitInput.addEventListener('input',()=>blue.color.set(outfitInput.value));
+    document.querySelector('#randomize').addEventListener('click',()=>{
+      const colors=['#527cff','#8b5cf6','#0f9f83','#e58b38','#d65378','#64748b'];
+      const chosen=colors[Math.floor(Math.random()*colors.length)];
+      outfitInput.value=chosen;blue.color.set(chosen);
+    });
+    document.querySelector('#resetView').addEventListener('click',()=>{
+      spin=0;camera.position.set(0,2.2,7.8);camera.lookAt(0,0,0);
+    });
+    document.querySelector('#exportCharacter').addEventListener('click',()=>{
+      const data={
+        format:'estudio3d-character-card',version:1,
+        name:nameInput.value.trim()||'Personagem sem nome',
+        appearance:{skinColor:skinInput.value,outfitColor:outfitInput.value},
+        transform:{position:{x:character.position.x,y:character.position.y,z:character.position.z},rotation:{x:character.rotation.x,y:character.rotation.y,z:character.rotation.z},scale:{x:character.scale.x,y:character.scale.y,z:character.scale.z}},
+        note:'Ficha de configuração. Não contém a geometria 3D do modelo.'
+      };
+      const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');
+      a.href=url;a.download=(data.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')||'personagem')+'.json';
+      a.click();URL.revokeObjectURL(url);
+    });
 
     let dragging=false, lastX=0, spin=0;
     renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;renderer.domElement.setPointerCapture(e.pointerId)});
