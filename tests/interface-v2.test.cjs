@@ -682,3 +682,17 @@ test('detalhes faciais procedurais permitem personalizar olhos, nariz e expressÃ
   assert.match(html, /face\.noseScale/);
   assert.match(html, /face\.mouthStyle/);
 });
+
+
+test('detalhes faciais incluem barba, bigode e sobrancelhas configurÃ¡veis', () => {
+  for (const id of ['faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /beardStyle: document\.querySelector\('#faceBeardStyle'\)\.value/);
+  assert.match(html, /mustacheStyle: document\.querySelector\('#faceMustacheStyle'\)\.value/);
+  assert.match(html, /eyebrowStyle: document\.querySelector\('#faceEyebrowStyle'\)\.value/);
+  assert.match(html, /face-beard/);
+  assert.match(html, /face-mustache/);
+  assert.match(html, /face-eyebrow/);
+  assert.match(html, /facialHairColor/);
+});
