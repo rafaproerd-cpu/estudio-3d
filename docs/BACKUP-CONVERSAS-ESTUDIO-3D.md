@@ -204,3 +204,13 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Escopo atual: exportação do pacote completo implementada; reimportação automática do ZIP com restauração dos GLBs ainda será a próxima etapa. Os arquivos não ficam guardados permanentemente no navegador pelo cache em memória.
 - Testes automatizados adicionados para a inclusão do projeto e dos GLBs, além da proteção contra pacotes com arquivos ausentes. Aguardar resultado do workflow para registrar a validação.
 - Validação do pacote ZIP: GitHub Actions run `45637936743`, commit `422d03851baa43d7436a782bb93fa86866138147`, **45/45 testes aprovados** (0 falhas). O workflow de publicação do Pages para o backup mais recente ainda estava em execução na última consulta.
+
+## 25/11/2026 — Importação automática de pacote ZIP
+
+- Adicionado botão **Importar projeto completo (.zip)** para abrir o pacote criado pelo exportador, restaurando o `project.json`, o catálogo e os arquivos GLB associados.
+- A importação valida CRC do ZIP, quantidade de entradas, caminhos internos (bloqueia caminhos absolutos e segmentos `.`/`..`), versão do projeto, manifesto, associação dos IDs, assinatura/versão/tamanho do cabeçalho GLB e integridade dos modelos via GLTFLoader antes de aplicar o projeto.
+- Limites atuais: ZIP até 150 MB, até 1.000 entradas, conteúdo descompactado declarado até 300 MB, GLB individual até 100 MB e soma dos GLBs até 250 MB.
+- Todos os GLBs listados no manifesto são preparados antes da importação JSON. O personagem ativo é restaurado na cena com suas transformações e clipes de animação; os binários de todos os personagens do pacote ficam disponíveis em memória para novo empacotamento durante a sessão.
+- Projetos com personagem procedural ativo também recriam o protótipo e reaplicam as transformações. Formatos JSON antigos v2/v3 continuam no importador JSON; o pacote ZIP atual exige projeto v4 com manifesto.
+- Testes automatizados no GitHub Actions: run `45639169856`, commit `4f35a79a8c8f3bc4f675bae12835f2b079694073`, **49/49 aprovados, 0 falhas**. Publicação GitHub Pages para esse commit ainda estava em andamento na última consulta.
+- Limitação pendente: validação visual e round-trip real no navegador com GLBs de exemplo, inclusive com animações. O teste automatizado cobre validações e integração estrutural, mas não substitui o teste manual do fluxo de ponta a ponta.
