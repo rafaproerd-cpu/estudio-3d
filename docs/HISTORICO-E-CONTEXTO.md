@@ -389,3 +389,12 @@ Commits conhecidos na branch `main`:
 - As configurações são salvas em `appearance.outfit`, recuperadas ao selecionar o cadastro e reaplicadas ao regenerar o protótipo.
 - Escopo atual: geometrias simples de pré-visualização em personagens que usam a base humanoide procedural. Não são roupas com costura, tecido simulado, UVs, ajustes anatômicos avançados ou compatibilidade automática com modelos GLB importados.
 - Testes estruturais adicionados; validação visual no navegador e revisão de sobreposição das peças ainda são necessárias.
+
+
+## 25/11/2026 — Acessórios procedurais no protótipo humanoide
+
+- Adicionados controles para óculos redondos, boné/chapéu, brincos (pontos ou argolas) e colar simples, com cor personalizável.
+- Os elementos são gerados em um grupo `procedural-accessories` separado do corpo, cabelo e roupas, permitindo substituir os acessórios sem reconstruir o personagem.
+- As escolhas são salvas em `appearance.accessories` e reaplicadas ao selecionar o cadastro ou regenerar o protótipo.
+- Escopo atual: geometrias simples de pré-visualização para personagens que usam a base humanoide procedural. Não são acessórios de produção com materiais/encaixes detalhados, e não alteram automaticamente modelos GLB importados.
+- Testes estruturais adicionados; validação visual no navegador e revisão de encaixe permanecem necessárias.
