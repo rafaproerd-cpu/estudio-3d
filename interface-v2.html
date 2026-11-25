@@ -1584,6 +1584,8 @@ light:sun.intensity,
 // Guarda todas as instâncias de personagens presentes na cena.
 sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
   recordId: obj.userData.characterRecordId || (obj === character ? characterRecordId : null),
+  instanceName: obj.userData.instanceName || obj.name || '',
+  visible: obj.visible,
   active: obj === character,
   source: obj.userData.proceduralCategory ? 'procedural_preview' : 'external_file',
   transform: {
