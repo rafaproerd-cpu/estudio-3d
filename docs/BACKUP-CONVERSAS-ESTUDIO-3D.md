@@ -250,3 +250,13 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Limitação conhecida: a exportação da cena completa inclui geometria e materiais, mas ainda não serializa os clipes de animação independentes. Isso requer etapa própria de consolidação/validação de animações. A portabilidade ZIP preserva os arquivos GLB originais.
 - Testes automatizados: run `45644158732`, commit `682a4b8df04ff537db45c7fe3ee6a1204bf70cf9`, **66/66 aprovados, 0 falhas**. Os testes cobrem estrutura e regressões; não substituem teste visual de navegador nem round-trip real com arquivos GLB animados.
 - Publicação Pages referente à alteração de código está sendo verificada separadamente; não considerar publicada até o workflow concluir.
+
+## 25/11/2026 — Gerenciamento de instâncias e preparação para o primeiro teste visual
+
+- O painel `Objetos da cena` agora permite renomear a instância selecionada e duplicar objetos e personagens procedurais. Os nomes são individuais por instância e são gravados no estado local do editor.
+- A duplicação de personagens GLB foi habilitada usando `SkeletonUtils.clone`, para separar corretamente os esqueletos. A cópia recebe transformação independente e um `AnimationMixer` próprio; o arquivo original continua compartilhado no manifesto/pacote ZIP por cadastro.
+- A restauração de pacotes ZIP também usa clonagem segura de esqueleto por instância GLB, reaplica os nomes e transformações e registra animações independentes. A exportação da cena completa usa a mesma clonagem segura antes de montar o arquivo GLB.
+- Selecionar um objeto comum desativa os controles de animação, evitando que os botões de animação atuem por engano no personagem anteriormente selecionado.
+- Ajustada a persistência: ao criar/restaurar uma instância procedural adicional, o gerador não grava um estado intermediário antes da transformação final ser aplicada; a rotina chamadora persiste o estado completo.
+- Testes automatizados: workflow `45645110588`, commit `7490e8fbf6701fa01b9589ce783ad73d9a9a26fc`, **72/72 aprovados, 0 falhas**. Cobrem estrutura e regressões, não substituem execução visual real no navegador.
+- Ainda falta o primeiro teste visual/manual com GLBs reais, incluindo ao menos dois modelos animados, duplicação, seleção, exclusão, exportação/importação ZIP e exportação da cena completa. Também é necessário verificar os arquivos resultantes em um visualizador/engine 3D.
