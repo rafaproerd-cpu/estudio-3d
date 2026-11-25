@@ -179,3 +179,12 @@ test('importação pendente antes do carregamento do GLB não duplica cadastro',
   assert.match(loader, /api\.updateCharacter\(imported\.id, importedData\)/);
   assert.match(loader, /api\.addCharacterToProject\(importedData\)/);
 });
+
+
+test('importação rejeita cadastros inválidos e mantém ID gerado para formato antigo', () => {
+  const start = html.indexOf("document.querySelector('#file').onchange");
+  const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
+  const importer = html.slice(start, end);
+  assert.match(importer, /!source \|\| typeof source !== 'object' \|\| Array\.isArray\(source\)/);
+  assert.match(importer, /data\.character\.record\.id = normalized\.id/);
+});
