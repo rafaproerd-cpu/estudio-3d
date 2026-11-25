@@ -198,6 +198,8 @@ h3{font-size:11px}
 <input type="range" id="faceEyeScale" min="0.6" max="1.6" step="0.05" value="1">
 <label>Formato dos olhos</label>
 <select id="faceEyeStyle"><option value="round">Arredondados</option><option value="almond">Amendoados</option><option value="wide">Alongados</option></select>
+<label>Abertura dos olhos</label>
+<input type="range" id="faceEyeOpenness" min="0.35" max="1.4" step="0.05" value="1">
 <label>Distância entre os olhos</label>
 <input type="range" id="faceEyeSpacing" min="0.7" max="1.4" step="0.05" value="1">
 <label>Cor dos olhos</label>
@@ -1154,6 +1156,7 @@ function syncCharacterForm(record) {
   document.querySelector('#faceEarStyle').value = ['round', 'pointed', 'long'].includes(face.earStyle) ? face.earStyle : 'round';
   document.querySelector('#faceEyeScale').value = Number.isFinite(Number(face.eyeScale)) ? face.eyeScale : 1;
   document.querySelector('#faceEyeStyle').value = ['round', 'almond', 'wide'].includes(face.eyeStyle) ? face.eyeStyle : 'round';
+  document.querySelector('#faceEyeOpenness').value = Number.isFinite(Number(face.eyeOpenness)) ? face.eyeOpenness : 1;
   document.querySelector('#faceEyeSpacing').value = Number.isFinite(Number(face.eyeSpacing)) ? face.eyeSpacing : 1;
   document.querySelector('#faceEyeColor').value = /^#[0-9a-f]{6}$/i.test(face.eyeColor || '') ? face.eyeColor : '#3b79b7';
   document.querySelector('#facePupilScale').value = Number.isFinite(Number(face.pupilScale)) ? face.pupilScale : 1;
@@ -1483,12 +1486,13 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
   details.add(nose);
   const eyeStyle = ['round', 'almond', 'wide'].includes(settings.eyeStyle) ? settings.eyeStyle : 'round';
   const eyeScale = Number.isFinite(Number(settings.eyeScale)) ? Math.max(0.6, Math.min(1.6, Number(settings.eyeScale))) : 1;
+  const eyeOpenness = Number.isFinite(Number(settings.eyeOpenness)) ? Math.max(0.35, Math.min(1.4, Number(settings.eyeOpenness))) : 1;
   const eyeSpacing = Number.isFinite(Number(settings.eyeSpacing)) ? Math.max(0.7, Math.min(1.4, Number(settings.eyeSpacing))) : 1;
   characterGroup.traverse(node => {
     if (node.userData.facialFeature === 'eye') {
       node.scale.set(
         eyeScale * (eyeStyle === 'wide' ? 1.2 : 1),
-        eyeScale * (eyeStyle === 'almond' ? 0.62 : eyeStyle === 'wide' ? 0.78 : 1),
+        eyeScale * eyeOpenness * (eyeStyle === 'almond' ? 0.62 : eyeStyle === 'wide' ? 0.78 : 1),
         eyeScale
       );
       if (node.name === 'face-eye-left') node.position.x = -0.16 * eyeSpacing;
@@ -2012,12 +2016,13 @@ const record = selected.userData.isCharacter && characterRecordId
   };
 });
 
-['faceEyeColor', 'facePupilScale', 'faceGazeX', 'faceGazeY', 'faceEyeStyle', 'faceNoseScale', 'faceNoseStyle', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor', 'faceEarScale', 'faceEarStyle'].forEach(controlId => {
+['faceEyeColor', 'facePupilScale', 'faceGazeX', 'faceGazeY', 'faceEyeOpenness', 'faceEyeStyle', 'faceNoseScale', 'faceNoseStyle', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor', 'faceEarScale', 'faceEarStyle'].forEach(controlId => {
   const control = document.querySelector('#' + controlId);
   const updateFaceDetails = () => {
     if (!selected || !selected.userData.supportsFaceDetails || !characterRecordId) return;
     const settings = {
       eyeColor: document.querySelector('#faceEyeColor').value,
+      eyeOpenness: Number(document.querySelector('#faceEyeOpenness').value),
       pupilScale: Number(document.querySelector('#facePupilScale').value),
       gazeX: Number(document.querySelector('#faceGazeX').value),
       gazeY: Number(document.querySelector('#faceGazeY').value),
@@ -2034,7 +2039,7 @@ const record = selected.userData.isCharacter && characterRecordId
     };
     applyProceduralFaceDetails(selected, settings);
     const keyMap = {
-      faceEyeColor: 'eyeColor', facePupilScale: 'pupilScale', faceGazeX: 'gazeX', faceGazeY: 'gazeY', faceEyeStyle: 'eyeStyle', faceNoseScale: 'noseScale', faceNoseStyle: 'noseStyle', faceMouthStyle: 'mouthStyle',
+      faceEyeColor: 'eyeColor', facePupilScale: 'pupilScale', faceGazeX: 'gazeX', faceGazeY: 'gazeY', faceEyeOpenness: 'eyeOpenness', faceEyeStyle: 'eyeStyle', faceNoseScale: 'noseScale', faceNoseStyle: 'noseStyle', faceMouthStyle: 'mouthStyle',
       faceBeardStyle: 'beardStyle', faceMustacheStyle: 'mustacheStyle',
       faceEyebrowStyle: 'eyebrowStyle', faceHairColor: 'facialHairColor',
       faceEarScale: 'earScale', faceEarStyle: 'earStyle'
