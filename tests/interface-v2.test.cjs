@@ -275,3 +275,31 @@ test('preview procedural salvo é restaurado sem carregar o GLB-base', () => {
   assert.match(loader, /Personagem procedural e cena restaurados sem depender do arquivo GLB-base/);
   assert.ok(loader.indexOf("status('Personagem procedural") < loader.indexOf('const loader=new GLTFLoader()'));
 });
+
+
+test('importação valida catálogo e transformações antes de modificar a cena', () => {
+  const start = html.indexOf("document.querySelector('#file').onchange");
+  const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
+  const importer = html.slice(start, end);
+  const validationEnd = importer.indexOf('// Um projeto sem personagem ativo');
+  const validation = importer.slice(0, validationEnd);
+  const sceneMutation = importer.indexOf('scene.remove(character)');
+  const objectMutation = importer.indexOf('objects.filter(o=>!o.userData.isCharacter)');
+  assert.ok(validationEnd > 0);
+  assert.ok(sceneMutation > validationEnd);
+  assert.ok(objectMutation > validationEnd);
+  assert.match(validation, /normalizedRecords = sourceRecords\.map/);
+  assert.match(validation, /validateCharacter\(normalized\)/);
+  assert.match(validation, /new Set\(ids\)\.size !== ids\.length/);
+  assert.match(validation, /item\[key\]\.every\(Number\.isFinite\)/);
+  assert.match(validation, /O projeto contém uma cor inválida/);
+});
+
+test('catálogo validado é aplicado sem repetir a normalização depois da troca da cena', () => {
+  const start = html.indexOf("document.querySelector('#file').onchange");
+  const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
+  const importer = html.slice(start, end);
+  assert.match(importer, /if \(normalizedRecords && window\.Estudio3DCore\)/);
+  assert.match(importer, /updateProject\(\{ characters: normalizedRecords \}\)/);
+  assert.doesNotMatch(importer, /const normalizedRecords = sourceRecords\.map/);
+});
