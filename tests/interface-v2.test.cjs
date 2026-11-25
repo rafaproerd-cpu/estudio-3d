@@ -183,7 +183,7 @@ test('importação pendente antes do carregamento do GLB não duplica cadastro',
 
 
 test('importação rejeita cadastros inválidos e mantém ID gerado para formato antigo', () => {
-  const start = html.indexOf("document.querySelector('#file').onchange");
+  const start = html.lastIndexOf("document.querySelector('#file').onchange");
   const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
   const importer = html.slice(start, end);
   assert.match(importer, /!source \|\| typeof source !== 'object' \|\| Array\.isArray\(source\)/);
@@ -255,7 +255,7 @@ test('personagem rigged restaura posição, rotação e escala salvas localmente
 
 
 test('importar projeto sem personagem remove o personagem anterior da cena', () => {
-  const start = html.indexOf("document.querySelector('#file').onchange");
+  const start = html.lastIndexOf("document.querySelector('#file').onchange");
   const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
   const importer = html.slice(start, end);
   assert.match(importer, /if \(!data\.character && character\)/);
@@ -279,7 +279,7 @@ test('preview procedural salvo é restaurado sem carregar o GLB-base', () => {
 
 
 test('importação valida catálogo e transformações antes de modificar a cena', () => {
-  const start = html.indexOf("document.querySelector('#file').onchange");
+  const start = html.lastIndexOf("document.querySelector('#file').onchange");
   const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
   const importer = html.slice(start, end);
   const validationEnd = importer.indexOf('// Um projeto sem personagem ativo');
@@ -297,7 +297,7 @@ test('importação valida catálogo e transformações antes de modificar a cena
 });
 
 test('catálogo validado é aplicado sem repetir a normalização depois da troca da cena', () => {
-  const start = html.indexOf("document.querySelector('#file').onchange");
+  const start = html.lastIndexOf("document.querySelector('#file').onchange");
   const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
   const importer = html.slice(start, end);
   assert.match(importer, /if \(normalizedRecords && window\.Estudio3DCore\)/);
