@@ -292,3 +292,5 @@ Commits conhecidos na branch `main`:
 - Projetos com personagem procedural ativo também recriam o protótipo e reaplicam as transformações. Formatos JSON antigos v2/v3 continuam no importador JSON; o pacote ZIP atual exige projeto v4 com manifesto.
 - Testes automatizados no GitHub Actions: run `45639169856`, commit `4f35a79a8c8f3bc4f675bae12835f2b079694073`, **49/49 aprovados, 0 falhas**. Publicação GitHub Pages para esse commit ainda estava em andamento na última consulta.
 - Limitação pendente: validação visual e round-trip real no navegador com GLBs de exemplo, inclusive com animações. O teste automatizado cobre validações e integração estrutural, mas não substitui o teste manual do fluxo de ponta a ponta.
+- Correção adicional: importações agora invalidam carregamentos assíncronos do GLB-base que já estavam em andamento, evitando que o carregamento inicial sobrescreva o projeto recém-importado. Teste de regressão incluído.
+- Validação final do código: GitHub Actions run `45639470486`, commit `8b45872f1d324813371fa1fabe66a48f8b73b07c`, **50/50 testes aprovados, 0 falhas**. A publicação Pages para o commit ainda estava em andamento na última consulta.
