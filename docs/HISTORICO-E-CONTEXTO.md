@@ -407,3 +407,11 @@ Commits conhecidos na branch `main`:
 - As opções são persistidas em `appearance.face` e restauradas ao selecionar o cadastro ou gerar novamente o protótipo.
 - Escopo atual: formas geométricas de pré-visualização na base humanoide procedural. Não substitui escultura facial, texturas, dentes, lábios detalhados ou expressões faciais animadas.
 - Testes estruturais adicionados; validação visual e anatômica no navegador ainda necessária.
+
+
+## 25/11/2026 — Barba, bigode e sobrancelhas
+
+- O editor facial ganhou opções de barba (curta ou cheia), bigode clássico e sobrancelhas (naturais, grossas ou ocultas), além de cor configurável dos pelos faciais.
+- Os elementos são gerados em grupo independente `procedural-face-details` e salvos em `appearance.face`.
+- Os controles são voltados ao protótipo humanoide procedural; a geometria é simplificada e ainda não representa fios, textura, aparo detalhado ou simulação de pelos.
+- Testes estruturais adicionados; inspeção visual em navegador segue necessária.
