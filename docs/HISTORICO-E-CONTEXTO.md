@@ -156,3 +156,14 @@ Commits conhecidos na branch `main`:
 - **Alterações feitas:**
 - **Validação/testes:**
 - **Pendências e próximo passo:**
+
+
+## 11. 25/11/2026 — Retomada: independência das cores do personagem
+
+- **Contexto:** ao retomar o projeto, foi revisado o controle de cor principal da interface.
+- **Problema identificado:** o seletor de cor principal percorria todos os materiais do personagem, inclusive o material reservado aos detalhes (character-accent), podendo apagar visualmente a cor independente dos detalhes.
+- **Correção implementada:** o controle principal agora ignora materiais com nome character-accent; o seletor de detalhes continua alterando apenas esse material.
+- **Arquivos alterados:** interface-v2.html e tests/interface-v2.test.cjs.
+- **Commits:** 36f7bd9 (cor principal preserva detalhes) e 9c0572f (teste de regressão).
+- **Validação:** workflow automatizado Testes do sistema de personagens concluído com sucesso no commit 9c0572f. A etapa de testes automatizados passou. Isso não substitui a validação visual manual no navegador.
+- **Próximo passo:** teste visual pelo usuário para confirmar a edição da cor principal e da cor de detalhes no protótipo; depois evoluir personalização por partes.
