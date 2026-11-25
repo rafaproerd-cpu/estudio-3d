@@ -338,6 +338,7 @@ function persistEditorState() {
     activeCharacter,
     sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
       recordId: obj.userData.characterRecordId || (obj === character ? characterRecordId : null),
+      instanceName: obj.userData.instanceName || obj.name || '',
       active: obj === character,
       source: obj.userData.proceduralCategory ? 'procedural_preview' : 'external_file',
       transform: {
@@ -348,6 +349,7 @@ function persistEditorState() {
     })),
     objects: objects.filter(obj => !obj.userData.isCharacter).map(obj => ({
       type: obj.userData.type,
+      instanceName: obj.userData.instanceName || obj.name || '',
       color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#527cff',
       position: obj.position.toArray(),
       rotation: obj.rotation.toArray(),
@@ -377,6 +379,10 @@ function restoreEditorState(editorState) {
       if (Array.isArray(item.position) && item.position.length === 3 && item.position.every(Number.isFinite)) obj.position.fromArray(item.position);
       if (Array.isArray(item.rotation) && item.rotation.length === 3 && item.rotation.every(Number.isFinite)) obj.rotation.fromArray(item.rotation);
       if (Array.isArray(item.scale) && item.scale.length === 3 && item.scale.every(Number.isFinite)) obj.scale.fromArray(item.scale);
+      if (typeof item.instanceName === 'string' && item.instanceName.trim()) {
+        obj.userData.instanceName = item.instanceName.slice(0, 80);
+        obj.name = obj.userData.instanceName;
+      }
     });
   }
   updateList();
@@ -1180,7 +1186,13 @@ function restoreAdditionalSceneCharacters(editorState) {
     if (!instance || instance.active || instance.source !== 'procedural_preview') return;
     const record = window.Estudio3DCharacters &&
       window.Estudio3DCharacters.getCharacter(instance.recordId);
-    if (record) addCharacterInstance(instance.recordId, instance.transform, { persist: false, offset: false });
+    if (record) {
+      addCharacterInstance(instance.recordId, instance.transform, { persist: false, offset: false });
+      if (character && typeof instance.instanceName === 'string' && instance.instanceName.trim()) {
+        character.userData.instanceName = instance.instanceName.slice(0, 80);
+        character.name = character.userData.instanceName;
+      }
+    }
   });
   character = activeRoot;
   characterRecordId = activeRecordId;
@@ -1986,8 +1998,9 @@ document.querySelector('#bundleFile').onchange = async (event) => {
       .forEach(instance => {
         const asset = preparedAssets.get(instance.recordId);
         if (!asset) return;
-        const root = asset.gltf.scene;
-        root.name = asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado';
+        const root = asset.gltf.scene.clone(true);
+        root.name = (instance.instanceName || asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado').slice(0, 80);
+        root.userData.instanceName = root.name;
         root.userData.type = 'personagem';
         root.userData.isCharacter = true;
         root.userData.characterRecordId = instance.recordId;
