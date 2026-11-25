@@ -539,3 +539,10 @@ test('importação ZIP clona esqueleto por instância GLB restaurada', () => {
   assert.match(html, /const root = cloneSkeleton\(asset\.gltf\.scene\)/);
   assert.match(html, /root\.userData\.instanceName = root\.name/);
 });
+
+test('geração de cópias não persiste estado intermediário antes de aplicar transformações', () => {
+  const start = html.indexOf('function generateCharacterPrototype(options = {})');
+  const end = html.indexOf('document.querySelector(\'#generateCharacter3D\')', start);
+  const generator = html.slice(start, end);
+  assert.match(generator, /if \(!addToScene\) persistEditorState\(\)/);
+});
