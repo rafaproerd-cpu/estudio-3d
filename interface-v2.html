@@ -173,10 +173,12 @@ h3{font-size:11px}
 <div class="actions">
 <button id="export">Exportar JSON</button>
 <button id="exportGLB">Exportar personagem GLB</button>
+<button id="importGLB">Importar personagem GLB</button>
 <button id="import">Importar JSON</button>
 <button id="delete">Excluir objeto</button>
 </div>
 <input type="file" id="file" accept=".json,application/json" hidden>
+<input type="file" id="glbFile" accept=".glb,model/gltf-binary" hidden>
 </div>
 
 <div id="status">Preparando o Estúdio 3D...</div>
@@ -1216,14 +1218,28 @@ const characterData = character && characterRecordId && window.Estudio3DCharacte
   ? window.Estudio3DCharacters.getCharacter(characterRecordId)
   : null;
 
+const catalog = window.Estudio3DCharacters
+  ? window.Estudio3DCharacters.getCharacters()
+  : [];
+
 return{
 
 version:4,
 
 // Exporta o catálogo inteiro, não apenas o personagem visual atualmente ativo.
-characters: window.Estudio3DCharacters
-  ? window.Estudio3DCharacters.getCharacters()
-  : [],
+characters: catalog,
+
+// Manifesto informa quais arquivos 3D externos acompanham os cadastros.
+assetManifest: catalog
+  .filter(record => record.model && record.model.assetId)
+  .map(record => ({
+    characterId: record.id,
+    assetId: record.model.assetId,
+    fileName: record.model.fileName || record.model.assetId,
+    format: record.model.format || 'glb',
+    embedded: false,
+    required: true
+  })),
 
 background:scene.background.getHexString(),
 
@@ -1273,6 +1289,121 @@ status('Projeto exportado em JSON com objetos, cenário, cadastro e transformaç
 
 };
 
+
+// Importa um modelo GLB local e associa o arquivo ao cadastro selecionado.
+document.querySelector('#importGLB').onclick = () => {
+  document.querySelector('#glbFile').click();
+};
+
+document.querySelector('#glbFile').onchange = async (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    if (!file.name.toLowerCase().endsWith('.glb')) {
+      throw new Error('Selecione um arquivo .glb válido.');
+    }
+    if (!window.Estudio3DCharacters || !window.Estudio3DCore) {
+      throw new Error('O sistema de personagens ainda não está disponível.');
+    }
+    status('Lendo modelo GLB...');
+    const buffer = await file.arrayBuffer();
+    const loader = new GLTFLoader();
+    loader.parse(buffer, '', (gltf) => {
+      try {
+        const importedCharacter = gltf.scene;
+        importedCharacter.name = file.name.replace(/\\.glb$/i, '') || 'Personagem importado';
+        importedCharacter.userData.type = 'personagem';
+        importedCharacter.userData.isCharacter = true;
+        importedCharacter.traverse((child) => {
+          if (!child.isMesh) return;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.userData.editorRoot = importedCharacter;
+          if (child.material) child.material.side = THREE.DoubleSide;
+        });
+
+        if (mixer) mixer.stopAllAction();
+        mixer = null;
+        activeAction = null;
+        animationActions = [];
+        if (character) {
+          scene.remove(character);
+          const previousIndex = objects.indexOf(character);
+          if (previousIndex >= 0) objects.splice(previousIndex, 1);
+        }
+
+        let record = selectedCatalogRecordId
+          ? window.Estudio3DCharacters.getCharacter(selectedCatalogRecordId)
+          : null;
+        const modelInfo = {
+          source: 'external_file',
+          format: 'glb',
+          assetId: file.name,
+          fileName: file.name,
+          embedded: false
+        };
+        if (record) {
+          record = window.Estudio3DCharacters.updateCharacter(record.id, {
+            ...getCharacterFormData(),
+            model: modelInfo
+          });
+        } else {
+          record = window.Estudio3DCharacters.addCharacterToProject({
+            ...getCharacterFormData(),
+            model: modelInfo
+          });
+        }
+
+        character = importedCharacter;
+        characterRecordId = record.id;
+        selectedCatalogRecordId = record.id;
+        scene.add(character);
+        objects.push(character);
+
+        const select = document.querySelector('#animationSelect');
+        select.innerHTML = '';
+        if (Array.isArray(gltf.animations) && gltf.animations.length) {
+          animationActions = gltf.animations.slice();
+          gltf.animations.forEach((clip, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = clip.name || 'Animação ' + (index + 1);
+            select.appendChild(option);
+          });
+          mixer = new THREE.AnimationMixer(character);
+          select.disabled = false;
+          document.querySelector('#animate').disabled = false;
+          document.querySelector('#pauseAnimation').disabled = false;
+        } else {
+          select.innerHTML = '<option>Sem animações no modelo</option>';
+          select.disabled = true;
+          document.querySelector('#animate').disabled = true;
+          document.querySelector('#pauseAnimation').disabled = true;
+        }
+
+        syncCharacterForm(record);
+        selectObject(character);
+        updateList();
+        const saved = window.Estudio3DCore.saveProject();
+        persistEditorState();
+        status(saved.ok
+          ? 'Modelo GLB importado e associado ao cadastro. Guarde o arquivo original junto do projeto.'
+          : 'Modelo GLB carregado, mas não foi possível salvar os metadados no navegador.');
+      } catch (error) {
+        console.error('[Estúdio 3D] Falha ao preparar GLB importado:', error);
+        status('Não foi possível preparar o personagem GLB: ' + error.message);
+      }
+    }, (error) => {
+      console.error('[Estúdio 3D] Falha ao ler GLB:', error);
+      status('Arquivo GLB inválido ou incompatível.');
+    });
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha na importação GLB:', error);
+    status('Não foi possível importar o GLB: ' + error.message);
+  } finally {
+    event.target.value = '';
+  }
+};
 
 // Exporta o objeto selecionado como GLB binário, preservando geometria e materiais.
 document.querySelector('#exportGLB').onclick = () => {
