@@ -149,3 +149,11 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Salvamento é local ao navegador/dispositivo via localStorage. Não é sincronização em nuvem e limpar os dados do navegador pode apagar esse estado. Exportar JSON continua sendo o meio portátil de backup.
 - Testes automatizados aprovados: 35/35 no GitHub Actions, workflow run `45633679675`, commit `39da595866e442bf8829a6f89d76f0617d549fcf`.
 - Próxima revisão: validar casos de cena vazia, falha/ausência do GLB-base e restauração de projetos com modelos externos; a aplicação ainda não guarda os bytes dos GLBs importados dentro do localStorage.
+
+
+## 25/11/2026 — Preservação de cenas intencionalmente vazias
+
+- O estado persistido agora registra `hasCharacter`, distinguindo uma cena que foi deixada sem personagem de um projeto ainda não inicializado.
+- Ao reabrir, se `hasCharacter` for explicitamente `false`, o editor restaura os objetos/configurações salvos sem carregar automaticamente o GLB-base.
+- Compatibilidade: estados antigos sem esse campo continuam seguindo o fluxo anterior de carregamento.
+- Testes automatizados aprovados: 36/36 no GitHub Actions, workflow run `45633895779`, commit `9a19533a95b453a0571a2283a180dadcbab0e841`.
