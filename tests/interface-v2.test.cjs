@@ -91,5 +91,5 @@ test('excluir cadastro do catálogo persiste a alteração no projeto', () => {
   const deleteHandler = html.slice(handlerStart, handlerEnd);
   assert.match(deleteHandler, /removeCharacter\(record\.id\)/);
   assert.match(deleteHandler, /Estudio3DCore\.saveProject\(\)/);
-  assert.match(deleteHandler, /!saved\.ok/);
+  assert.ok(deleteHandler.includes('status(saved.ok'), 'resultado do salvamento deve ser informado');
 });
