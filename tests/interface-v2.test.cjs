@@ -451,3 +451,16 @@ test('instâncias múltiplas ainda não substituem modelos GLB externos por prot
   assert.match(html, /Instâncias de modelos 3D externos serão habilitadas em uma próxima etapa/);
   assert.match(html, /A inclusão de múltiplas instâncias de modelos GLB externos será habilitada em uma próxima etapa/);
 });
+
+test('excluir personagem da cena preserva as demais instâncias e seleciona uma ativa', () => {
+  const start = html.indexOf("document.querySelector('#delete').onclick");
+  const end = html.indexOf("document.querySelector('#reset').onclick", start);
+  assert.ok(start >= 0 && end > start, 'handler de exclusão não encontrado');
+  const handler = html.slice(start, end);
+  assert.match(handler, /const removedObject = selected/);
+  assert.match(handler, /objects\.splice\(removedIndex, 1\)/);
+  assert.match(handler, /removedObject === character/);
+  assert.match(handler, /objects\.find\(obj => obj\.userData\.isCharacter\)/);
+  assert.match(handler, /characterRecordId = character \? \(character\.userData\.characterRecordId \|\| null\) : null/);
+  assert.match(handler, /if \(selected\) selectObject\(selected\)/);
+});
