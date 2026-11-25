@@ -468,3 +468,10 @@ Commits conhecidos na branch `main`:
 - A animação é atualizada pelo loop de renderização existente; não cria timers nem loops paralelos.
 - A ação é transitória e não altera as configurações faciais persistidas do personagem.
 - Limitação conhecida: trata-se de uma simulação procedural por escala dos olhos, não de pálpebras modeladas, rig facial ou blendshapes profissionais. A validação visual no navegador continua necessária.
+
+## 25/11/2026 — Piscadas automáticas por personagem
+
+- Além do botão **Piscar agora**, personagens procedurais com detalhes faciais passam a piscar automaticamente em intervalos individuais e levemente variados (aproximadamente 2,8 a 5,5 segundos).
+- O agendamento é atualizado dentro do loop de renderização existente, sem `setInterval`, timers externos ou loops paralelos.
+- Os intervalos são descartados quando o personagem sai da lista de objetos da cena.
+- A piscada continua sendo uma simulação por escala vertical dos olhos, não uma animação anatômica de pálpebras. A validação visual no navegador permanece necessária.
