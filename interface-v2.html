@@ -421,6 +421,9 @@ if (!pendingCharacterImport && startupEditorState && startupEditorState.activeCh
       if (Array.isArray(transform.position)) character.position.fromArray(transform.position);
       if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
       if (Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+      const activeInstance = startupEditorState.sceneCharacters &&
+        startupEditorState.sceneCharacters.find(instance => instance.active);
+      if (activeInstance && typeof activeInstance.visible === 'boolean') character.visible = activeInstance.visible;
     }
     restoreAdditionalSceneCharacters(startupEditorState);
     persistEditorState();
@@ -570,6 +573,10 @@ try {
       return;
     }
     if (savedEditorState) {
+      const activeInstance = Array.isArray(savedEditorState.sceneCharacters)
+        ? savedEditorState.sceneCharacters.find(instance => instance.active)
+        : null;
+      if (activeInstance && typeof activeInstance.visible === 'boolean') character.visible = activeInstance.visible;
       restoreAdditionalSceneCharacters(savedEditorState);
       persistEditorState();
     }
@@ -2046,7 +2053,6 @@ document.querySelector('#bundleFile').onchange = async (event) => {
         const root = cloneSkeleton(asset.gltf.scene);
         root.name = (instance.instanceName || asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado').slice(0, 80);
         root.userData.instanceName = root.name;
-        if (typeof instance.visible === 'boolean') root.visible = instance.visible;
         if (typeof instance.visible === 'boolean') root.visible = instance.visible;
         root.userData.type = 'personagem';
         root.userData.isCharacter = true;
