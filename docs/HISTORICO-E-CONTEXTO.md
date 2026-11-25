@@ -431,3 +431,11 @@ Commits conhecidos na branch `main`:
 - Os formatos são aplicados ao atualizar os controles e armazenados em `appearance.face`, sendo restaurados ao selecionar o personagem e ao regenerar o protótipo.
 - As opções usam geometrias simplificadas de pré-visualização; não equivalem a escultura anatômica, malha facial de alta resolução ou controles de blendshapes.
 - Testes automatizados estruturais foram acionados pelo commit; a validação visual em navegador ainda é necessária.
+
+
+## 25/11/2026 — Ampliação das expressões faciais
+
+- O controle da boca agora oferece expressões neutra, sorriso, triste, surpresa, irritada e séria.
+- As expressões triste e irritada também ajustam a inclinação das sobrancelhas quando elas estão habilitadas.
+- A seleção continua salva em `appearance.face` e é restaurada ao selecionar ou regenerar o personagem.
+- São formas geométricas simplificadas para pré-visualização; não são expressões animadas nem substituem blendshapes ou rig facial.
