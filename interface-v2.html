@@ -460,7 +460,10 @@ const startupEditorState = window.Estudio3DCore
   : null;
 if (!pendingCharacterImport && startupEditorState && startupEditorState.hasCharacter === false) {
   restoreEditorState(startupEditorState);
-  status('Cena restaurada sem personagem. Você pode adicionar objetos ou gerar um personagem pelo catálogo.');
+  // Mesmo sem personagem ativo, preserva outras instâncias procedurais que ficaram na cena.
+  restoreAdditionalSceneCharacters(startupEditorState);
+  persistEditorState();
+  status('Cena restaurada sem personagem ativo. Os demais personagens e objetos foram recuperados.');
   return;
 }
 if (!pendingCharacterImport && startupEditorState && startupEditorState.activeCharacter) {
