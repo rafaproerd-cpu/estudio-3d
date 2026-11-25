@@ -1649,12 +1649,14 @@ function generateCharacterPrototype(options = {}) {
     group.userData.supportsFaceDetails = true;
     const faceSettings = record.appearance && record.appearance.face || {};
     const headScale = Number.isFinite(Number(faceSettings.headScale)) ? Math.max(0.75, Math.min(1.35, Number(faceSettings.headScale))) : 1;
+    const faceWidthScale = Number.isFinite(Number(faceSettings.widthScale)) ? Math.max(0.75, Math.min(1.35, Number(faceSettings.widthScale))) : 1;
+    const faceHeightScale = Number.isFinite(Number(faceSettings.heightScale)) ? Math.max(0.75, Math.min(1.35, Number(faceSettings.heightScale))) : 1;
     const eyeScale = Number.isFinite(Number(faceSettings.eyeScale)) ? Math.max(0.6, Math.min(1.6, Number(faceSettings.eyeScale))) : 1;
     const eyeSpacing = Number.isFinite(Number(faceSettings.eyeSpacing)) ? Math.max(0.7, Math.min(1.4, Number(faceSettings.eyeSpacing))) : 1;
     const headMesh = part(new THREE.SphereGeometry(record.category === 'creature' ? 0.58 : 0.43, 24, 18), material, 0, 1.05, 0);
     headMesh.name = 'face-head';
     headMesh.userData.facialFeature = 'head';
-    headMesh.scale.set(headScale, headScale, headScale);
+    headMesh.scale.set(headScale * faceWidthScale, headScale * faceHeightScale, headScale);
     part(new THREE.CapsuleGeometry(0.38, 0.82, 6, 12), material, 0, 0.05, 0);
     for (const x of [-0.52, 0.52]) {
       limb(x * 0.55, 0.45, 0, x * 1.15, -0.35, 0, 0.14);
