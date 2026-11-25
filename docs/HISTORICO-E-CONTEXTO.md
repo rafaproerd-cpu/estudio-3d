@@ -423,3 +423,11 @@ Commits conhecidos na branch `main`:
 - Os ajustes são persistidos em `appearance.face`, reaplicados ao atualizar os controles e restaurados ao gerar novamente o personagem.
 - As orelhas são geometrias procedurais simples; não representam anatomia detalhada ou escultura profissional.
 - Testes estruturais adicionados; revisão visual em navegador ainda necessária.
+
+
+## 25/11/2026 — Formatos de olhos e nariz
+
+- O protótipo humanoide ganhou opções de olhos arredondados, amendoados ou alongados e nariz arredondado, estreito, largo ou pontudo.
+- Os formatos são aplicados ao atualizar os controles e armazenados em `appearance.face`, sendo restaurados ao selecionar o personagem e ao regenerar o protótipo.
+- As opções usam geometrias simplificadas de pré-visualização; não equivalem a escultura anatômica, malha facial de alta resolução ou controles de blendshapes.
+- Testes automatizados estruturais foram acionados pelo commit; a validação visual em navegador ainda é necessária.
