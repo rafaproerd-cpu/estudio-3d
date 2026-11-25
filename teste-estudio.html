@@ -34,10 +34,11 @@ input[type=file]{display:none}
 .danger{background:#482a36;border-color:#754052}
 @media(max-width:650px){
 main{display:flex;flex-direction:column;min-height:calc(100svh - 60px)}
-aside{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:10px;padding:10px;border-right:0;border-bottom:1px solid #30384b}
+aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:12px;border-right:0;border-bottom:1px solid #30384b;overflow:visible}
 aside h3{display:none}
-aside>div{flex:0 0 155px;min-width:155px}
-.viewer{position:relative;min-height:calc(100svh - 260px);flex:1}
+aside>div{min-width:0;flex:initial}
+aside>.character-panel{grid-column:1/-1;min-width:0!important;width:100%;margin-top:4px}
+.viewer{position:relative;min-height:58svh;flex:1}
 label{margin:8px 0}
 }
 </style>
@@ -135,7 +136,7 @@ label{margin:8px 0}
 <button id="projectSave" type="button">Salvar projeto neste aparelho</button>
 <button id="projectLoad" type="button">Carregar projeto salvo</button>
 <div id="characterMessage" class="library-count" role="status" aria-live="polite">Cadastros são salvos no projeto deste navegador.</div>
-<p style="font-size:11px;line-height:1.5;color:#9eacc8">Nesta etapa, o cadastro organiza os dados do personagem. A geração de um novo modelo 3D, rigging e animações será integrada em etapas posteriores.</p>
+<p style="font-size:11px;line-height:1.5;color:#9eacc8">Ao cadastrar, o Estúdio cria um modelo 3D inicial para visualizar. Modelagem detalhada por IA, rigging avançado e animações personalizadas serão etapas posteriores.</p>
 </div>
 
 </aside>
@@ -406,6 +407,89 @@ modelLibrary.push(entry);
 updateLibrary();
 activateModel(entry);
 }
+
+// CRIAR UM MODELO 3D INICIAL A PARTIR DO CADASTRO
+function createCharacterPreview(character){
+const group=new THREE.Group();
+let seed=0;
+for(const char of String(character.name||'Personagem')) seed=(seed*31+char.charCodeAt(0))>>>0;
+const hue=(seed%360)/360;
+const skinColor=new THREE.Color().setHSL((hue+0.08)%1,0.34,0.68);
+const outfitColor=new THREE.Color().setHSL(hue,0.48,0.42);
+const darkColor=new THREE.Color().setHSL(hue,0.22,0.18);
+const isRobot=character.category==='robot';
+const isAnimal=character.category==='animal';
+const isObject=character.category==='object';
+const material=(color,roughness=0.72,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const skin=material(isRobot?0x9ba9bd:skinColor,isRobot?0.35:0.8,isRobot?0.65:0);
+const clothes=material(isRobot?0x526b8e:outfitColor);
+const dark=material(darkColor);
+const eye=material(0x171923,0.25);
+const white=material(0xf4f0e8,0.3);
+function ellipsoid(name,mat,x,y,z,sx,sy,sz){
+const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),mat);
+mesh.name=name;mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);
+mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
+}
+function capsule(name,mat,a,b,r1,r2){
+const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b);
+const direction=new THREE.Vector3().subVectors(end,start);
+const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,direction.length(),16),mat);
+mesh.name=name;mesh.position.copy(start).add(end).multiplyScalar(0.5);
+mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;
+}
+if(isObject){
+const object=new THREE.Mesh(new THREE.BoxGeometry(1.45,1.8,0.9),clothes);
+object.position.y=0.9;object.castShadow=true;group.add(object);
+ellipsoid('Detalhe frontal',white,0,1.05,0.47,0.28,0.2,0.04);
+}else if(isAnimal){
+ellipsoid('Corpo',clothes,0,1.05,0,0.95,0.48,0.42);
+ellipsoid('Cabeça',skin,0.78,1.45,0,0.42,0.4,0.38);
+for(const x of [-0.62,0.62]) for(const z of [-0.25,0.25]){
+capsule('Pata',skin,[x,0.18,z],[x*0.9,0.92,z],0.13,0.1);
+}
+ellipsoid('Focinho',white,1.08,1.32,0.05,0.22,0.16,0.24);
+ellipsoid('Olho esquerdo',eye,0.92,1.58,0.34,0.055,0.07,0.035);
+ellipsoid('Olho direito',eye,0.62,1.58,0.34,0.055,0.07,0.035);
+capsule('Cauda',skin,[-0.82,1.18,0],[-1.35,1.55,0],0.13,0.06);
+}else{
+const ageScale=character.ageStage==='baby'?0.68:character.ageStage==='child'?0.78:character.ageStage==='teen'?0.92:character.ageStage==='senior'?0.98:1;
+const bodyY=1.12*ageScale;
+ellipsoid('Tronco',clothes,0,bodyY,0,0.48*ageScale,0.68*ageScale,0.29*ageScale);
+ellipsoid('Pescoço',skin,0,1.83*ageScale,0,0.16*ageScale,0.18*ageScale,0.16*ageScale);
+ellipsoid('Cabeça',skin,0,2.18*ageScale,0,0.39*ageScale,0.48*ageScale,0.36*ageScale);
+for(const side of [-1,1]){
+ellipsoid('Orelha',skin,side*0.39*ageScale,2.18*ageScale,0,0.09*ageScale,0.15*ageScale,0.1*ageScale);
+ellipsoid('Olho',white,side*0.145*ageScale,2.25*ageScale,0.315*ageScale,0.085*ageScale,0.105*ageScale,0.045*ageScale);
+ellipsoid('Pupila',eye,side*0.145*ageScale,2.25*ageScale,0.355*ageScale,0.04*ageScale,0.06*ageScale,0.025*ageScale);
+capsule('Braço',skin,[side*0.39*ageScale,1.58*ageScale,0],[side*0.62*ageScale,0.78*ageScale,0],0.14*ageScale,0.105*ageScale);
+ellipsoid('Mão',skin,side*0.62*ageScale,0.72*ageScale,0,0.12*ageScale,0.13*ageScale,0.12*ageScale);
+capsule('Perna',dark,[side*0.2*ageScale,0.68*ageScale,0],[side*0.22*ageScale,0.12*ageScale,0],0.17*ageScale,0.12*ageScale);
+ellipsoid('Sapato',dark,side*0.22*ageScale,0.08*ageScale,0.09*ageScale,0.16*ageScale,0.09*ageScale,0.25*ageScale);
+}
+if(character.category==='creature'||character.category==='alien'){
+for(const side of [-1,1]){
+const horn=new THREE.Mesh(new THREE.ConeGeometry(0.11*ageScale,0.42*ageScale,16),dark);
+horn.position.set(side*0.22*ageScale,2.62*ageScale,0);horn.castShadow=true;group.add(horn);
+}
+}
+}
+group.position.y=-1.5;
+return group;
+}
+function showCreatedCharacter(character){
+if(!character)return;
+const model=createCharacterPreview(character);
+const entry={id:nextModelId++,name:character.name+' (criado)',scene:model,animations:[],characterId:character.id};
+modelLibrary.push(entry);
+updateLibrary();
+activateModel(entry);
+modelStatus.textContent='Prévia 3D: '+character.name;
+status.textContent='● Personagem criado no visualizador 3D';
+}
+window.Estúdio3DViewer={showCharacter:showCreatedCharacter};
+
 
 // PERSONALIZAÇÃO DO CORPO
 function applyBodyCustomization(){
@@ -784,15 +868,21 @@ animate();
       }
     };
     try {
+      const wasEditing = Boolean(editingId);
       let saved;
-      if (editingId) saved = characters.updateCharacter(editingId, data);
+      if (wasEditing) saved = characters.updateCharacter(editingId, data);
       else saved = characters.addCharacterToProject(data);
       refreshList(saved.id);
+      if (window.Estúdio3DViewer) window.Estúdio3DViewer.showCharacter(saved);
       clearForm();
-      message(editingId ? 'Personagem atualizado.' : 'Personagem cadastrado no projeto.');
+      message(wasEditing ? 'Personagem atualizado e exibido no visualizador 3D.' : 'Personagem cadastrado e exibido no visualizador 3D.');
     } catch (error) {
       message(error.message || 'Não foi possível salvar o personagem.');
     }
+  });
+  $('characterList').addEventListener('change', function(){
+    const selected = characters.getCharacter($('characterList').value);
+    if (selected && window.Estúdio3DViewer) window.Estúdio3DViewer.showCharacter(selected);
   });
   $('characterEdit').addEventListener('click', function(){
     const item = characters.getCharacter($('characterList').value);
