@@ -186,6 +186,14 @@ h3{font-size:11px}
 <h3>Rosto (protótipo humanoide)</h3>
 <label>Volume da cabeça</label>
 <input type="range" id="faceHeadScale" min="0.75" max="1.35" step="0.05" value="1">
+<label>Largura do rosto</label>
+<input type="range" id="faceWidthScale" min="0.75" max="1.35" step="0.05" value="1">
+<label>Altura do rosto</label>
+<input type="range" id="faceHeightScale" min="0.75" max="1.35" step="0.05" value="1">
+<label>Tamanho das orelhas</label>
+<input type="range" id="faceEarScale" min="0.5" max="1.8" step="0.05" value="1">
+<label>Formato das orelhas</label>
+<select id="faceEarStyle"><option value="round">Arredondadas</option><option value="pointed">Pontudas</option><option value="long">Alongadas</option></select>
 <label>Tamanho dos olhos</label>
 <input type="range" id="faceEyeScale" min="0.6" max="1.6" step="0.05" value="1">
 <label>Distância entre os olhos</label>
@@ -1130,6 +1138,10 @@ function syncCharacterForm(record) {
   document.querySelector('#hairStyle').value = hair.style || 'short';
   document.querySelector('#hairColor').value = /^#[0-9a-f]{6}$/i.test(hair.color || '') ? hair.color : '#30251f';
   document.querySelector('#faceHeadScale').value = Number.isFinite(Number(face.headScale)) ? face.headScale : 1;
+  document.querySelector('#faceWidthScale').value = Number.isFinite(Number(face.widthScale)) ? face.widthScale : 1;
+  document.querySelector('#faceHeightScale').value = Number.isFinite(Number(face.heightScale)) ? face.heightScale : 1;
+  document.querySelector('#faceEarScale').value = Number.isFinite(Number(face.earScale)) ? face.earScale : 1;
+  document.querySelector('#faceEarStyle').value = ['round', 'pointed', 'long'].includes(face.earStyle) ? face.earStyle : 'round';
   document.querySelector('#faceEyeScale').value = Number.isFinite(Number(face.eyeScale)) ? face.eyeScale : 1;
   document.querySelector('#faceEyeSpacing').value = Number.isFinite(Number(face.eyeSpacing)) ? face.eyeSpacing : 1;
   document.querySelector('#faceEyeColor').value = /^#[0-9a-f]{6}$/i.test(face.eyeColor || '') ? face.eyeColor : '#3b79b7';
@@ -1438,7 +1450,21 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
   nose.scale.set(0.75 * noseScale, noseScale, 0.65 * noseScale);
   nose.userData.editorRoot = characterGroup;
   details.add(nose);
-  const mouthStyle = ['neutral', 'smile', 'serious'].includes(settings.mouthStyle) ? settings.mouthStyle : 'neutral';
+  const earScale = Number.isFinite(Number(settings.earScale)) ? Math.max(0.5, Math.min(1.8, Number(settings.earScale))) : 1;
+  const earStyle = ['round', 'pointed', 'long'].includes(settings.earStyle) ? settings.earStyle : 'round';
+  for (const side of [-1, 1]) {
+    const earGeometry = earStyle === 'pointed'
+      ? new THREE.ConeGeometry(0.105, 0.3, 12)
+      : new THREE.SphereGeometry(0.105, 14, 12);
+    const ear = new THREE.Mesh(earGeometry, featureMaterial);
+    ear.name = 'face-ear';
+    ear.position.set(side * (earStyle === 'long' ? 0.43 : 0.39), 1.04, 0);
+    ear.scale.set(earScale * (earStyle === 'long' ? 0.8 : 1), earScale * (earStyle === 'long' ? 1.65 : 1), 0.55);
+    ear.rotation.z = side * (earStyle === 'pointed' ? -0.12 : 0);
+    ear.userData.editorRoot = characterGroup;
+    details.add(ear);
+  }
+    const mouthStyle = ['neutral', 'smile', 'serious'].includes(settings.mouthStyle) ? settings.mouthStyle : 'neutral';
   const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 6, 20, Math.PI), featureMaterial);
   mouth.name = 'face-mouth';
   mouth.position.set(0, 0.88, 0.405);
@@ -1902,7 +1928,7 @@ const record = selected.userData.isCharacter && characterRecordId
   control.addEventListener('change', updateAccessories);
 });
 
-['faceHeadScale', 'faceEyeScale', 'faceEyeSpacing'].forEach((controlId) => {
+['faceHeadScale', 'faceEyeScale', 'faceEyeSpacing', 'faceWidthScale', 'faceHeightScale'].forEach((controlId) => {
   document.querySelector('#' + controlId).oninput = (event) => {
     if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
     const record = window.Estudio3DCharacters.getCharacter(characterRecordId);
@@ -1910,21 +1936,26 @@ const record = selected.userData.isCharacter && characterRecordId
     const values = {
       headScale: controlId === 'faceHeadScale' ? Number(event.target.value) : (Number(face.headScale) || 1),
       eyeScale: controlId === 'faceEyeScale' ? Number(event.target.value) : (Number(face.eyeScale) || 1),
-      eyeSpacing: controlId === 'faceEyeSpacing' ? Number(event.target.value) : (Number(face.eyeSpacing) || 1)
+      eyeSpacing: controlId === 'faceEyeSpacing' ? Number(event.target.value) : (Number(face.eyeSpacing) || 1),
+      widthScale: controlId === 'faceWidthScale' ? Number(event.target.value) : (Number(face.widthScale) || 1),
+      heightScale: controlId === 'faceHeightScale' ? Number(event.target.value) : (Number(face.heightScale) || 1)
     };
     selected.traverse(node => {
-      if (node.userData.facialFeature === 'head') node.scale.setScalar(values.headScale);
+      if (node.userData.facialFeature === 'head') node.scale.set(values.headScale * values.widthScale, values.headScale * values.heightScale, values.headScale);
       if (node.userData.facialFeature === 'eye') node.scale.setScalar(values.eyeScale);
       if (node.name === 'face-eye-left') node.position.x = -0.16 * values.eyeSpacing;
       if (node.name === 'face-eye-right') node.position.x = 0.16 * values.eyeSpacing;
     });
-    const key = controlId === 'faceHeadScale' ? 'headScale' : controlId === 'faceEyeScale' ? 'eyeScale' : 'eyeSpacing';
+    const key = ({
+      faceHeadScale: 'headScale', faceEyeScale: 'eyeScale', faceEyeSpacing: 'eyeSpacing',
+      faceWidthScale: 'widthScale', faceHeightScale: 'heightScale'
+    })[controlId];
     persistSelectedCharacter({ appearance: { face: { [key]: Number(event.target.value) } } });
     persistEditorState();
   };
 });
 
-['faceEyeColor', 'faceNoseScale', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor'].forEach(controlId => {
+['faceEyeColor', 'faceNoseScale', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor', 'faceEarScale', 'faceEarStyle'].forEach(controlId => {
   const control = document.querySelector('#' + controlId);
   const updateFaceDetails = () => {
     if (!selected || !selected.userData.supportsFaceDetails || !characterRecordId) return;
@@ -1935,13 +1966,16 @@ const record = selected.userData.isCharacter && characterRecordId
       beardStyle: document.querySelector('#faceBeardStyle').value,
       mustacheStyle: document.querySelector('#faceMustacheStyle').value,
       eyebrowStyle: document.querySelector('#faceEyebrowStyle').value,
-      facialHairColor: document.querySelector('#faceHairColor').value
+      facialHairColor: document.querySelector('#faceHairColor').value,
+      earScale: Number(document.querySelector('#faceEarScale').value),
+      earStyle: document.querySelector('#faceEarStyle').value
     };
     applyProceduralFaceDetails(selected, settings);
     const keyMap = {
       faceEyeColor: 'eyeColor', faceNoseScale: 'noseScale', faceMouthStyle: 'mouthStyle',
       faceBeardStyle: 'beardStyle', faceMustacheStyle: 'mustacheStyle',
-      faceEyebrowStyle: 'eyebrowStyle', faceHairColor: 'facialHairColor'
+      faceEyebrowStyle: 'eyebrowStyle', faceHairColor: 'facialHairColor',
+      faceEarScale: 'earScale', faceEarStyle: 'earStyle'
     };
     const key = keyMap[controlId];
     persistSelectedCharacter({ appearance: { face: { [key]: settings[key] } } });
