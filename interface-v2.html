@@ -119,6 +119,7 @@ h3{font-size:11px}
 <label>Descrição</label>
 <input id="characterDescription" type="text" maxlength="300" placeholder="Descreva o personagem">
 <button id="saveCharacterData" style="width:100%;margin-top:10px">Salvar cadastro</button>
+<button id="generateCharacter3D" style="width:100%;margin-top:8px">✦ Gerar protótipo 3D</button>
 <button id="newCharacterRecord" style="width:100%;margin-top:8px">＋ Novo personagem no catálogo</button>
 <div style="margin-top:12px">
 <label>Catálogo de personagens</label>
@@ -646,6 +647,123 @@ document.querySelector('#saveCharacterData').onclick = () => {
     status('Não foi possível salvar o cadastro: ' + error.message);
   }
 };
+
+
+// Geração procedural inicial: malha 3D de pré-visualização conforme a categoria.
+function generateCharacterPrototype() {
+  if (!window.Estudio3DCharacters || !characterRecordId) {
+    status('Crie ou selecione um personagem no catálogo antes de gerar o protótipo.');
+    return;
+  }
+
+  const record = window.Estudio3DCharacters.getCharacter(characterRecordId);
+  if (!record) {
+    status('Cadastro não encontrado. Selecione novamente o personagem.');
+    return;
+  }
+
+  const group = new THREE.Group();
+  group.name = record.name || 'Personagem procedural';
+  group.userData.type = 'procedural-character';
+  group.userData.isCharacter = true;
+  group.userData.proceduralCategory = record.category;
+
+  const palette = {
+    human: 0xc58d68, animal: 0xb9824d, creature: 0x687c9f,
+    robot: 0x9aa8bd, alien: 0x65b99a, object: 0x527cff, other: 0x8b83b8
+  };
+  const baseColor = palette[record.category] || palette.other;
+  const material = new THREE.MeshStandardMaterial({
+    color: baseColor, roughness: 0.62, metalness: record.category === 'robot' ? 0.72 : 0.05
+  });
+  const accent = new THREE.MeshStandardMaterial({
+    color: record.category === 'robot' ? 0x34445f : 0x26344f,
+    roughness: 0.5, metalness: record.category === 'robot' ? 0.8 : 0.1
+  });
+
+  function part(geometry, mat, x, y, z) {
+    const mesh = new THREE.Mesh(geometry, mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.editorRoot = group;
+    group.add(mesh);
+    return mesh;
+  }
+  function limb(x1, y1, z1, x2, y2, z2, radius, mat = material) {
+    const start = new THREE.Vector3(x1, y1, z1);
+    const end = new THREE.Vector3(x2, y2, z2);
+    const direction = new THREE.Vector3().subVectors(end, start);
+    const mesh = part(new THREE.CylinderGeometry(radius * 0.82, radius, direction.length(), 12), mat,
+      (x1+x2)/2, (y1+y2)/2, (z1+z2)/2);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), direction.normalize());
+    return mesh;
+  }
+
+  if (record.category === 'animal') {
+    // Protótipo quadrúpede com tronco, cabeça, quatro patas e cauda.
+    part(new THREE.SphereGeometry(0.72, 24, 18), material, 0, 0.15, 0);
+    part(new THREE.SphereGeometry(0.43, 20, 16), material, 0, 0.35, 0.78);
+    for (const x of [-0.43, 0.43]) for (const z of [-0.42, 0.48]) {
+      limb(x, 0.05, z, x, -0.82, z, 0.14);
+    }
+    limb(0, 0.2, -0.58, 0, 0.35, -1.12, 0.11);
+    part(new THREE.SphereGeometry(0.09, 12, 10), accent, -0.17, 0.48, 1.13);
+    part(new THREE.SphereGeometry(0.09, 12, 10), accent, 0.17, 0.48, 1.13);
+  } else if (record.category === 'robot') {
+    part(new THREE.BoxGeometry(1.05, 1.15, 0.62), material, 0, 0.15, 0);
+    part(new THREE.BoxGeometry(0.72, 0.62, 0.58), material, 0, 1.05, 0);
+    part(new THREE.BoxGeometry(0.42, 0.12, 0.08), accent, 0, 1.1, 0.31);
+    for (const x of [-0.72, 0.72]) {
+      limb(x, 0.55, 0, x * 1.2, -0.25, 0, 0.16, accent);
+      limb(x * 0.48, -0.42, 0, x * 0.48, -1.18, 0, 0.19, accent);
+    }
+  } else if (record.category === 'object') {
+    part(new THREE.BoxGeometry(1.15, 1.5, 0.72), material, 0, 0, 0);
+    part(new THREE.SphereGeometry(0.38, 20, 16), material, 0, 1.05, 0);
+    part(new THREE.SphereGeometry(0.07, 12, 10), accent, -0.14, 1.1, 0.34);
+    part(new THREE.SphereGeometry(0.07, 12, 10), accent, 0.14, 1.1, 0.34);
+    limb(-0.25, -0.72, 0, -0.3, -1.25, 0, 0.13);
+    limb(0.25, -0.72, 0, 0.3, -1.25, 0, 0.13);
+  } else {
+    // Humanoide base para humanos, alienígenas, criaturas e outras categorias.
+    part(new THREE.SphereGeometry(record.category === 'creature' ? 0.58 : 0.43, 24, 18), material, 0, 1.05, 0);
+    part(new THREE.CapsuleGeometry(0.38, 0.82, 6, 12), material, 0, 0.05, 0);
+    for (const x of [-0.52, 0.52]) {
+      limb(x * 0.55, 0.45, 0, x * 1.15, -0.35, 0, 0.14);
+      limb(x * 0.38, -0.45, 0, x * 0.48, -1.28, 0, 0.17);
+    }
+    part(new THREE.SphereGeometry(0.075, 12, 10), accent, -0.16, 1.12, 0.37);
+    part(new THREE.SphereGeometry(0.075, 12, 10), accent, 0.16, 1.12, 0.37);
+    if (record.category === 'alien' || record.category === 'creature') {
+      part(new THREE.ConeGeometry(0.12, 0.48, 12), material, -0.36, 1.62, 0);
+      part(new THREE.ConeGeometry(0.12, 0.48, 12), material, 0.36, 1.62, 0);
+    }
+  }
+
+  group.position.set(0, 0, 0);
+  scene.add(group);
+  objects.push(group);
+  character = group;
+  mixer = null;
+  animationActions = [];
+  activeAction = null;
+  document.querySelector('#animationSelect').innerHTML = '<option>Protótipo sem animações</option>';
+  document.querySelector('#animationSelect').disabled = true;
+  document.querySelector('#animate').disabled = true;
+  document.querySelector('#pauseAnimation').disabled = true;
+
+  window.Estudio3DCharacters.updateCharacter(record.id, {
+    model: { source: 'procedural_preview', format: 'threejs-runtime', assetId: '' },
+    gameReady: { rigged: false, animated: false }
+  });
+  window.Estudio3DCore.saveProject();
+  selectObject(group);
+  updateList();
+  status('Protótipo 3D gerado para ' + record.category + '. É uma malha inicial de pré-visualização; rigging e exportação GLB ainda serão implementados.');
+}
+
+document.querySelector('#generateCharacter3D').onclick = generateCharacterPrototype;
 
 function persistSelectedCharacter(patch) {
   if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
