@@ -641,3 +641,16 @@ test('visibilidade é restaurada para instâncias procedurais e GLB em ZIP e JSO
 test('exportação da cena ignora objetos ocultos', () => {
   assert.match(html, /objects\.filter\(obj => obj && obj\.visible\)/);
 });
+
+
+test('personalização procedural de roupas oferece peças, cores e persistência no protótipo humanoide', () => {
+  for (const id of ['outfitTopStyle', 'outfitTopColor', 'outfitBottomStyle', 'outfitBottomColor', 'outfitShoesStyle', 'outfitShoesColor']) {
+    assert.match(html, new RegExp('id="' + id + '"'));
+  }
+  assert.match(html, /function applyProceduralOutfit\(characterGroup, settings = \{\}\)/);
+  assert.match(html, /procedural-outfit/);
+  assert.match(html, /supportsOutfit = true/);
+  assert.match(html, /applyProceduralOutfit\(group, record\.appearance && record\.appearance\.outfit \|\| \{\}\)/);
+  assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ outfit: settings \} \}\)/);
+  assert.match(html, /const outfit = record\.appearance && record\.appearance\.outfit \|\| \{\}/);
+});
