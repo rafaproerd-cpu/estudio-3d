@@ -398,3 +398,12 @@ Commits conhecidos na branch `main`:
 - As escolhas são salvas em `appearance.accessories` e reaplicadas ao selecionar o cadastro ou regenerar o protótipo.
 - Escopo atual: geometrias simples de pré-visualização para personagens que usam a base humanoide procedural. Não são acessórios de produção com materiais/encaixes detalhados, e não alteram automaticamente modelos GLB importados.
 - Testes estruturais adicionados; validação visual no navegador e revisão de encaixe permanecem necessárias.
+
+
+## 25/11/2026 — Detalhes faciais procedurais
+
+- Adicionados controles para cor dos olhos, escala do nariz e expressão da boca (neutra, sorriso ou séria).
+- Os detalhes são criados em grupo `procedural-face-details`, separado da cabeça e dos demais elementos, para atualização sem reconstrução integral do personagem.
+- As opções são persistidas em `appearance.face` e restauradas ao selecionar o cadastro ou gerar novamente o protótipo.
+- Escopo atual: formas geométricas de pré-visualização na base humanoide procedural. Não substitui escultura facial, texturas, dentes, lábios detalhados ou expressões faciais animadas.
+- Testes estruturais adicionados; validação visual e anatômica no navegador ainda necessária.
