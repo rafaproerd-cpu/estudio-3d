@@ -175,7 +175,8 @@ h3{font-size:11px}
 <button id="exportBundle">Exportar projeto completo (.zip)</button>
 <button id="importBundle">Importar projeto completo (.zip)</button>
 <button id="exportGLB">Exportar personagem GLB</button>
-<button id="importGLB">Importar personagem GLB</button>
+<button id="importGLB">Importar GLB (substituir)</button>
+<button id="addGLB">＋ Adicionar GLB à cena</button>
 <button id="import">Importar JSON</button>
 <button id="delete">Excluir objeto</button>
 </div>
@@ -263,6 +264,8 @@ const externalModelAssets = new Map();
 let mixer=null;
 let animationActions=[];
 let activeAction=null;
+// Cada personagem GLB mantém seu próprio mixer e conjunto de clipes.
+const characterAnimationStates = new Map();
 let clock=new THREE.Clock();
 
 const raycaster=new THREE.Raycaster();
@@ -270,6 +273,42 @@ const pointer=new THREE.Vector2();
 
 function status(message){
 document.querySelector('#status').textContent=message;
+}
+
+function registerCharacterAnimations(root, clips) {
+  const list = Array.isArray(clips) ? clips.slice() : [];
+  const state = list.length
+    ? { mixer: new THREE.AnimationMixer(root), clips: list, activeAction: null }
+    : { mixer: null, clips: [], activeAction: null };
+  characterAnimationStates.set(root, state);
+  return state;
+}
+
+function activateCharacterAnimations(root) {
+  const state = root ? characterAnimationStates.get(root) : null;
+  mixer = state ? state.mixer : null;
+  animationActions = state ? state.clips : [];
+  activeAction = state ? state.activeAction : null;
+  const select = document.querySelector('#animationSelect');
+  select.innerHTML = '';
+  if (animationActions.length) {
+    animationActions.forEach((clip, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = clip.name || 'Animação ' + (index + 1);
+      select.appendChild(option);
+    });
+    select.disabled = false;
+    document.querySelector('#animate').disabled = false;
+    document.querySelector('#pauseAnimation').disabled = false;
+  } else {
+    select.innerHTML = '<option>Sem animações neste personagem</option>';
+    select.disabled = true;
+    document.querySelector('#animate').disabled = true;
+    document.querySelector('#pauseAnimation').disabled = true;
+  }
+  document.querySelector('#pauseAnimation').textContent =
+    mixer && mixer.timeScale === 0 ? '▶ Continuar animação' : 'Ⅱ Pausar animação';
 }
 
 /* PERSISTÊNCIA DA CENA NO NAVEGADOR */
@@ -621,6 +660,7 @@ if(!obj)return;
 
 if (obj.userData.isCharacter) {
   character = obj;
+  activateCharacterAnimations(obj);
   characterRecordId = obj.userData.characterRecordId || characterRecordId;
   if (characterRecordId && window.Estudio3DCharacters) {
     selectedCatalogRecordId = characterRecordId;
@@ -1186,6 +1226,8 @@ activeAction.fadeOut(.2);
 const clip=animationActions[index];
 
 activeAction=mixer.clipAction(clip);
+const activeAnimationState = characterAnimationStates.get(character);
+if (activeAnimationState) activeAnimationState.activeAction = activeAction;
 activeAction.reset();
 activeAction.fadeIn(.2);
 activeAction.play();
@@ -1251,6 +1293,9 @@ return;
 }
 
 const removedObject = selected;
+const removedAnimationState = characterAnimationStates.get(removedObject);
+if (removedAnimationState && removedAnimationState.mixer) removedAnimationState.mixer.stopAllAction();
+characterAnimationStates.delete(removedObject);
 scene.remove(removedObject);
 const removedIndex = objects.indexOf(removedObject);
 if (removedIndex >= 0) objects.splice(removedIndex, 1);
@@ -1286,6 +1331,10 @@ document.querySelector('#reset').onclick=()=>{
 objects.forEach(o=>scene.remove(o));
 
 objects.length=0;
+characterAnimationStates.forEach(state => {
+  if (state.mixer) state.mixer.stopAllAction();
+});
+characterAnimationStates.clear();
 selected=null;
 character=null;
 mixer=null;
@@ -1442,11 +1491,18 @@ document.querySelector('#exportBundle').onclick = async () => {
 
 // Importa um modelo GLB local e associa o arquivo ao cadastro selecionado.
 document.querySelector('#importGLB').onclick = () => {
+  document.querySelector('#glbFile').dataset.addToScene = 'false';
+  document.querySelector('#glbFile').click();
+};
+document.querySelector('#addGLB').onclick = () => {
+  document.querySelector('#glbFile').dataset.addToScene = 'true';
   document.querySelector('#glbFile').click();
 };
 
 document.querySelector('#glbFile').onchange = async (event) => {
   const file = event.target.files && event.target.files[0];
+  const addToScene = event.target.dataset.addToScene === 'true';
+  event.target.dataset.addToScene = 'false';
   if (!file) return;
   try {
     if (!file.name.toLowerCase().endsWith('.glb')) {
@@ -1472,17 +1528,16 @@ document.querySelector('#glbFile').onchange = async (event) => {
           if (child.material) child.material.side = THREE.DoubleSide;
         });
 
-        if (mixer) mixer.stopAllAction();
-        mixer = null;
-        activeAction = null;
-        animationActions = [];
-        if (character) {
+        if (!addToScene && character) {
+          const previousState = characterAnimationStates.get(character);
+          if (previousState && previousState.mixer) previousState.mixer.stopAllAction();
+          characterAnimationStates.delete(character);
           scene.remove(character);
           const previousIndex = objects.indexOf(character);
           if (previousIndex >= 0) objects.splice(previousIndex, 1);
         }
 
-        let record = selectedCatalogRecordId
+        let record = (!addToScene && selectedCatalogRecordId)
           ? window.Estudio3DCharacters.getCharacter(selectedCatalogRecordId)
           : null;
         const modelInfo = {
@@ -1492,54 +1547,38 @@ document.querySelector('#glbFile').onchange = async (event) => {
           fileName: file.name,
           embedded: false
         };
+        const characterForm = {
+          ...getCharacterFormData(),
+          ...(addToScene ? { name: file.name.replace(/\.glb$/i, '') || 'Personagem importado' } : {}),
+          model: modelInfo
+        };
         if (record) {
-          record = window.Estudio3DCharacters.updateCharacter(record.id, {
-            ...getCharacterFormData(),
-            model: modelInfo
-          });
+          record = window.Estudio3DCharacters.updateCharacter(record.id, characterForm);
         } else {
-          record = window.Estudio3DCharacters.addCharacterToProject({
-            ...getCharacterFormData(),
-            model: modelInfo
-          });
+          record = window.Estudio3DCharacters.addCharacterToProject(characterForm);
         }
 
         externalModelAssets.set(record.id, { fileName: file.name, data: buffer });
         importedCharacter.userData.characterRecordId = record.id;
+        if (addToScene) {
+          importedCharacter.position.x = objects.filter(obj => obj.userData.isCharacter).length * 1.8;
+        }
         character = importedCharacter;
         characterRecordId = record.id;
         selectedCatalogRecordId = record.id;
-        scene.add(character);
-        objects.push(character);
-
-        const select = document.querySelector('#animationSelect');
-        select.innerHTML = '';
-        if (Array.isArray(gltf.animations) && gltf.animations.length) {
-          animationActions = gltf.animations.slice();
-          gltf.animations.forEach((clip, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = clip.name || 'Animação ' + (index + 1);
-            select.appendChild(option);
-          });
-          mixer = new THREE.AnimationMixer(character);
-          select.disabled = false;
-          document.querySelector('#animate').disabled = false;
-          document.querySelector('#pauseAnimation').disabled = false;
-        } else {
-          select.innerHTML = '<option>Sem animações no modelo</option>';
-          select.disabled = true;
-          document.querySelector('#animate').disabled = true;
-          document.querySelector('#pauseAnimation').disabled = true;
-        }
+        scene.add(importedCharacter);
+        objects.push(importedCharacter);
+        registerCharacterAnimations(importedCharacter, gltf.animations);
 
         syncCharacterForm(record);
-        selectObject(character);
+        selectObject(importedCharacter);
         updateList();
         const saved = window.Estudio3DCore.saveProject();
         persistEditorState();
         status(saved.ok
-          ? 'Modelo GLB importado e associado ao cadastro. Guarde o arquivo original junto do projeto.'
+          ? (addToScene
+            ? 'Novo personagem GLB adicionado à cena. Sua animação é independente; o pacote ZIP incluirá o arquivo.'
+            : 'Modelo GLB importado e associado ao cadastro. Guarde o arquivo original junto do projeto.')
           : 'Modelo GLB carregado, mas não foi possível salvar os metadados no navegador.');
       } catch (error) {
         console.error('[Estúdio 3D] Falha ao preparar GLB importado:', error);
@@ -2155,9 +2194,14 @@ requestAnimationFrame(loop);
 
 const delta=clock.getDelta();
 
-if(mixer){
-mixer.update(delta);
-}
+const updatedMixers = new Set();
+characterAnimationStates.forEach(state => {
+  if (state.mixer) {
+    state.mixer.update(delta);
+    updatedMixers.add(state.mixer);
+  }
+});
+if (mixer && !updatedMixers.has(mixer)) mixer.update(delta);
 
 renderer.render(scene,camera);
 
