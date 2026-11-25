@@ -242,3 +242,11 @@ Commits conhecidos na branch `main`:
 - Corrigida restauração da transformação completa (posição, rotação e escala) também para personagens rigged salvos localmente, não apenas para protótipos procedurais.
 - Ao importar um projeto sem personagem ativo, o editor agora remove o personagem anterior da cena, limpa sua associação e encerra ações de animação antigas; o catálogo importado continua preservado separadamente.
 - Testes automatizados aprovados: 38/38 no GitHub Actions, workflow run `45634201857`, commit `53fc035efa203f9518c1393cb69715f10a443410`.
+
+
+## 25/11/2026 — Robustez adicional na restauração de personagens e cenas
+
+- Personagens rigged agora recuperam posição, rotação e escala locais ao reabrir o editor.
+- Importar um projeto sem personagem ativo remove o personagem visual anterior e limpa sua associação/animações, sem confundir isso com os demais cadastros do catálogo.
+- Protótipos procedurais salvos são reconstruídos diretamente a partir do cadastro e do estado local, sem exigir o GLB-base; objetos e cenário também são restaurados nesse caminho.
+- Testes automatizados aprovados: 39/39 no GitHub Actions, workflow run `45634504138`, commit `3e784fa8c9e5d949edfb54b65fef81089eac86d8`.
