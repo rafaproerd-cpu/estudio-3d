@@ -1998,6 +1998,9 @@ if(data.character && data.character.record){
 // Restaura instâncias procedurais adicionais sem duplicar o personagem ativo.
 if (Array.isArray(data.sceneCharacters)) {
   const activeInstance = data.sceneCharacters.find(instance => instance.active);
+  const importedActiveRoot = character;
+  const importedActiveRecordId = characterRecordId;
+  const importedActiveSelection = selected;
   data.sceneCharacters.forEach(instance => {
     if (instance.active) {
       if (character && activeInstance && activeInstance.recordId === characterRecordId) {
@@ -2010,8 +2013,11 @@ if (Array.isArray(data.sceneCharacters)) {
     if (instance.source !== 'procedural_preview') return;
     const instanceRecord = window.Estudio3DCharacters &&
       window.Estudio3DCharacters.getCharacter(instance.recordId);
-    if (instanceRecord) addCharacterInstance(instance.recordId, instance.transform);
+    if (instanceRecord) addCharacterInstance(instance.recordId, instance.transform, { offset: false, persist: false });
   });
+  character = importedActiveRoot;
+  characterRecordId = importedActiveRecordId;
+  selected = importedActiveSelection;
 }
 
 selected=(data.character && character) ? character : (objects[objects.length-1]||null);
