@@ -522,6 +522,19 @@ test('gerenciador da cena permite renomear e duplicar instâncias', () => {
   assert.match(html, /addCharacterInstance\(recordId\)/);
 });
 
+test('clonagem segura remove referências circulares e restaura a raiz original', () => {
+  assert.match(html, /function cloneSkeletonSafe\(source, attachEditorRoots = true\)/);
+  assert.match(html, /delete node\.userData\.editorRoot/);
+  assert.match(html, /const copy = cloneSkeleton\(source\)/);
+  assert.match(html, /finally \{[\s\S]*?node\.userData\.editorRoot = root/);
+  assert.match(html, /copy\.traverse\(node => \{\s*if \(node\.isMesh\) node\.userData\.editorRoot = copy/);
+});
+
+test('duplicação de objetos primitivos também usa clonagem sem referência circular', () => {
+  assert.match(html, /const copy = cloneSkeletonSafe\(selected, false\)/);
+  assert.match(html, /copy\.userData = \{ \.\.\.selected\.userData, instanceName: copy\.name, editorRoot: copy \}/);
+});
+
 test('duplicação de GLB usa clonagem segura de esqueleto e mixer independente', () => {
   assert.match(html, /three\/addons\/utils\/SkeletonUtils\.js/);
   assert.match(html, /const copy = cloneSkeletonSafe\(source\)/);
