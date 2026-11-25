@@ -344,3 +344,35 @@ test('pacote ZIP não é criado quando faltam binários GLB obrigatórios', () =
   assert.match(html, /const missingAssets = requiredAssets\.filter\(asset => !externalModelAssets\.has\(asset\.characterId\)\)/);
   assert.match(html, /Antes de criar o pacote, importe novamente estes modelos GLB/);
 });
+
+
+test('interface oferece importação de pacote ZIP completo', () => {
+  assert.match(html, /id="importBundle"/);
+  assert.match(html, /id="bundleFile" accept="\.zip/);
+  assert.match(html, /document\.querySelector\('#bundleFile'\)\.onchange/);
+  assert.match(html, /JSZip\.loadAsync\(file, \{ checkCRC32: true \}\)/);
+  assert.match(html, /project\.json/);
+  assert.match(html, /parseGLBBuffer\(buffer\)/);
+});
+
+test('importação ZIP valida caminhos, tamanhos e manifesto antes de alterar a cena', () => {
+  const handlerStart = html.indexOf("document.querySelector('#bundleFile').onchange");
+  const handlerEnd = html.indexOf("document.querySelector('#glbFile').onchange", handlerStart);
+  assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'importador ZIP não encontrado');
+  const handler = html.slice(handlerStart, handlerEnd);
+  assert.match(handler, /file\.size > 150 \* 1024 \* 1024/);
+  assert.match(handler, /name\.split\('\/'\)\.some\(part => part === '\.\.' \|\| part === '\.'\)/);
+  assert.match(handler, /buffer\.byteLength > 100 \* 1024 \* 1024/);
+  assert.match(handler, /totalAssetBytes > 250 \* 1024 \* 1024/);
+  assert.ok(handler.indexOf('await parseGLBBuffer(buffer)') < handler.indexOf("document.querySelector('#file').onchange({"), 'GLB deve ser validado antes de importar o projeto');
+});
+
+test('validador GLB exige assinatura, versão e tamanho binário coerentes', () => {
+  const start = html.indexOf('function parseGLBBuffer(buffer)');
+  const end = html.indexOf("document.querySelector('#bundleFile').onchange", start);
+  const validator = html.slice(start, end);
+  assert.match(validator, /0x46546c67/);
+  assert.match(validator, /getUint32\(4, true\) !== 2/);
+  assert.match(validator, /getUint32\(8, true\) !== buffer\.byteLength/);
+  assert.match(validator, /new GLTFLoader\(\)\.parse/);
+});
