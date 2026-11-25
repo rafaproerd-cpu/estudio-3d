@@ -50,6 +50,18 @@ test('JavaScript da interface passa pela análise sintática', () => {
   assert.doesNotThrow(() => new Function(source));
 });
 
+test('controles de proporção corporal são persistidos e reaplicados ao protótipo', () => {
+  assert.match(html, /id="bodyWidth"/);
+  assert.match(html, /id="bodyHeight"/);
+  assert.match(html, /id="bodyDepth"/);
+  assert.match(html, /body\.width/);
+  assert.match(html, /body\.height/);
+  assert.match(html, /body\.depth/);
+  assert.match(html, /group\.scale\.set\(baseScale \* bodyWidth, baseScale \* bodyHeight, baseScale \* bodyDepth\)/);
+  assert.match(html, /persistSelectedCharacter\(\{ appearance: \{ body: \{ \[key\]: Number\(event\.target\.value\) \} \} \}\)/);
+  assert.match(html, /ageScale\[record && record\.ageStage\]/);
+});
+
 test('regenerar protótipo substitui o personagem anterior sem afetar adições intencionais', () => {
   assert.match(html, /if \(!addToScene && character\) \{/);
   assert.match(html, /characterAnimationStates\.delete\(character\)/);
