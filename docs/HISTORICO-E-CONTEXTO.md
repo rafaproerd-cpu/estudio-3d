@@ -439,3 +439,10 @@ Commits conhecidos na branch `main`:
 - As expressões triste e irritada também ajustam a inclinação das sobrancelhas quando elas estão habilitadas.
 - A seleção continua salva em `appearance.face` e é restaurada ao selecionar ou regenerar o personagem.
 - São formas geométricas simplificadas para pré-visualização; não são expressões animadas nem substituem blendshapes ou rig facial.
+
+
+## 25/11/2026 — Controle do tamanho das pupilas
+
+- Adicionado controle para aumentar ou reduzir o tamanho das pupilas no protótipo humanoide.
+- Cada olho recebe íris colorida e pupila escura em grupo facial independente; a escala da pupila é aplicada ao vivo e persistida em `appearance.face`.
+- A configuração é restaurada ao selecionar o personagem e ao regenerar o protótipo. O recurso usa geometrias simples e ainda depende de inspeção visual no navegador para conferir alinhamento e proporções.
