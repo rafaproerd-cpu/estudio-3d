@@ -371,3 +371,12 @@ Commits conhecidos na branch `main`:
 - Os valores são armazenados em `appearance.face`, aplicados em tempo real às malhas identificadas e reaplicados ao regenerar o protótipo.
 - A alteração se aplica ao protótipo humanoide atual (humanos, alienígenas, criaturas e categorias que usam essa base). Não representa ainda um sistema completo de escultura facial nem altera modelos GLB importados.
 - Foram adicionados testes estruturais para os três controles e sua persistência. A validação visual no navegador ainda é necessária.
+
+
+## 25/11/2026 — Cabelos procedurais no protótipo humanoide
+
+- Adicionados estilos iniciais de cabelo: sem cabelo, curto, comprido e arrepiado, com seletor de cor.
+- A geometria é criada como grupo separado e identificado na hierarquia, permitindo trocar estilo/cor sem reconstruir o corpo.
+- Estilo e cor são persistidos em `appearance.hair` e reaplicados ao regenerar protótipos humanoides.
+- Escopo atual: somente personagens que usam a base humanoide procedural. Não altera cabelos de modelos GLB importados e ainda não é um sistema de penteados detalhados/fios individuais.
+- Testes estruturais adicionados; validação visual real no navegador permanece necessária.
