@@ -453,3 +453,10 @@ Commits conhecidos na branch `main`:
 - Adicionados controles de deslocamento horizontal e vertical do olhar no protótipo humanoide, movimentando íris e pupilas em conjunto.
 - Os valores são limitados a uma faixa pequena para manter os olhos próximos da região ocular e são persistidos em `appearance.face`.
 - A direção é restaurada ao selecionar o personagem e ao regenerar o protótipo. O recurso usa geometrias simples e precisa de inspeção visual para validar o alinhamento em diferentes proporções de cabeça.
+
+
+## 25/11/2026 — Abertura dos olhos
+
+- Adicionado controle para ajustar a abertura vertical dos olhos no protótipo humanoide, combinado ao formato e ao tamanho já existentes.
+- A configuração é salva em `appearance.face`, restaurada ao selecionar o personagem e reaplicada ao regenerar o protótipo.
+- O ajuste atua na escala vertical das geometrias oculares; não representa pálpebras articuladas, piscadas ou rig facial animado. A inspeção visual no navegador continua necessária.
