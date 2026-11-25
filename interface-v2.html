@@ -91,6 +91,7 @@ h3{font-size:11px}
 <div class="toolbar">
 <button id="renameSceneObject">Renomear</button>
 <button id="duplicateSceneObject">Duplicar</button>
+<button id="toggleSceneVisibility">Ocultar</button>
 </div>
 </div>
 </aside>
@@ -340,6 +341,7 @@ function persistEditorState() {
     sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
       recordId: obj.userData.characterRecordId || (obj === character ? characterRecordId : null),
       instanceName: obj.userData.instanceName || obj.name || '',
+      visible: obj.visible,
       active: obj === character,
       source: obj.userData.proceduralCategory ? 'procedural_preview' : 'external_file',
       transform: {
@@ -351,6 +353,7 @@ function persistEditorState() {
     objects: objects.filter(obj => !obj.userData.isCharacter).map(obj => ({
       type: obj.userData.type,
       instanceName: obj.userData.instanceName || obj.name || '',
+      visible: obj.visible,
       color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#527cff',
       position: obj.position.toArray(),
       rotation: obj.rotation.toArray(),
@@ -384,6 +387,7 @@ function restoreEditorState(editorState) {
         obj.userData.instanceName = item.instanceName.slice(0, 80);
         obj.name = obj.userData.instanceName;
       }
+      if (typeof item.visible === 'boolean') obj.visible = item.visible;
     });
   }
   updateList();
@@ -674,6 +678,8 @@ selected=obj;
 if(!obj)return;
 document.querySelector('#sceneObjectName').value =
   obj.userData.instanceName || obj.name || '';
+document.querySelector('#toggleSceneVisibility').textContent =
+  obj.visible ? 'Ocultar' : 'Mostrar';
 
 if (obj.userData.isCharacter) {
   character = obj;
@@ -725,9 +731,10 @@ objects.forEach((obj,i)=>{
 
 const b=document.createElement('button');
 
-b.textContent=obj.userData.instanceName || obj.name ||
+const baseName = obj.userData.instanceName || obj.name ||
   (obj.userData.isCharacter ? 'Personagem '+(i+1) : (obj.userData.type||'Objeto')+' '+(i+1));
-
+b.textContent = (obj.visible ? '' : '◌ ') + baseName;
+b.title = obj.visible ? 'Visível na cena' : 'Oculto na cena';
 b.className=obj===selected?'active':'';
 
 b.onclick=()=>selectObject(obj);
@@ -737,6 +744,19 @@ list.appendChild(b);
 });
 
 }
+
+document.querySelector('#toggleSceneVisibility').onclick = () => {
+  if (!selected) {
+    status('Selecione um objeto da cena para alterar a visibilidade.');
+    return;
+  }
+  selected.visible = !selected.visible;
+  document.querySelector('#toggleSceneVisibility').textContent =
+    selected.visible ? 'Ocultar' : 'Mostrar';
+  updateList();
+  persistEditorState();
+  status(selected.visible ? 'Objeto exibido na cena.' : 'Objeto ocultado da cena.');
+};
 
 document.querySelector('#renameSceneObject').onclick = () => {
   if (!selected) {
@@ -1216,6 +1236,7 @@ function restoreAdditionalSceneCharacters(editorState) {
         character.userData.instanceName = instance.instanceName.slice(0, 80);
         character.name = character.userData.instanceName;
       }
+      if (character && typeof instance.visible === 'boolean') character.visible = instance.visible;
     }
   });
   character = activeRoot;
@@ -2025,6 +2046,8 @@ document.querySelector('#bundleFile').onchange = async (event) => {
         const root = cloneSkeleton(asset.gltf.scene);
         root.name = (instance.instanceName || asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado').slice(0, 80);
         root.userData.instanceName = root.name;
+        if (typeof instance.visible === 'boolean') root.visible = instance.visible;
+        if (typeof instance.visible === 'boolean') root.visible = instance.visible;
         root.userData.type = 'personagem';
         root.userData.isCharacter = true;
         root.userData.characterRecordId = instance.recordId;
