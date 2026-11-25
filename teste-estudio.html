@@ -145,7 +145,7 @@ label{margin:8px 0}
 <div id="scene"></div>
 <div class="info">
 VISUALIZADOR 3D<br>
-<span id="modelStatus">Carregando personagem…</span><br><span id="rigStatus" style="color:#9eacc8">Analisando estrutura do modelo…</span>
+<span id="modelStatus">Carregando personagem…</span><br><span id="rigStatus" style="color:#9eacc8">Analisando estrutura do modelo…</span><br><span id="rigValidationStatus" style="color:#9eacc8">Aguardando validação de pesos…</span>
 </div>
 <div class="bottom">Arraste para orbitar • Use dois dedos ou a barra para zoom</div>
 </section>
@@ -353,6 +353,14 @@ if(!window.Estudio3DRig){target.textContent='Diagnóstico de rig indisponível';
 const report=window.Estudio3DRig.inspect(entry&&entry.scene,entry&&entry.animations);
 target.textContent=window.Estudio3DRig.getStatusLabel(report)+' • '+report.boneCount+' ossos • '+report.skinnedMeshCount+' malhas vinculadas • '+report.animationCount+' animações';
 target.title=report.recommendations.join(' ');
+const validationTarget=document.querySelector('#rigValidationStatus');
+if(validationTarget){
+const validation=window.Estudio3DRig.validate(entry&&entry.scene);
+validationTarget.textContent=validation.ok
+? 'Estrutura e pesos: sem problemas detectáveis • '+validation.checkedVertices+' vértices analisados'
+: 'Validação: '+validation.issues.length+' alerta(s) • '+validation.checkedVertices+' vértices analisados';
+validationTarget.title=validation.issues.join(' ');
+}
 }
 
 // ATIVAR MODELO
