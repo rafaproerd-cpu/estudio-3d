@@ -159,7 +159,7 @@ test('exportação JSON inclui o catálogo completo de personagens', () => {
 });
 
 test('importação valida e restaura o catálogo inteiro preservando IDs', () => {
-  const start = html.indexOf("document.querySelector('#file').onchange");
+  const start = html.lastIndexOf("document.querySelector('#file').onchange");
   const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
   const importer = html.slice(start, end);
   assert.match(importer, /\[2,3,4\]/);
@@ -356,8 +356,8 @@ test('interface oferece importação de pacote ZIP completo', () => {
 });
 
 test('importação ZIP valida caminhos, tamanhos e manifesto antes de alterar a cena', () => {
-  const handlerStart = html.indexOf("document.querySelector('#bundleFile').onchange");
-  const handlerEnd = html.indexOf("document.querySelector('#glbFile').onchange", handlerStart);
+  const handlerStart = html.indexOf("document.querySelector('#bundleFile').onchange = async");
+  const handlerEnd = html.indexOf("document.querySelector('#file').onchange=async", handlerStart);
   assert.ok(handlerStart >= 0 && handlerEnd > handlerStart, 'importador ZIP não encontrado');
   const handler = html.slice(handlerStart, handlerEnd);
   assert.match(handler, /file\.size > 150 \* 1024 \* 1024/);
@@ -375,4 +375,11 @@ test('validador GLB exige assinatura, versão e tamanho binário coerentes', () 
   assert.match(validator, /getUint32\(4, true\) !== 2/);
   assert.match(validator, /getUint32\(8, true\) !== buffer\.byteLength/);
   assert.match(validator, /new GLTFLoader\(\)\.parse/);
+});
+
+test('importação ZIP protege contra conteúdo descompactado excessivo e restaura protótipo procedural', () => {
+  assert.match(html, /declaredArchiveBytes > 300 \* 1024 \* 1024/);
+  assert.match(html, /entry\._data\.uncompressedSize > 100 \* 1024 \* 1024/);
+  assert.match(html, /project\.character\.record\.model\.source === 'procedural_preview'/);
+  assert.match(html, /generateCharacterPrototype\(\)/);
 });
