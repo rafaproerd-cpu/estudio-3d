@@ -60,3 +60,17 @@ test('cor primária salva no cadastro é reaplicada ao reconstruir o protótipo'
   assert.match(html, /record\.appearance\.colors\.primary/);
   assert.ok(html.includes("savedPrimaryColor && /^#[0-9a-f]{6}$/i.test(savedPrimaryColor)"));
 });
+
+test('oferece cor independente para detalhes do personagem', () => {
+  assert.match(html, /id="accentColor"/);
+  assert.match(html, /accent\.name = 'character-accent'/);
+  assert.match(html, /material\.name==='character-accent'/);
+  assert.match(html, /colors: \{ accent: e\.target\.value \}/);
+});
+
+test('reaplica a cor dos detalhes salva ao reconstruir o protótipo', () => {
+  assert.match(html, /record\.appearance && record\.appearance\.colors/);
+  assert.match(html, /record\.appearance\.colors\.accent/);
+  assert.match(html, /savedAccentColor && \/\^#[0-9a-f]\{6\}\$\/i\.test\(savedAccentColor\)/);
+  assert.match(html, /accentMaterialFound/);
+});
