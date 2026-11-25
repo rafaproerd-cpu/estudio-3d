@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -353,7 +354,7 @@ cameraPhi=Math.PI/2;
 fitCharacter();
 
 modelStatus.textContent=entry.name;
-status.textContent='● Modelo 3D carregado';
+status.textContent = (window.Estudio3DCore && window.Estudio3DCharacters) ? '● Modelo 3D + módulos conectados' : '● Modelo 3D carregado';
 modelSelect.value=String(entry.id);
 }
 
