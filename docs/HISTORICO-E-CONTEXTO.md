@@ -1,0 +1,158 @@
+# Histórico, conversas, decisões e planejamento — Estúdio 3D
+
+Última atualização: 25/11/2026
+
+Este documento é o registro central de continuidade do Estúdio 3D. Reúne a visão do produto, decisões aprovadas, planejamento, estado técnico, histórico recente e próximos passos conhecidos.
+
+**Nota importante:** este documento é um histórico consolidado, não uma transcrição literal de todas as mensagens do ChatGPT. As conversas originais permanecem no histórico da conta ChatGPT; elas não são copiadas automaticamente para o GitHub. Quando novas decisões e etapas forem tomadas, este arquivo deve ser atualizado para preservar o contexto do projeto.
+
+## 1. Combinado de trabalho, conversa e salvamento
+
+- O projeto significa tudo: código, arquivos, ideias, requisitos, decisões, planejamento, conversas relevantes, testes, problemas encontrados e próximos passos.
+- Registrar no GitHub as alterações de código e atualizar este histórico com decisões e avanços importantes.
+- Não dizer que algo foi salvo sem confirmar o commit.
+- Preservar decisões anteriores; quando uma decisão mudar, registrar a mudança e o motivo, sem apagar silenciosamente o histórico.
+- O usuário delegou as decisões técnicas rotineiras ao assistente. Evitar perguntas técnicas desnecessárias.
+- Chamar o usuário principalmente quando houver um teste/validação real a fazer ou uma decisão de produto que dependa dele.
+- Não alegar trabalho em segundo plano. Só comunicar progresso que tenha sido efetivamente realizado e verificado.
+- Ao retomar o trabalho, consultar este documento e o estado atual do repositório antes de continuar.
+
+## 2. Visão e escopo do produto
+
+O Estúdio 3D deve ser uma plataforma ampla para criação e personalização de personagens, cenas, histórias e animações.
+
+### Catálogo de personagens
+- Humanos masculinos e femininos em todas as fases da vida: bebês, crianças, adolescentes, adultos e idosos.
+- Animais domésticos e selvagens, aves e outras espécies.
+- Personagens antropomórficos.
+- Criaturas, monstros, dragões e seres de fantasia.
+- Robôs e extraterrestres.
+- Objetos antropomórficos.
+- Heróis, vilões e outros tipos de personagens.
+
+### Direção artística
+O estilo não deve ser fixo por espécie ou projeto. Deve se adaptar à história e à direção artística: cartoon, cartoon realista, 3D estilizado, semi-realista, realista, fantasia, anime e outras abordagens. Estilos diferentes podem coexistir quando a narrativa pedir, mantendo coerência visual dentro de cada cena ou produção.
+
+### Público e exportação
+- Atender também criadores de jogos.
+- Permitir exportar o personagem completo ou partes separadas, como cabeça, corpo, roupas, cabelo e acessórios.
+- Prever fluxos e configurações para Unity, Unreal Engine e Godot.
+- Suportar rigging e animações quando tecnicamente implementados e validados.
+
+## 3. Planos, créditos e limites
+
+Valores definidos como proposta de planejamento, ainda sujeitos à validação dos custos reais de processamento:
+
+| Plano | Créditos mensais |
+|---|---:|
+| Estúdio Básico | 1.000 |
+| Estúdio Pro | 10.000 |
+| Estúdio Ultra | 100.000 |
+
+- Créditos não utilizados acumulam para o mês seguinte, conforme decisão registrada no planejamento.
+- Priorizar ferramentas gratuitas e processamento local no início, para controlar custos.
+- O plano gratuito teve uma proposta anterior de até 3 minutos por vídeo; confirmar a estrutura final de planos antes de lançamento comercial.
+- Os valores e regras comerciais precisam ser validados com custos reais, infraestrutura e testes de uso.
+
+## 4. Áudio e exportação
+
+Proposta aprovada para os três planos:
+- Formatos: MP3, WAV, FLAC e OGG.
+- Exportar narração, diálogos por personagem, músicas, efeitos sonoros, faixas separadas e mixagem completa.
+- MP3 como referência de 192 kbps no Básico e até 320 kbps no Pro/Ultra.
+- Recursos efetivos e limites por plano devem ser confirmados na implementação e validados com custos e desempenho.
+
+## 5. Estado técnico conhecido
+
+Repositório: https://github.com/rafaproerd-cpu/estudio-3d
+
+Arquivos e módulos conhecidos:
+- `interface-v2.html`: interface do editor 3D baseada em Three.js.
+- `character-system.js`: catálogo e estrutura de dados de personagens.
+- `estudio-core.js`: núcleo do projeto, persistência local, importação/exportação JSON e eventos.
+- `tests/interface-v2.test.cjs`: testes automatizados da interface.
+
+### Sistema de personagens
+Versão conhecida: 1.1.0.
+- Categorias: humano, animal, criatura, robô, alienígena, objeto e outros.
+- Faixas etárias: bebê, criança, adolescente, adulto, idoso e não aplicável.
+- Tipos de rig: humanoide, quadrúpede, ave, personalizado, nenhum e desconhecido.
+- API conhecida: criação de personagem/aparência/direção visual, validação, inclusão no projeto, consulta, atualização, remoção e agrupamento visual.
+- Estrutura de aparência inclui corpo, rosto, cabelo, vestuário, cores e características.
+
+### Núcleo do projeto
+Versão conhecida: 1.0.1.
+- Projeto em memória e localStorage.
+- Obter, atualizar, salvar e carregar projeto.
+- Importar/exportar JSON.
+- Sistema de eventos e adaptadores.
+
+### Interface 3D
+- Three.js 0.160.0 via CDN e GLTFLoader.
+- Há tentativa de carregar `man-base-character-rigged.glb`.
+- Ferramentas de formas primitivas, cor, escala, posição, rotação, iluminação, fundo e animação quando o modelo compatível está carregado.
+- Exportação GLB implementada via GLTFExporter para o objeto selecionado, em modo binário.
+- Protótipos procedurais básicos para categorias de personagens, incluindo ramo de aves.
+- Escala aproximada por faixa etária.
+- Registro do personagem e restauração de protótipo/transformação em importação JSON.
+- Controles de cor principal e cor de detalhes, com persistência das cores no registro e restauração na reconstrução.
+- Prevenção de duplicação de protótipos ao substituir personagem.
+
+## 6. Histórico recente de desenvolvimento
+
+Commits conhecidos na branch `main`:
+- `f1c343ff993ba7dbf649d601ea85bfd5d217b23b`: exportação JSON v3 com metadados do personagem e transformação.
+- `c6ad6dd752f01bc2fe8d1906ebc070a48182f92e`: importação/restauração de metadados, transformação, iluminação e fundo; compatibilidade JSON v2/v3.
+- `6fb0a374f710dc91ea172f491ab036384271072f`: formulário universal de cadastro de personagens.
+- `d6b0ad91f8eb1b6369f6329e2eb1ac3242e91719`: protótipo inicial de geração procedural 3D.
+- `9e490399c13b782272bb792195810abdda253423`: evita pré-visualizações duplicadas e restaura cores salvas do protótipo.
+- `b2842248eeb83ebbc47d33ece63c2a6203d343a1`: estabilização de teste de restauração de cor; 20 testes aprovados naquele ciclo.
+- `5035e9a2ed71c50f1db50cc8b8b96373fb75a4a4`: controle separado de cor de detalhes.
+- `063ff6c46d8e0c226a3af9a05d50324286f7d365`: estabiliza teste de restauração da cor de detalhes.
+
+### Último estado confirmado em 25/11/2026
+- Último commit conhecido na branch `main`: `063ff6c46d8e0c226a3af9a05d50324286f7d365`.
+- Arquivo `interface-v2.html` foi consultado no GitHub; blob SHA naquele momento: `88d2956ed942bdd60c391c433623e93433177025`.
+- Workflow automatizado de testes: 22 aprovados, 0 falhas.
+- GitHub Pages: execução de publicação correspondente ao commit acima concluída com sucesso.
+- Execução dos testes: https://github.com/rafaproerd-cpu/estudio-3d/actions/runs/45542964260
+- Execução da publicação: https://github.com/rafaproerd-cpu/estudio-3d/actions/runs/45542964631
+
+## 7. Limitações e validações pendentes
+
+- Os personagens procedurais ainda são protótipos simples feitos com formas primitivas; não são modelos finais detalhados.
+- A exportação GLB exporta o objeto selecionado e conteúdo visível; a exportação de protótipos procedurais é essencialmente geometria e materiais estáticos.
+- Rigging e animações não estão garantidos na exportação dos protótipos procedurais.
+- O JSON guarda o registro do personagem e transformações, não a malha 3D completa; a prévia é reconstruída a partir do registro.
+- O tratamento de múltiplos personagens na mesma cena ainda precisa ser verificado e pode estar limitado pelo uso de variáveis globais.
+- A dependência do modelo GLB externo precisa ser validada no navegador.
+- Os testes automatizados passaram, mas isso não substitui teste visual e funcional real no navegador.
+- A exportação GLB, o carregamento do Three.js e a interação completa da interface ainda precisam de validação manual em navegador.
+
+## 8. Próximos passos técnicos sugeridos
+
+1. Revisar o controle de cor principal para garantir que não sobrescreva a cor de detalhes.
+2. Fazer teste manual da interface no navegador assim que a etapa estiver pronta para validação do usuário.
+3. Evoluir personalização de partes do corpo, roupas, cabelo e acessórios, respeitando as partes realmente existentes em cada protótipo.
+4. Planejar exportação de partes individuais do personagem.
+5. Evoluir protótipos procedurais para modelos de maior qualidade e categorias mais completas.
+6. Melhorar gerenciamento de múltiplos personagens e persistência da cena.
+7. Validar exportação GLB e compatibilidade com ferramentas externas.
+8. Atualizar este documento a cada marco relevante e manter testes automatizados.
+
+## 9. Registro das conversas recentes sobre continuidade
+
+- O usuário pediu que o desenvolvimento continue sem ser chamado a cada decisão técnica; quer ser chamado apenas para testes ou decisões que realmente dependam dele.
+- O usuário reforçou que o combinado inclui salvamento, não apenas continuidade do desenvolvimento.
+- Foi esclarecido que salvar o projeto significa preservar também o contexto, planejamento e decisões das conversas, além do código.
+- Este documento foi criado para iniciar esse registro centralizado no próprio repositório.
+- A partir daqui, acrescentar entradas datadas com decisões, perguntas importantes, respostas acordadas, mudanças de escopo, testes e próximos passos.
+
+## 10. Modelo para novas entradas de conversa
+
+### AAAA-MM-DD — Assunto
+- **O que foi discutido:**
+- **Decisão/combinação:**
+- **Alterações feitas:**
+- **Validação/testes:**
+- **Pendências e próximo passo:**
