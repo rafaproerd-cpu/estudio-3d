@@ -173,12 +173,14 @@ h3{font-size:11px}
 <div class="actions">
 <button id="export">Exportar JSON</button>
 <button id="exportBundle">Exportar projeto completo (.zip)</button>
+<button id="importBundle">Importar projeto completo (.zip)</button>
 <button id="exportGLB">Exportar personagem GLB</button>
 <button id="importGLB">Importar personagem GLB</button>
 <button id="import">Importar JSON</button>
 <button id="delete">Excluir objeto</button>
 </div>
 <input type="file" id="file" accept=".json,application/json" hidden>
+<input type="file" id="bundleFile" accept=".zip,application/zip,application/x-zip-compressed" hidden>
 <input type="file" id="glbFile" accept=".glb,model/gltf-binary" hidden>
 </div>
 
@@ -254,6 +256,7 @@ let character=null;
 let characterRecordId=null;
 let selectedCatalogRecordId=null;
 let pendingCharacterImport=null;
+let lastProjectImportSucceeded = false;
 // Mantém em memória os binários GLB importados para incluí-los no pacote portátil.
 const externalModelAssets = new Map();
 let mixer=null;
@@ -1503,11 +1506,196 @@ document.querySelector('#file').click();
 
 };
 
+// Importa um pacote ZIP completo. Todo o conteúdo é validado e os GLBs são
+// analisados antes de substituir qualquer parte do projeto aberto.
+document.querySelector('#importBundle').onclick = () => {
+  document.querySelector('#bundleFile').click();
+};
+
+function parseGLBBuffer(buffer) {
+  if (!(buffer instanceof ArrayBuffer) || buffer.byteLength < 20) {
+    return Promise.reject(new Error('O arquivo GLB está vazio ou incompleto.'));
+  }
+  const header = new DataView(buffer);
+  if (header.getUint32(0, true) !== 0x46546c67 || header.getUint32(4, true) !== 2 ||
+      header.getUint32(8, true) !== buffer.byteLength) {
+    return Promise.reject(new Error('Um dos arquivos do pacote não possui cabeçalho GLB 2.0 válido.'));
+  }
+  return new Promise((resolve, reject) => {
+    try {
+      new GLTFLoader().parse(buffer, '', resolve, reject);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+document.querySelector('#bundleFile').onchange = async (event) => {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      throw new Error('Selecione um pacote .zip.');
+    }
+    if (file.size > 150 * 1024 * 1024) {
+      throw new Error('O pacote ZIP excede o limite de 150 MB.');
+    }
+    if (!window.JSZip) {
+      throw new Error('A biblioteca de compactação não foi carregada. Verifique sua conexão e tente novamente.');
+    }
+
+    status('Verificando pacote ZIP...');
+    const zip = await window.JSZip.loadAsync(file, { checkCRC32: true });
+    const entries = Object.values(zip.files);
+    if (entries.length > 1000) throw new Error('O pacote contém arquivos demais.');
+    for (const entry of entries) {
+      const name = entry.name;
+      if (name.includes('\\') || name.startsWith('/') || /^[a-z]:/i.test(name) ||
+          name.split('/').some(part => part === '..' || part === '.')) {
+        throw new Error('O pacote contém um caminho de arquivo inseguro.');
+      }
+    }
+
+    const projectEntry = zip.file('project.json');
+    if (!projectEntry) throw new Error('O pacote não contém project.json.');
+    const projectText = await projectEntry.async('string');
+    if (projectText.length > 5 * 1024 * 1024) throw new Error('O arquivo de projeto excede 5 MB.');
+    const project = JSON.parse(projectText);
+    if (project.version !== 4 || !Array.isArray(project.objects)) {
+      throw new Error('O pacote contém uma versão de projeto não suportada.');
+    }
+    if (!Array.isArray(project.assetManifest)) {
+      throw new Error('O manifesto de modelos do pacote está ausente ou inválido.');
+    }
+
+    const records = Array.isArray(project.characters) ? project.characters : [];
+    const recordIds = new Set(records.map(record => record && record.id));
+    const manifestIds = new Set();
+    const preparedAssets = new Map();
+    let totalAssetBytes = 0;
+
+    status('Validando modelos 3D do pacote...');
+    for (const asset of project.assetManifest) {
+      if (!asset || typeof asset.characterId !== 'string' ||
+          !recordIds.has(asset.characterId) || manifestIds.has(asset.characterId)) {
+        throw new Error('O manifesto contém um personagem inválido ou duplicado.');
+      }
+      manifestIds.add(asset.characterId);
+      if (asset.format !== 'glb' || asset.embedded !== true ||
+          typeof asset.archivePath !== 'string' ||
+          !/^assets\/[a-z0-9_-]+\/[a-z0-9._-]+\.glb$/i.test(asset.archivePath)) {
+        throw new Error('O manifesto contém um caminho ou formato de modelo inválido.');
+      }
+      const entry = zip.file(asset.archivePath);
+      if (!entry || entry.dir) throw new Error('Modelo obrigatório ausente: ' + asset.fileName);
+      const buffer = await entry.async('arraybuffer');
+      if (buffer.byteLength > 100 * 1024 * 1024) throw new Error('Um modelo GLB excede 100 MB.');
+      totalAssetBytes += buffer.byteLength;
+      if (totalAssetBytes > 250 * 1024 * 1024) throw new Error('Os modelos do pacote excedem o limite total de 250 MB.');
+      const gltf = await parseGLBBuffer(buffer);
+      preparedAssets.set(asset.characterId, {
+        fileName: asset.fileName || 'model.glb',
+        data: buffer,
+        gltf
+      });
+    }
+
+    // O importador JSON existente faz a validação do catálogo e das transformações.
+    status('Restaurando projeto e catálogo...');
+    const projectFile = new File([projectText], 'project.json', { type: 'application/json' });
+    lastProjectImportSucceeded = false;
+    await document.querySelector('#file').onchange({
+      target: { files: [projectFile], value: '' }
+    });
+    if (!lastProjectImportSucceeded) {
+      throw new Error('O projeto JSON não passou pela validação. A cena não será completada com os modelos.');
+    }
+
+    externalModelAssets.clear();
+    preparedAssets.forEach((asset, id) => {
+      externalModelAssets.set(id, { fileName: asset.fileName, data: asset.data });
+    });
+
+    // Restaura na cena o modelo correspondente ao personagem ativo no projeto.
+    const activeId = project.character && project.character.record && project.character.record.id;
+    const activeAsset = activeId ? preparedAssets.get(activeId) : null;
+    if (activeAsset) {
+      if (character) {
+        scene.remove(character);
+        const oldIndex = objects.indexOf(character);
+        if (oldIndex >= 0) objects.splice(oldIndex, 1);
+      }
+      if (mixer) mixer.stopAllAction();
+      mixer = null;
+      activeAction = null;
+      animationActions = [];
+
+      const root = activeAsset.gltf.scene;
+      root.name = activeAsset.fileName.replace(/\.glb$/i, '') || 'Personagem importado';
+      root.userData.type = 'personagem';
+      root.userData.isCharacter = true;
+      root.traverse(child => {
+        if (!child.isMesh) return;
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.userData.editorRoot = root;
+        if (child.material) child.material.side = THREE.DoubleSide;
+      });
+      character = root;
+      characterRecordId = activeId;
+      selectedCatalogRecordId = activeId;
+      const transform = project.character.transform || {};
+      if (Array.isArray(transform.position)) root.position.fromArray(transform.position);
+      if (Array.isArray(transform.rotation)) root.rotation.fromArray(transform.rotation);
+      if (Array.isArray(transform.scale)) root.scale.fromArray(transform.scale);
+      scene.add(root);
+      objects.push(root);
+
+      const select = document.querySelector('#animationSelect');
+      select.innerHTML = '';
+      animationActions = activeAsset.gltf.animations || [];
+      if (animationActions.length) {
+        animationActions.forEach((clip, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.textContent = clip.name || 'Animação ' + (index + 1);
+          select.appendChild(option);
+        });
+        mixer = new THREE.AnimationMixer(root);
+        select.disabled = false;
+        document.querySelector('#animate').disabled = false;
+        document.querySelector('#pauseAnimation').disabled = false;
+      } else {
+        select.innerHTML = '<option>Sem animações no modelo</option>';
+        select.disabled = true;
+        document.querySelector('#animate').disabled = true;
+        document.querySelector('#pauseAnimation').disabled = true;
+      }
+      const activeRecord = window.Estudio3DCharacters.getCharacter(activeId);
+      if (activeRecord) syncCharacterForm(activeRecord);
+      selectObject(root);
+    }
+
+    renderCharacterCatalog();
+    updateList();
+    window.Estudio3DCore.saveProject();
+    persistEditorState();
+    status('Projeto ZIP restaurado com ' + preparedAssets.size + ' modelo(s) GLB. Confira a cena e o catálogo.');
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha ao importar pacote ZIP:', error);
+    status('Não foi possível abrir o pacote: ' + error.message);
+  } finally {
+    event.target.value = '';
+  }
+};
+
+
 document.querySelector('#file').onchange=async e=>{
 
 const file=e.target.files[0];
 
 if(!file)return;
+lastProjectImportSucceeded = false;
 
 try{
 
@@ -1663,6 +1851,7 @@ selected=(data.character && character) ? character : (objects[objects.length-1]|
 if(selected) selectObject(selected);
 updateList();
 if(window.Estudio3DCore) window.Estudio3DCore.saveProject();
+lastProjectImportSucceeded = true;
 status(data.character
   ? 'Projeto importado. Os dados do personagem foram restaurados; o modelo GLB precisa estar disponível.'
   : 'Projeto importado.');
