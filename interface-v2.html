@@ -683,6 +683,13 @@ function generateCharacterPrototype() {
     return;
   }
 
+  // O editor mantém um personagem principal por vez: evita duplicatas ao regenerar.
+  if (character) {
+    scene.remove(character);
+    const previousIndex = objects.indexOf(character);
+    if (previousIndex >= 0) objects.splice(previousIndex, 1);
+  }
+
   const group = new THREE.Group();
   group.name = record.name || 'Personagem procedural';
   group.userData.type = 'procedural-character';
@@ -693,7 +700,12 @@ function generateCharacterPrototype() {
     human: 0xc58d68, animal: 0xb9824d, creature: 0x687c9f,
     robot: 0x9aa8bd, alien: 0x65b99a, object: 0x527cff, other: 0x8b83b8
   };
-  const baseColor = palette[record.category] || palette.other;
+  const savedPrimaryColor = record.appearance && record.appearance.colors
+    ? record.appearance.colors.primary
+    : null;
+  const baseColor = savedPrimaryColor && /^#[0-9a-f]{6}$/i.test(savedPrimaryColor)
+    ? savedPrimaryColor
+    : (palette[record.category] || palette.other);
   const material = new THREE.MeshStandardMaterial({
     color: baseColor, roughness: 0.62, metalness: record.category === 'robot' ? 0.72 : 0.05
   });
@@ -789,6 +801,7 @@ function generateCharacterPrototype() {
   scene.add(group);
   objects.push(group);
   character = group;
+  selected = group;
   mixer = null;
   animationActions = [];
   activeAction = null;
