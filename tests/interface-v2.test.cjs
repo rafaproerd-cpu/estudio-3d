@@ -152,7 +152,8 @@ test('exportação JSON inclui o catálogo completo de personagens', () => {
   const end = html.indexOf("document.querySelector('#export').onclick", start);
   const exporter = html.slice(start, end);
   assert.match(exporter, /version:4/);
-  assert.match(exporter, /characters: window\.Estudio3DCharacters/);
+  assert.match(exporter, /characters: catalog/);
+  assert.match(exporter, /window\.Estudio3DCharacters\.getCharacters\(\)/);
   assert.match(exporter, /getCharacters\(\)/);
   assert.match(exporter, /character: characterData \? \{/);
 });
