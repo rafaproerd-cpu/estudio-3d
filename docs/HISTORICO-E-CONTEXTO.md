@@ -188,3 +188,14 @@ Commits conhecidos na branch `main`:
 - **Validação:** workflow automatizado do commit `7077ca6` concluído com sucesso. A publicação do GitHub Pages referente aos commits de documentação subsequentes estava pendente na última consulta.
 - **Estado anterior confirmado nesta retomada:** no commit `d1316994`, os 25 testes automatizados e a publicação do GitHub Pages concluíram com sucesso.
 - **Próximo passo:** aguardar o workflow do commit `7077ca6`; depois continuar a revisão da restauração e seleção de personagens.
+
+
+## 25/11/2026 — Isolamento entre seleção do catálogo e personagem ativo na cena
+
+- Identificado risco de associação incorreta: selecionar outro cadastro no catálogo também alterava `characterRecordId`, que é usado pelos controles de aparência e persistência do modelo atualmente presente na cena.
+- Separadas as referências `selectedCatalogRecordId` (cadastro em edição/selecionado no catálogo) e `characterRecordId` (cadastro associado ao personagem visual ativo na cena).
+- Salvar dados e gerar protótipo agora usam o cadastro selecionado; ajustes de aparência, transformações e exportação JSON continuam vinculados ao personagem efetivamente presente na cena. A associação visual só muda ao gerar o protótipo ou carregar/restaurar um modelo.
+- Exclusão limpa as referências correspondentes sem apagar automaticamente a malha visual da cena.
+- Adicionados testes de regressão para impedir que a seleção no catálogo troque silenciosamente a associação do personagem ativo.
+- Testes automatizados do GitHub Actions aprovados no commit `884f86233a40c3a6aaaea6630dd9f411ebfc644d` (workflow run `45630311820`).
+- Publicação do GitHub Pages para esse commit foi iniciada; verificar conclusão antes de considerar a publicação atualizada.
