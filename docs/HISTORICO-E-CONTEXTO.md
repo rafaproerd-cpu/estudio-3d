@@ -199,3 +199,10 @@ Commits conhecidos na branch `main`:
 - Adicionados testes de regressão para impedir que a seleção no catálogo troque silenciosamente a associação do personagem ativo.
 - Testes automatizados do GitHub Actions aprovados no commit `884f86233a40c3a6aaaea6630dd9f411ebfc644d` (workflow run `45630311820`).
 - Publicação do GitHub Pages para esse commit foi iniciada; verificar conclusão antes de considerar a publicação atualizada.
+
+
+## 25/11/2026 — Limpeza de animações ao substituir modelo rigged por protótipo
+
+- Identificado que gerar um protótipo procedural após carregar um modelo rigged poderia deixar o mixer e os controles de animação apontando para o modelo antigo, já removido da cena.
+- A geração procedural agora encerra as ações anteriores, limpa mixer/ação/clipes e desativa os controles de animação, indicando que o protótipo ainda não possui animações.
+- Teste de regressão adicionado. GitHub Actions aprovado no commit `ba3079a02ad8cb0a5120e6dd1fb0670f0be4fe18` (workflow run `45630515181`).
