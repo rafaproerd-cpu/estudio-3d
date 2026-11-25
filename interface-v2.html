@@ -350,6 +350,49 @@ function registerCharacterAnimations(root, clips) {
   return state;
 }
 
+function getCharacterAnimationSnapshot(root) {
+  const state = root ? characterAnimationStates.get(root) : null;
+  if (!state || !state.mixer || !state.activeAction) return null;
+  return {
+    clipName: state.activeAction.getClip().name || '',
+    clipIndex: state.clips.indexOf(state.activeAction.getClip()),
+    time: Number.isFinite(state.activeAction.time) ? state.activeAction.time : 0,
+    timeScale: Number.isFinite(state.mixer.timeScale) ? state.mixer.timeScale : 1,
+    playing: state.activeAction.isRunning()
+  };
+}
+
+function restoreCharacterAnimation(root, snapshot) {
+  if (!root || !snapshot || snapshot.playing !== true) return false;
+  const state = characterAnimationStates.get(root);
+  if (!state || !state.mixer || !state.clips.length) return false;
+  let clip = typeof snapshot.clipName === 'string'
+    ? state.clips.find(item => item.name === snapshot.clipName) : null;
+  if (!clip && Number.isInteger(snapshot.clipIndex)) clip = state.clips[snapshot.clipIndex];
+  if (!clip) return false;
+  const action = state.mixer.clipAction(clip);
+  action.reset();
+  action.play();
+  if (Number.isFinite(snapshot.time)) {
+    const duration = Math.max(0, clip.duration || 0);
+    action.time = duration ? Math.max(0, Math.min(duration, snapshot.time)) : 0;
+  }
+  state.mixer.timeScale = Number.isFinite(snapshot.timeScale) ? snapshot.timeScale : 1;
+  state.activeAction = action;
+  if (root === character) {
+    mixer = state.mixer;
+    animationActions = state.clips;
+    activeAction = action;
+    const select = document.querySelector('#animationSelect');
+    const index = state.clips.indexOf(clip);
+    if (select && index >= 0) select.value = String(index);
+    const pause = document.querySelector('#pauseAnimation');
+    if (pause) pause.textContent = state.mixer.timeScale === 0
+      ? '▶ Continuar animação' : 'Ⅱ Pausar animação';
+  }
+  return true;
+}
+
 function activateCharacterAnimations(root) {
   const state = root ? characterAnimationStates.get(root) : null;
   mixer = state ? state.mixer : null;
@@ -405,7 +448,8 @@ function persistEditorState() {
         position: obj.position.toArray(),
         rotation: obj.rotation.toArray(),
         scale: obj.scale.toArray()
-      }
+      },
+      animation: getCharacterAnimationSnapshot(obj)
     })),
     objects: objects.filter(obj => !obj.userData.isCharacter).map(obj => ({
       type: obj.userData.type,
@@ -1449,6 +1493,7 @@ activeAction.fadeIn(.2);
 activeAction.play();
 
 status('Animação: '+(clip.name||'Movimento'));
+persistEditorState();
 
 }
 
@@ -1488,6 +1533,7 @@ document.querySelector('#pauseAnimation').textContent=
 mixer.timeScale===0?'▶ Continuar animação':'Ⅱ Pausar animação';
 
 status(mixer.timeScale===0?'Animação pausada.':'Animação retomada.');
+persistEditorState();
 
 };
 
@@ -1615,7 +1661,8 @@ sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
     position: obj.position.toArray(),
     rotation: obj.rotation.toArray(),
     scale: obj.scale.toArray()
-  }
+  },
+  animation: getCharacterAnimationSnapshot(obj)
 })),
 
 // Inclui os metadados universais e a transformação do personagem no arquivo.
@@ -2114,6 +2161,8 @@ document.querySelector('#bundleFile').onchange = async (event) => {
         });
         registerCharacterAnimations(root, animationActions);
         activateCharacterAnimations(root);
+        const activeSceneInstance = (project.sceneCharacters || []).find(instance => instance && instance.active);
+        restoreCharacterAnimation(root, activeSceneInstance && activeSceneInstance.animation);
         select.disabled = false;
         document.querySelector('#animate').disabled = false;
         document.querySelector('#pauseAnimation').disabled = false;
@@ -2156,6 +2205,7 @@ document.querySelector('#bundleFile').onchange = async (event) => {
         scene.add(root);
         objects.push(root);
         registerCharacterAnimations(root, asset.gltf.animations || []);
+        restoreCharacterAnimation(root, instance.animation);
       });
 
     renderCharacterCatalog();
