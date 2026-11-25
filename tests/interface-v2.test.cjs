@@ -240,3 +240,14 @@ test('cena salva intencionalmente sem personagem não carrega GLB-base ao reabri
   assert.match(loader, /restoreEditorState\(startupEditorState\)/);
   assert.match(loader, /return;/);
 });
+
+
+test('personagem rigged restaura posição, rotação e escala salvas localmente', () => {
+  const start = html.indexOf('function loadCharacter()');
+  const end = html.indexOf('/* OBJETOS */', start);
+  const loader = html.slice(start, end);
+  assert.match(loader, /if \(!restoreProcedural && restoredProceduralTransform\)/);
+  assert.match(loader, /character\.position\.fromArray\(t\.position\)/);
+  assert.match(loader, /character\.rotation\.fromArray\(t\.rotation\)/);
+  assert.match(loader, /character\.scale\.fromArray\(t\.scale\)/);
+});
