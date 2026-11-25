@@ -270,6 +270,32 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
 
+// Object3D.userData.editorRoot aponta de cada malha para a raiz e cria uma
+// referência circular. O clone do Three.js serializa userData em JSON, então
+// removemos essa referência temporariamente durante a cópia.
+function cloneSkeletonSafe(source, attachEditorRoots = true) {
+  const editorRootRefs = [];
+  source.traverse(node => {
+    if (node.userData && Object.prototype.hasOwnProperty.call(node.userData, 'editorRoot')) {
+      editorRootRefs.push([node, node.userData.editorRoot]);
+      delete node.userData.editorRoot;
+    }
+  });
+  try {
+    const copy = cloneSkeletonSafe(source);
+    if (attachEditorRoots) {
+      copy.traverse(node => {
+        if (node.isMesh) node.userData.editorRoot = copy;
+      });
+    }
+    return copy;
+  } finally {
+    editorRootRefs.forEach(([node, root]) => {
+      node.userData.editorRoot = root;
+    });
+  }
+}
+
 const canvas=document.querySelector('#scene');
 const renderer=new THREE.WebGLRenderer({
 canvas,
@@ -912,7 +938,7 @@ document.querySelector('#duplicateSceneObject').onclick = () => {
       return;
     }
     const sourceAnimationState = characterAnimationStates.get(source);
-    const copy = cloneSkeleton(source);
+    const copy = cloneSkeletonSafe(source);
     copy.name = (sourceName + ' (cópia)').slice(0, 80);
     copy.userData = { ...source.userData, instanceName: copy.name, characterRecordId: recordId };
     copy.position.copy(source.position);
@@ -1312,7 +1338,7 @@ function addCharacterInstance(recordId, transform = null, options = {}) {
       status('Este modelo GLB não está carregado na cena. Importe o arquivo original novamente para criar outra instância.');
       return;
     }
-    const copy = cloneSkeleton(source);
+    const copy = cloneSkeletonSafe(source);
     const sourceName = source.userData.instanceName || source.name || record.name;
     copy.name = (sourceName + ' (cópia)').slice(0, 80);
     copy.userData = { ...source.userData, instanceName: copy.name, characterRecordId: recordId };
@@ -1876,7 +1902,7 @@ document.querySelector('#exportSceneGLB').onclick = () => {
   const exportRoot = new THREE.Group();
   exportRoot.name = 'Estudio3D-Scene';
   sceneCharacters.forEach((obj, index) => {
-    const copy = cloneSkeleton(obj);
+    const copy = cloneSkeletonSafe(obj, false);
     copy.name = obj.name || 'Objeto-' + (index + 1);
     copy.position.copy(obj.position);
     copy.quaternion.copy(obj.quaternion);
@@ -1920,18 +1946,28 @@ document.querySelector('#exportGLB').onclick = () => {
     return;
   }
 
+  const exportTarget = selected;
+  const exportName = exportTarget.name || 'personagem';
+  let exportClone;
+  try {
+    exportClone = cloneSkeletonSafe(exportTarget, false);
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha ao copiar personagem para exportação:', error);
+    status('Não foi possível preparar uma cópia segura do personagem para exportação.');
+    return;
+  }
   const exporter = new GLTFExporter();
   status('Preparando arquivo GLB do personagem...');
 
   exporter.parse(
-    selected,
+    exportClone,
     (result) => {
       try {
         const blob = new Blob([result], { type: 'model/gltf-binary' });
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        const safeName = (selected.name || 'personagem')
+        const safeName = exportName
           .toLowerCase()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
@@ -2186,7 +2222,7 @@ document.querySelector('#bundleFile').onchange = async (event) => {
       .forEach(instance => {
         const asset = preparedAssets.get(instance.recordId);
         if (!asset) return;
-        const root = cloneSkeleton(asset.gltf.scene);
+        const root = cloneSkeletonSafe(asset.gltf.scene);
         root.name = (instance.instanceName || asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado').slice(0, 80);
         root.userData.instanceName = root.name;
         if (typeof instance.visible === 'boolean') root.visible = instance.visible;
