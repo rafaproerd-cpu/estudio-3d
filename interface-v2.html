@@ -276,6 +276,7 @@ function persistEditorState() {
       } }
     : null;
   const editorState = {
+    hasCharacter: !!activeCharacter,
     background: '#' + scene.background.getHexString(),
     light: sun.intensity,
     activeCharacter,
@@ -318,6 +319,15 @@ function restoreEditorState(editorState) {
 /* CARREGAMENTO DO PERSONAGEM */
 
 function loadCharacter(){
+
+const startupEditorState = window.Estudio3DCore
+  ? (window.Estudio3DCore.getProject().settings || {}).editorState
+  : null;
+if (!pendingCharacterImport && startupEditorState && startupEditorState.hasCharacter === false) {
+  restoreEditorState(startupEditorState);
+  status('Cena restaurada sem personagem. Você pode adicionar objetos ou gerar um personagem pelo catálogo.');
+  return;
+}
 
 status('Carregando personagem 3D...');
 
