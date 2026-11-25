@@ -128,3 +128,13 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Identificado que gerar um protótipo procedural após carregar um modelo rigged poderia deixar o mixer e os controles de animação apontando para o modelo antigo, já removido da cena.
 - A geração procedural agora encerra as ações anteriores, limpa mixer/ação/clipes e desativa os controles de animação, indicando que o protótipo ainda não possui animações.
 - Teste de regressão adicionado. GitHub Actions aprovado no commit `ba3079a02ad8cb0a5120e6dd1fb0670f0be4fe18` (workflow run `45630515181`).
+
+
+## 25/11/2026 — Exportação e importação do catálogo completo de personagens
+
+- Corrigida perda potencial de cadastros ao exportar projetos JSON: a versão 4 inclui a lista completa `characters`, além do personagem visual ativo e sua transformação.
+- A importação aceita versões 2, 3 e 4, restaura o catálogo completo, normaliza e valida cada cadastro, rejeita entradas inválidas e IDs duplicados e preserva os identificadores originais.
+- Compatibilidade com arquivos antigos sem ID: o identificador gerado durante a normalização também é aplicado ao registro ativo para evitar duplicação.
+- Corrigido o caminho de importação antes do carregamento do GLB: o carregador verifica o ID importado e atualiza o cadastro existente em vez de criar uma cópia.
+- Testes automatizados aprovados: 32/32 no GitHub Actions, workflow run `45633183501`, commit `65c69f8bbafe22af77afe13ab89088287528413a`.
+- Limitação conhecida para a próxima etapa: a persistência local do núcleo guarda o catálogo, mas a restauração automática completa da cena ativa (modelo, objetos, cenário e transformações) após recarregar o navegador ainda precisa ser integrada e testada.
