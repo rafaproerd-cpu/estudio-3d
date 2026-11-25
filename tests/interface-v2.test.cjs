@@ -424,3 +424,22 @@ test('selecionar personagem da cena atualiza seu cadastro associado', () => {
   assert.match(html, /characterRecordId = obj\.userData\.characterRecordId/);
   assert.match(html, /selectedRecord = window\.Estudio3DCharacters\.getCharacter\(characterRecordId\)/);
 });
+
+
+test('restauração local recria personagens procedurais adicionais sem perder o personagem ativo', () => {
+  assert.match(html, /function restoreAdditionalSceneCharacters\(editorState\)/);
+  assert.match(html, /editorState\.sceneCharacters\.forEach\(instance =>/);
+  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform, \{ persist: false, offset: false \} \)/);
+  assert.match(html, /character = activeRoot/);
+});
+
+test('importação de cena preserva a instância marcada como ativa após recriar as demais', () => {
+  assert.match(html, /const importedActiveRoot = character/);
+  assert.match(html, /character = importedActiveRoot/);
+  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform, \{ offset: false, persist: false \} \)/);
+});
+
+test('modelos GLB importados ficam vinculados ao ID do cadastro no catálogo', () => {
+  assert.match(html, /importedCharacter\.userData\.characterRecordId = record\.id/);
+  assert.match(html, /root\.userData\.characterRecordId = activeId/);
+});
