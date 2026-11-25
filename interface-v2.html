@@ -367,6 +367,33 @@ function status(message){
 document.querySelector('#status').textContent=message;
 }
 
+// Prepara uma cópia de clipe para uma instância renomeada na exportação de cena.
+// O GLTFExporter resolve os alvos por nome; prefixos evitam colisões entre rigs.
+function remapAnimationClipForExport(clip, root, prefix) {
+  const renamedNodes = new Map();
+  root.traverse(node => {
+    const oldName = node.name;
+    if (!oldName) return;
+    const newName = prefix + THREE.PropertyBinding.sanitizeNodeName(oldName);
+    renamedNodes.set(oldName, newName);
+    node.name = newName;
+  });
+
+  const remapped = clip.clone();
+  remapped.tracks.forEach(track => {
+    const parsed = THREE.PropertyBinding.parseTrackName(track.name);
+    const nodeName = renamedNodes.get(parsed.nodeName) || parsed.nodeName;
+    const objectIndex = parsed.objectIndex == null
+      ? parsed.objectIndex
+      : (renamedNodes.get(parsed.objectIndex) || parsed.objectIndex);
+    track.name = nodeName
+      + (parsed.objectName ? '.' + parsed.objectName + '[' + objectIndex + ']' : '')
+      + '.' + parsed.propertyName
+      + (parsed.propertyIndex == null ? '' : '[' + parsed.propertyIndex + ']');
+  });
+  return remapped;
+}
+
 function registerCharacterAnimations(root, clips) {
   const list = Array.isArray(clips) ? clips.slice() : [];
   const state = list.length
@@ -1903,18 +1930,31 @@ document.querySelector('#exportSceneGLB').onclick = () => {
   // nem interromper os mixers e controles da cena em edição.
   const exportRoot = new THREE.Group();
   exportRoot.name = 'Estudio3D-Scene';
+  const sceneExportAnimations = [];
   sceneCharacters.forEach((obj, index) => {
     const copy = cloneSkeletonSafe(obj, false);
-    copy.name = obj.name || 'Objeto-' + (index + 1);
     copy.position.copy(obj.position);
     copy.quaternion.copy(obj.quaternion);
     copy.scale.copy(obj.scale);
+    const animationState = characterAnimationStates.get(obj);
+    if (animationState && animationState.clips.length) {
+      const prefix = 'Instance_' + (index + 1) + '__';
+      sceneExportAnimations.push(...animationState.clips.map(clip =>
+        remapAnimationClipForExport(clip, copy, prefix)
+      ));
+    } else {
+      copy.name = 'Instance_' + (index + 1) + '__' + THREE.PropertyBinding.sanitizeNodeName(obj.name || 'Objeto');
+    }
     exportRoot.add(copy);
   });
   exportRoot.updateMatrixWorld(true);
 
   const exporter = new GLTFExporter();
-  status('Preparando exportação GLB da cena completa...');
+  const sceneExportOptions = { binary: true, onlyVisible: true };
+  if (sceneExportAnimations.length) sceneExportOptions.animations = sceneExportAnimations;
+  status(sceneExportAnimations.length
+    ? 'Preparando cena GLB com ' + sceneExportAnimations.length + ' clipe(s) de animação...'
+    : 'Preparando exportação GLB da cena completa...');
   exporter.parse(
     exportRoot,
     result => {
@@ -1928,7 +1968,9 @@ document.querySelector('#exportSceneGLB').onclick = () => {
         anchor.click();
         anchor.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        status('Cena completa exportada em GLB. A geometria e os materiais foram incluídos; clipes de animação precisam de validação/exportação específica.');
+        status(sceneExportAnimations.length
+          ? 'Cena completa exportada com geometria, materiais e clipes de animação. Confira o arquivo salvo e valide a reprodução.'
+          : 'Cena completa exportada em GLB com geometria e materiais.');
       } catch (error) {
         console.error('[Estúdio 3D] Falha ao preparar a cena GLB:', error);
         status('Não foi possível preparar o download da cena GLB.');
@@ -1938,7 +1980,7 @@ document.querySelector('#exportSceneGLB').onclick = () => {
       console.error('[Estúdio 3D] Falha na exportação da cena GLB:', error);
       status('Falha ao exportar a cena: ' + (error.message || 'erro desconhecido'));
     },
-    { binary: true, onlyVisible: true }
+    sceneExportOptions
   );
 };
 
