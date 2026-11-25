@@ -372,6 +372,7 @@ try {
         if (Array.isArray(t.position)) character.position.fromArray(t.position);
         if (Array.isArray(t.rotation)) character.rotation.fromArray(t.rotation);
         if (Array.isArray(t.scale)) character.scale.fromArray(t.scale);
+        window.Estudio3DCore.saveProject();
       }
       return;
     }
@@ -803,7 +804,7 @@ function generateCharacterPrototype() {
   window.Estudio3DCore.saveProject();
   selectObject(group);
   updateList();
-  status('Protótipo 3D gerado para ' + record.category + '. É uma malha inicial de pré-visualização; rigging e exportação GLB ainda serão implementados.');
+  status('Protótipo 3D gerado para ' + record.category + '. Você já pode exportar a malha em GLB; rigging e animações deste protótipo ainda não estão disponíveis.');
 }
 
 document.querySelector('#generateCharacter3D').onclick = generateCharacterPrototype;
@@ -1065,7 +1066,7 @@ a.click();
 
 URL.revokeObjectURL(url);
 
-status('Projeto exportado em JSON. Os metadados e a transformação do personagem foram incluídos; o arquivo GLB precisa estar disponível na pasta do editor.');
+status('Projeto exportado em JSON com objetos, cenário, cadastro e transformação do personagem. Para personagens rigged externos, mantenha o arquivo GLB original disponível ao reabrir.');
 
 };
 
