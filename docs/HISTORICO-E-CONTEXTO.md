@@ -296,3 +296,15 @@ Commits conhecidos na branch `main`:
 - Validação final do código: GitHub Actions run `45639470486`, commit `8b45872f1d324813371fa1fabe66a48f8b73b07c`, **50/50 testes aprovados, 0 falhas**. A publicação Pages para o commit ainda estava em andamento na última consulta.
 - Endurecimento adicional do manifesto: cada `archivePath` agora precisa pertencer à pasta do ID do personagem correspondente; caminhos duplicados são recusados e o importador exige que todos os cadastros com modelo `external_file` estejam representados no manifesto.
 - Testes atualizados: GitHub Actions run `45639682485`, commit `044f387ceab69270c977cc945588712ed2992d7b`, **51/51 aprovados, 0 falhas**. A publicação Pages para esse commit estava em andamento na última consulta.
+
+
+## 25/11/2026 — Primeira etapa de múltiplos personagens na cena
+
+- O catálogo agora apresenta uma ação para adicionar uma instância do personagem à cena, mantendo as instâncias anteriores.
+- A primeira etapa atende **protótipos procedurais**. Cada raiz recebe o ID do cadastro associado; ao selecionar uma instância, o editor atualiza o cadastro ativo para que os ajustes de aparência e transformações atinjam o personagem correto.
+- Cada instância mantém posição, rotação e escala próprias. A exportação JSON e o estado local do editor registram a lista `sceneCharacters`, incluindo a instância ativa e a origem do modelo.
+- A importação JSON valida a lista (máximo de 500 instâncias e vetores de transformação com três números finitos) antes de alterar a cena; restaura instâncias procedurais adicionais e preserva a instância marcada como ativa.
+- A restauração local também recria as instâncias procedurais adicionais. O espaçamento inicial evita sobreposição entre cópias criadas pelo catálogo.
+- Segurança de escopo: o botão de adicionar fica desativado para modelos GLB externos ou outros modelos não procedurais, para não substituir indevidamente o vínculo original do arquivo. Múltiplas instâncias de GLB, mixers/animações independentes e exportação de toda a cena em GLB ficam para etapas seguintes.
+- Validação automatizada: GitHub Actions run `45641787409`, commit `8120f7000b5d15f444867f2414799beefae26c3b`, **59/59 testes aprovados, 0 falhas**.
+- A publicação do GitHub Pages associada ao commit mais recente ainda estava em execução na última consulta. Os testes são automatizados e não substituem validação visual real no navegador.
