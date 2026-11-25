@@ -173,8 +173,14 @@ h3{font-size:11px}
 <label>Cor dos detalhes</label>
 <input type="color" id="accentColor" value="#26344f">
 
-<label>Escala</label>
+<label>Escala geral</label>
 <input type="range" id="size" min="0.3" max="3" step="0.1" value="1">
+<label>Proporção: largura</label>
+<input type="range" id="bodyWidth" min="0.5" max="1.8" step="0.05" value="1">
+<label>Proporção: altura</label>
+<input type="range" id="bodyHeight" min="0.5" max="1.8" step="0.05" value="1">
+<label>Proporção: profundidade</label>
+<input type="range" id="bodyDepth" min="0.5" max="1.8" step="0.05" value="1">
 
 <label>Posição horizontal</label>
 <input type="range" id="position" min="-4" max="4" step="0.1" value="0">
@@ -1047,6 +1053,10 @@ function syncCharacterForm(record) {
     record.visualDirection && record.visualDirection.style
       ? record.visualDirection.style : 'definido pelo contexto';
   document.querySelector('#characterDescription').value = record.description || '';
+  const body = record.appearance && record.appearance.body || {};
+  document.querySelector('#bodyWidth').value = Number.isFinite(Number(body.width)) ? body.width : 1;
+  document.querySelector('#bodyHeight').value = Number.isFinite(Number(body.height)) ? body.height : 1;
+  document.querySelector('#bodyDepth').value = Number.isFinite(Number(body.depth)) ? body.depth : 1;
   renderCharacterCatalog();
 }
 
@@ -1315,11 +1325,13 @@ function generateCharacterPrototype(options = {}) {
   const savedEditorPositionX = Number(savedBody.editorPositionX);
   const savedEditorRotationY = Number(savedBody.editorRotationY);
 
-  group.scale.setScalar(
-    Number.isFinite(savedEditorScale) && savedEditorScale > 0
-      ? savedEditorScale
-      : (ageScale[record.ageStage] || 1)
-  );
+  const baseScale = Number.isFinite(savedEditorScale) && savedEditorScale > 0
+    ? savedEditorScale
+    : (ageScale[record.ageStage] || 1);
+  const bodyWidth = Number.isFinite(Number(savedBody.width)) ? Math.max(0.5, Math.min(1.8, Number(savedBody.width))) : 1;
+  const bodyHeight = Number.isFinite(Number(savedBody.height)) ? Math.max(0.5, Math.min(1.8, Number(savedBody.height))) : 1;
+  const bodyDepth = Number.isFinite(Number(savedBody.depth)) ? Math.max(0.5, Math.min(1.8, Number(savedBody.depth))) : 1;
+  group.scale.set(baseScale * bodyWidth, baseScale * bodyHeight, baseScale * bodyDepth);
   group.position.set(
     Number.isFinite(savedEditorPositionX) ? savedEditorPositionX : 0,
     0,
@@ -1487,12 +1499,35 @@ document.querySelector('#accentColor').oninput=e=>{
 document.querySelector('#size').oninput=e=>{
 
 if(selected){
-selected.scale.setScalar(Number(e.target.value));
+const record = selected.userData.isCharacter && characterRecordId
+    ? window.Estudio3DCharacters.getCharacter(characterRecordId) : null;
+  const body = record && record.appearance && record.appearance.body || {};
+  selected.scale.set(
+    Number(e.target.value) * (Number(body.width) || 1),
+    Number(e.target.value) * (Number(body.height) || 1),
+    Number(e.target.value) * (Number(body.depth) || 1)
+  );
   persistSelectedCharacter({ appearance: { body: { editorScale: Number(e.target.value) } } });
   persistEditorState();
 }
 
 };
+
+['bodyWidth', 'bodyHeight', 'bodyDepth'].forEach((controlId) => {
+  document.querySelector('#' + controlId).oninput = (event) => {
+    if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
+    const record = window.Estudio3DCharacters.getCharacter(characterRecordId);
+    const body = record && record.appearance && record.appearance.body || {};
+    const baseScale = Number(body.editorScale) > 0 ? Number(body.editorScale) : 1;
+    const width = controlId === 'bodyWidth' ? Number(event.target.value) : (Number(body.width) || 1);
+    const height = controlId === 'bodyHeight' ? Number(event.target.value) : (Number(body.height) || 1);
+    const depth = controlId === 'bodyDepth' ? Number(event.target.value) : (Number(body.depth) || 1);
+    selected.scale.set(baseScale * width, baseScale * height, baseScale * depth);
+    const key = controlId === 'bodyWidth' ? 'width' : controlId === 'bodyHeight' ? 'height' : 'depth';
+    persistSelectedCharacter({ appearance: { body: { [key]: Number(event.target.value) } } });
+    persistEditorState();
+  };
+});
 
 document.querySelector('#position').oninput=e=>{
 
