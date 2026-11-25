@@ -501,3 +501,14 @@ test('exportação ZIP continua incluindo os binários GLB de todos os cadastros
   assert.match(html, /externalModelAssets\.set\(record\.id, \{ fileName: file\.name, data: buffer \}\)/);
   assert.match(html, /bundledProject\.assetManifest = bundledProject\.assetManifest\.map/);
 });
+
+test('exportação GLB da cena completa inclui todas as instâncias e objetos sem reparentar originais', () => {
+  assert.match(html, /id="exportSceneGLB"/);
+  assert.match(html, /document\.querySelector\('#exportSceneGLB'\)\.onclick/);
+  assert.match(html, /const sceneCharacters = objects\.filter\(obj => obj && obj\.visible\)/);
+  assert.match(html, /const exportRoot = new THREE\.Group\(\)/);
+  assert.match(html, /const copy = obj\.clone\(true\)/);
+  assert.match(html, /exportRoot\.add\(copy\)/);
+  assert.match(html, /estudio-3d-cena-completa\.glb/);
+  assert.match(html, /clipes de animação precisam de validação\/exportação específica/);
+});
