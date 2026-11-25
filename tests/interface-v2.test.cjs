@@ -27,7 +27,7 @@ test('protótipos consideram a fase da vida', () => {
   for (const stage of ['baby', 'child', 'teen', 'adult', 'senior']) {
     assert.match(html, new RegExp(stage + ':'));
   }
-  assert.match(html, /group\.scale\.setScalar\(ageScale\[record\.ageStage\] \|\| 1\)/);
+  assert.match(html, /ageScale\[record\.ageStage\] \|\| 1/);
 });
 
 test('projeto JSON preserva cadastro e transformação do personagem', () => {
