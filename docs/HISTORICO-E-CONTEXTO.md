@@ -185,6 +185,6 @@ Commits conhecidos na branch `main`:
 - **Correção:** a restauração agora converte o valor salvo com `THREE.MathUtils.degToRad(savedEditorRotationY)`.
 - **Arquivos:** `interface-v2.html` e `tests/interface-v2.test.cjs`.
 - **Commits:** `7070209` (correção) e `7077ca6` (teste da conversão).
-- **Validação:** a correção e a nova assertiva foram commitadas; o workflow automatizado deste commit ainda precisa concluir para confirmar o resultado.
+- **Validação:** workflow automatizado do commit `7077ca6` concluído com sucesso. A publicação do GitHub Pages referente aos commits de documentação subsequentes estava pendente na última consulta.
 - **Estado anterior confirmado nesta retomada:** no commit `d1316994`, os 25 testes automatizados e a publicação do GitHub Pages concluíram com sucesso.
 - **Próximo passo:** aguardar o workflow do commit `7077ca6`; depois continuar a revisão da restauração e seleção de personagens.
