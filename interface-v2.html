@@ -830,7 +830,9 @@ function generateCharacterPrototype() {
     0,
     0
   );
-  group.rotation.y = Number.isFinite(savedEditorRotationY) ? savedEditorRotationY : 0;
+  group.rotation.y = Number.isFinite(savedEditorRotationY)
+    ? THREE.MathUtils.degToRad(savedEditorRotationY)
+    : 0;
   scene.add(group);
   objects.push(group);
   character = group;
