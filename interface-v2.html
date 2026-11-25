@@ -1426,7 +1426,6 @@ document.querySelector('#glbFile').onchange = async (event) => {
         importedCharacter.name = file.name.replace(/\.glb$/i, '') || 'Personagem importado';
         importedCharacter.userData.type = 'personagem';
         importedCharacter.userData.isCharacter = true;
-        importedCharacter.userData.characterRecordId = record ? record.id : null;
         importedCharacter.traverse((child) => {
           if (!child.isMesh) return;
           child.castShadow = true;
@@ -1468,6 +1467,7 @@ document.querySelector('#glbFile').onchange = async (event) => {
         }
 
         externalModelAssets.set(record.id, { fileName: file.name, data: buffer });
+        importedCharacter.userData.characterRecordId = record.id;
         character = importedCharacter;
         characterRecordId = record.id;
         selectedCatalogRecordId = record.id;
