@@ -1958,8 +1958,15 @@ document.querySelector('#exportGLB').onclick = () => {
     status('Não foi possível preparar uma cópia segura do personagem para exportação.');
     return;
   }
+  const exportAnimationState = characterAnimationStates.get(exportTarget);
+  const exportOptions = { binary: true, onlyVisible: true };
+  if (exportAnimationState && exportAnimationState.clips.length) {
+    exportOptions.animations = exportAnimationState.clips;
+  }
   const exporter = new GLTFExporter();
-  status('Preparando arquivo GLB do personagem...');
+  status(exportOptions.animations
+    ? 'Preparando personagem GLB com animações...'
+    : 'Preparando arquivo GLB do personagem...');
 
   exporter.parse(
     exportClone,
@@ -1980,7 +1987,9 @@ document.querySelector('#exportGLB').onclick = () => {
         anchor.click();
         anchor.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        status('Arquivo GLB exportado. Confira o arquivo salvo no seu dispositivo.');
+        status(exportOptions.animations
+          ? 'Personagem e clipes de animação exportados em GLB. Confira o arquivo salvo no seu dispositivo.'
+          : 'Arquivo GLB exportado. Confira o arquivo salvo no seu dispositivo.');
       } catch (error) {
         console.error('[Estúdio 3D] Falha ao preparar o download GLB:', error);
         status('Não foi possível preparar o download GLB.');
@@ -1990,7 +1999,7 @@ document.querySelector('#exportGLB').onclick = () => {
       console.error('[Estúdio 3D] Falha na exportação GLB:', error);
       status('Falha ao exportar GLB: ' + (error.message || 'erro desconhecido'));
     },
-    { binary: true, onlyVisible: true }
+    exportOptions
   );
 };
 
