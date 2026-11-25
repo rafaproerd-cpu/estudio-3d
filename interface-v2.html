@@ -207,7 +207,7 @@ h3{font-size:11px}
 <label>Formato do nariz</label>
 <select id="faceNoseStyle"><option value="round">Arredondado</option><option value="narrow">Estreito</option><option value="wide">Largo</option><option value="pointed">Pontudo</option></select>
 <label>Expressão da boca</label>
-<select id="faceMouthStyle"><option value="neutral">Neutra</option><option value="smile">Sorriso</option><option value="serious">Séria</option></select>
+<select id="faceMouthStyle"><option value="neutral">Neutra</option><option value="smile">Sorriso</option><option value="sad">Triste</option><option value="surprised">Surpresa</option><option value="angry">Irritada</option><option value="serious">Séria</option></select>
 <label>Barba</label>
 <select id="faceBeardStyle"><option value="none">Sem barba</option><option value="short">Barba curta</option><option value="full">Barba cheia</option></select>
 <label>Bigode</label>
@@ -1152,7 +1152,7 @@ function syncCharacterForm(record) {
   document.querySelector('#faceEyeColor').value = /^#[0-9a-f]{6}$/i.test(face.eyeColor || '') ? face.eyeColor : '#3b79b7';
   document.querySelector('#faceNoseScale').value = Number.isFinite(Number(face.noseScale)) ? face.noseScale : 1;
   document.querySelector('#faceNoseStyle').value = ['round', 'narrow', 'wide', 'pointed'].includes(face.noseStyle) ? face.noseStyle : 'round';
-  document.querySelector('#faceMouthStyle').value = ['neutral', 'smile', 'serious'].includes(face.mouthStyle) ? face.mouthStyle : 'neutral';
+  document.querySelector('#faceMouthStyle').value = ['neutral', 'smile', 'sad', 'surprised', 'angry', 'serious'].includes(face.mouthStyle) ? face.mouthStyle : 'neutral';
   document.querySelector('#faceBeardStyle').value = ['none', 'short', 'full'].includes(face.beardStyle) ? face.beardStyle : 'none';
   document.querySelector('#faceMustacheStyle').value = face.mustacheStyle === 'classic' ? 'classic' : 'none';
   document.querySelector('#faceEyebrowStyle').value = ['none', 'natural', 'thick'].includes(face.eyebrowStyle) ? face.eyebrowStyle : 'natural';
@@ -1489,12 +1489,21 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
     ear.userData.editorRoot = characterGroup;
     details.add(ear);
   }
-    const mouthStyle = ['neutral', 'smile', 'serious'].includes(settings.mouthStyle) ? settings.mouthStyle : 'neutral';
-  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 6, 20, Math.PI), featureMaterial);
+  const mouthStyle = ['neutral', 'smile', 'sad', 'surprised', 'angry', 'serious'].includes(settings.mouthStyle) ? settings.mouthStyle : 'neutral';
+  const mouth = mouthStyle === 'surprised'
+    ? new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 12), featureMaterial)
+    : new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 6, 20, Math.PI), featureMaterial);
   mouth.name = 'face-mouth';
-  mouth.position.set(0, 0.88, 0.405);
-  mouth.rotation.z = mouthStyle === 'smile' ? Math.PI : mouthStyle === 'serious' ? 0.08 : 0;
-  mouth.scale.set(1.15, mouthStyle === 'serious' ? 0.28 : 0.55, 1);
+  mouth.position.set(0, mouthStyle === 'sad' ? 0.865 : 0.88, 0.405);
+  mouth.rotation.z = mouthStyle === 'smile' ? Math.PI
+    : mouthStyle === 'sad' ? 0
+    : mouthStyle === 'angry' ? 0.12
+    : mouthStyle === 'serious' ? 0.08 : 0;
+  mouth.scale.set(
+    mouthStyle === 'surprised' ? 0.85 : 1.15,
+    mouthStyle === 'surprised' ? 1.35 : mouthStyle === 'serious' || mouthStyle === 'angry' ? 0.28 : 0.55,
+    1
+  );
   mouth.userData.editorRoot = characterGroup;
   details.add(mouth);
   const facialHairColor = /^#[0-9a-f]{6}$/i.test(settings.facialHairColor || '') ? settings.facialHairColor : '#30251f';
@@ -1531,7 +1540,8 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
       );
       brow.name = 'face-eyebrow';
       brow.position.set(side * 0.16, 1.235, 0.405);
-      brow.rotation.z = side * -0.08;
+      const expressionTilt = mouthStyle === 'angry' ? 0.32 : mouthStyle === 'sad' ? -0.2 : 0;
+      brow.rotation.z = side * (mouthStyle === 'angry' ? -expressionTilt : mouthStyle === 'sad' ? expressionTilt : -0.08);
       brow.userData.editorRoot = characterGroup;
       details.add(brow);
     }
