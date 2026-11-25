@@ -326,7 +326,9 @@ try {
     if (pendingCharacterImport && pendingCharacterImport.record) {
       const imported = pendingCharacterImport.record;
       restoreProcedural = !!(imported.model && imported.model.source === 'procedural_preview');
-      record = api.addCharacterToProject({
+      const existingImported = imported.id ? api.getCharacter(imported.id) : null;
+      const importedData = {
+        id: imported.id,
         name: imported.name || 'Personagem importado',
         category: imported.category || 'human',
         ageStage: imported.ageStage || 'adult',
@@ -338,7 +340,10 @@ try {
         gameReady: imported.gameReady || {},
         model: imported.model || { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' },
         tags: imported.tags || []
-      });
+      };
+      record = existingImported
+        ? api.updateCharacter(imported.id, importedData)
+        : api.addCharacterToProject(importedData);
       const transform = pendingCharacterImport.transform;
       restoredProceduralTransform = transform || null;
       if (transform) {
