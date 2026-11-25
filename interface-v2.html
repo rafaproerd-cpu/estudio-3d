@@ -995,12 +995,8 @@ function renderCharacterCatalog() {
     const addButton = document.createElement('button');
     addButton.type = 'button';
     addButton.textContent = '＋';
-    const canAddProcedural = !record.model || !record.model.source ||
-      record.model.source === 'not_created' || record.model.source === 'procedural_preview';
-    addButton.title = canAddProcedural
-      ? 'Adicionar uma cópia deste personagem à cena'
-      : 'Instâncias de modelos 3D externos serão habilitadas em uma próxima etapa';
-    addButton.disabled = !canAddProcedural;
+    addButton.title = 'Adicionar uma cópia deste personagem à cena; para GLB, o modelo precisa estar carregado';
+    addButton.disabled = false;
     addButton.style.cssText = 'width:38px;flex:0 0 38px';
     addButton.onclick = () => addCharacterInstance(record.id);
     const deleteButton = document.createElement('button');
@@ -1266,7 +1262,34 @@ function addCharacterInstance(recordId, transform = null, options = {}) {
   }
   if (record.model && record.model.source &&
       !['not_created', 'procedural_preview'].includes(record.model.source)) {
-    status('A inclusão de múltiplas instâncias de modelos GLB externos será habilitada em uma próxima etapa.');
+    const source = objects.find(obj => obj.userData.isCharacter &&
+      obj.userData.characterRecordId === recordId);
+    if (!source) {
+      status('Este modelo GLB não está carregado na cena. Importe o arquivo original novamente para criar outra instância.');
+      return;
+    }
+    const copy = cloneSkeleton(source);
+    const sourceName = source.userData.instanceName || source.name || record.name;
+    copy.name = (sourceName + ' (cópia)').slice(0, 80);
+    copy.userData = { ...source.userData, instanceName: copy.name, characterRecordId: recordId };
+    copy.position.copy(source.position);
+    copy.position.x += 1.8;
+    copy.rotation.copy(source.rotation);
+    copy.scale.copy(source.scale);
+    copy.traverse(child => {
+      if (!child.isMesh) return;
+      child.castShadow = true;
+      child.receiveShadow = true;
+      child.userData.editorRoot = copy;
+    });
+    scene.add(copy);
+    objects.push(copy);
+    const sourceState = characterAnimationStates.get(source);
+    registerCharacterAnimations(copy, sourceState ? sourceState.clips : []);
+    selectObject(copy);
+    updateList();
+    if (options.persist !== false) persistEditorState();
+    status('Cópia do modelo GLB adicionada. Transformações e animações são independentes.');
     return;
   }
   selectedCatalogRecordId = recordId;
