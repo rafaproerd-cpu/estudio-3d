@@ -129,8 +129,10 @@ h3{font-size:11px}
 
 <div>
 <h3>Aparência</h3>
-<label>Cor do objeto</label>
+<label>Cor principal</label>
 <input type="color" id="color" value="#527cff">
+<label>Cor dos detalhes</label>
+<input type="color" id="accentColor" value="#26344f">
 
 <label>Escala</label>
 <input type="range" id="size" min="0.3" max="3" step="0.1" value="1">
@@ -483,20 +485,24 @@ if (obj.userData.isCharacter && characterRecordId && window.Estudio3DCharacters)
 }
 
 let materialFound=null;
+let accentMaterialFound=null;
 
 obj.traverse((child)=>{
 
-if(!materialFound&&child.isMesh&&child.material){
-
-const material=Array.isArray(child.material)?child.material[0]:child.material;
-materialFound=material;
-
-}
+if(!child.isMesh||!child.material)return;
+const materials=Array.isArray(child.material)?child.material:[child.material];
+materials.forEach((material)=>{
+  if(!materialFound&&material.color&&material.name!=='character-accent') materialFound=material;
+  if(!accentMaterialFound&&material.color&&material.name==='character-accent') accentMaterialFound=material;
+});
 
 });
 
 if(materialFound&&materialFound.color){
 document.querySelector('#color').value='#'+materialFound.color.getHexString();
+}
+if(accentMaterialFound&&accentMaterialFound.color){
+document.querySelector('#accentColor').value='#'+accentMaterialFound.color.getHexString();
 }
 
 document.querySelector('#size').value=obj.scale.x;
@@ -709,10 +715,16 @@ function generateCharacterPrototype() {
   const material = new THREE.MeshStandardMaterial({
     color: baseColor, roughness: 0.62, metalness: record.category === 'robot' ? 0.72 : 0.05
   });
+  const savedAccentColor = record.appearance && record.appearance.colors
+    ? record.appearance.colors.accent
+    : null;
   const accent = new THREE.MeshStandardMaterial({
-    color: record.category === 'robot' ? 0x34445f : 0x26344f,
+    color: savedAccentColor && /^#[0-9a-f]{6}$/i.test(savedAccentColor)
+      ? savedAccentColor
+      : (record.category === 'robot' ? 0x34445f : 0x26344f),
     roughness: 0.5, metalness: record.category === 'robot' ? 0.8 : 0.1
   });
+  accent.name = 'character-accent';
 
   function part(geometry, mat, x, y, z) {
     const mesh = new THREE.Mesh(geometry, mat);
@@ -854,6 +866,18 @@ material.color.set(e.target.value);
 });
 
 persistSelectedCharacter({ appearance: { colors: { primary: e.target.value } } });
+};
+
+document.querySelector('#accentColor').oninput=e=>{
+  if(!selected || !selected.userData.isCharacter)return;
+  selected.traverse((child)=>{
+    if(!child.isMesh||!child.material)return;
+    const materials=Array.isArray(child.material)?child.material:[child.material];
+    materials.forEach((material)=>{
+      if(material.name==='character-accent' && material.color) material.color.set(e.target.value);
+    });
+  });
+  persistSelectedCharacter({ appearance: { colors: { accent: e.target.value } } });
 };
 
 document.querySelector('#size').oninput=e=>{
