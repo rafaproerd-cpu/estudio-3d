@@ -684,6 +684,8 @@ if (obj.userData.isCharacter) {
     const selectedRecord = window.Estudio3DCharacters.getCharacter(characterRecordId);
     if (selectedRecord) syncCharacterForm(selectedRecord);
   }
+} else {
+  activateCharacterAnimations(null);
 }
 
 let materialFound=null;
