@@ -213,6 +213,7 @@ let lastX=0,lastY=0;
 
 let character=null;
 let characterRecordId=null;
+let pendingCharacterImport=null;
 let mixer=null;
 let animationActions=[];
 let activeAction=null;
@@ -279,25 +280,47 @@ character.position.set(
 scene.add(character);
 objects.push(character);
 
-// Registra o modelo visual no cadastro universal do projeto.
+// Registra o modelo visual e restaura os dados importados, quando existirem.
 try {
   const api = window.Estudio3DCharacters;
   if (api) {
-    const saved = api.getCharacters().find(item =>
-      item.model && item.model.assetId === 'man-base-character-rigged.glb'
-    );
-    const record = saved
-      ? api.updateCharacter(saved.id, {
-          model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
-        })
-      : api.addCharacterToProject({
-          name: 'Meu personagem',
-          category: 'human',
-          ageStage: 'adult',
-          rigType: 'humanoid',
-          description: 'Personagem carregado no editor 3D',
-          model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
-        });
+    let record;
+    if (pendingCharacterImport && pendingCharacterImport.record) {
+      const imported = pendingCharacterImport.record;
+      record = api.addCharacterToProject({
+        name: imported.name || 'Personagem importado',
+        category: imported.category || 'human',
+        ageStage: imported.ageStage || 'adult',
+        rigType: imported.rigType || 'unknown',
+        description: imported.description || '',
+        appearance: imported.appearance || {},
+        visualDirection: imported.visualDirection || {},
+        parts: imported.parts || {},
+        gameReady: imported.gameReady || {},
+        model: imported.model || { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' },
+        tags: imported.tags || []
+      });
+      const transform = pendingCharacterImport.transform;
+      if (transform) {
+        if (Array.isArray(transform.position)) character.position.fromArray(transform.position);
+        if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+        if (Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+      }
+      pendingCharacterImport = null;
+    } else {
+      const saved = api.getCharacters().find(item =>
+        item.model && item.model.assetId === 'man-base-character-rigged.glb'
+      );
+      record = saved
+        ? api.updateCharacter(saved.id, {
+            model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
+          })
+        : api.addCharacterToProject({
+            name: 'Meu personagem', category: 'human', ageStage: 'adult', rigType: 'humanoid',
+            description: 'Personagem carregado no editor 3D',
+            model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
+          });
+    }
     characterRecordId = record.id;
     const savedResult = window.Estudio3DCore.saveProject();
     status(savedResult.ok
@@ -305,7 +328,8 @@ try {
       : 'Personagem carregado; não foi possível salvar no navegador.');
   }
 } catch (error) {
-  console.error('[Estúdio 3D] Falha ao registrar personagem:', error);
+  console.error('[Estúdio 3D] Falha ao registrar/restaurar personagem:', error);
+  pendingCharacterImport = null;
   status('Personagem carregado, mas houve falha ao registrar seus dados.');
 }
 
@@ -731,7 +755,7 @@ a.click();
 
 URL.revokeObjectURL(url);
 
-status('Objetos da cena exportados em JSON. O personagem GLB não é incluído nesse arquivo.');
+status('Projeto exportado em JSON. Os metadados e a transformação do personagem foram incluídos; o arquivo GLB precisa estar disponível na pasta do editor.');
 
 };
 
@@ -752,7 +776,10 @@ try{
 const data=JSON.parse(await file.text());
 
 if(!Array.isArray(data.objects)){
-throw new Error('Arquivo inválido');
+throw new Error('Arquivo inválido: lista de objetos ausente.');
+}
+if(data.version && ![2,3].includes(data.version)){
+throw new Error('Versão de projeto não suportada.');
 }
 
 objects.filter(o=>!o.userData.isCharacter).forEach(o=>scene.remove(o));
@@ -781,18 +808,56 @@ o.scale.fromArray(item.scale);
 });
 
 if(data.background){
-scene.background=new THREE.Color('#'+data.background);
+const backgroundValue = String(data.background).startsWith('#') ? data.background : '#'+data.background;
+scene.background=new THREE.Color(backgroundValue);
+document.querySelector('#background').value=backgroundValue;
 }
 
 if(Number.isFinite(data.light)){
 sun.intensity=data.light;
+document.querySelector('#light').value=data.light;
+}
+
+// Restaura os metadados e a transformação do personagem importado.
+if(data.character && data.character.record){
+  if(character && window.Estudio3DCharacters){
+    const imported = data.character.record;
+    const existing = characterRecordId
+      ? window.Estudio3DCharacters.getCharacter(characterRecordId)
+      : null;
+    const patch = {
+      name: imported.name || 'Personagem importado',
+      category: imported.category || 'human',
+      ageStage: imported.ageStage || 'adult',
+      rigType: imported.rigType || 'unknown',
+      description: imported.description || '',
+      appearance: imported.appearance || {},
+      visualDirection: imported.visualDirection || {},
+      parts: imported.parts || {},
+      gameReady: imported.gameReady || {},
+      model: imported.model || {},
+      tags: imported.tags || []
+    };
+    const restored = existing
+      ? window.Estudio3DCharacters.updateCharacter(characterRecordId, patch)
+      : window.Estudio3DCharacters.addCharacterToProject(patch);
+    characterRecordId = restored.id;
+    const transform = data.character.transform || {};
+    if(Array.isArray(transform.position)) character.position.fromArray(transform.position);
+    if(Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+    if(Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+  } else {
+    pendingCharacterImport = data.character;
+  }
 }
 
 selected=objects[objects.length-1]||character||null;
-
+if(selected) selectObject(selected);
 updateList();
-
-status('Projeto importado.');
+if(window.Estudio3DCore) window.Estudio3DCore.saveProject();
+status(data.character
+  ? 'Projeto importado. Os dados do personagem foram restaurados; o modelo GLB precisa estar disponível.'
+  : 'Projeto importado.');
 
 }catch(err){
 
