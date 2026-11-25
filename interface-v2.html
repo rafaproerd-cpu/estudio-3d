@@ -1340,6 +1340,42 @@ if(data.version && ![2,3,4].includes(data.version)){
 throw new Error('Versão de projeto não suportada.');
 }
 
+// Valida os dados portáteis antes de alterar a cena ou o projeto atual.
+for (const item of data.objects) {
+  if (!item || !['box', 'sphere', 'cylinder', 'torus'].includes(item.type)) continue;
+  for (const key of ['position', 'rotation', 'scale']) {
+    if (!Array.isArray(item[key]) || item[key].length !== 3 || !item[key].every(Number.isFinite)) {
+      throw new Error('O projeto contém transformação inválida em um objeto.');
+    }
+  }
+  if (typeof item.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(item.color)) {
+    throw new Error('O projeto contém uma cor inválida em um objeto.');
+  }
+}
+
+let normalizedRecords = null;
+if (window.Estudio3DCharacters && window.Estudio3DCore) {
+  const sourceRecords = Array.isArray(data.characters)
+    ? data.characters
+    : (data.character && data.character.record ? [data.character.record] : []);
+  normalizedRecords = sourceRecords.map((source) => {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) {
+      throw new Error('O catálogo contém um cadastro inválido.');
+    }
+    const normalized = window.Estudio3DCharacters.createCharacter(source);
+    const validation = window.Estudio3DCharacters.validateCharacter(normalized);
+    if (!validation.valid) throw new Error(validation.errors.join(' '));
+    if (data.character && data.character.record === source) {
+      data.character.record.id = normalized.id;
+    }
+    return normalized;
+  });
+  const ids = normalizedRecords.map(record => record.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error('O catálogo importado contém identificadores duplicados.');
+  }
+}
+
 // Um projeto sem personagem ativo deve substituir também o personagem da cena atual.
 if (!data.character && character) {
   scene.remove(character);
@@ -1394,28 +1430,8 @@ sun.intensity=data.light;
 document.querySelector('#light').value=data.light;
 }
 
-// Restaura o catálogo completo. Arquivos antigos continuam compatíveis.
-if (window.Estudio3DCharacters && window.Estudio3DCore) {
-  const sourceRecords = Array.isArray(data.characters)
-    ? data.characters
-    : (data.character && data.character.record ? [data.character.record] : []);
-  const normalizedRecords = sourceRecords.map((source) => {
-    if (!source || typeof source !== 'object' || Array.isArray(source)) {
-      throw new Error('O catálogo contém um cadastro inválido.');
-    }
-    const normalized = window.Estudio3DCharacters.createCharacter(source);
-    const validation = window.Estudio3DCharacters.validateCharacter(normalized);
-    if (!validation.valid) throw new Error(validation.errors.join(' '));
-    // Compatibilidade com arquivos antigos que não possuíam ID no cadastro.
-    if (data.character && data.character.record === source) {
-      data.character.record.id = normalized.id;
-    }
-    return normalized;
-  });
-  const ids = normalizedRecords.map(record => record.id);
-  if (new Set(ids).size !== ids.length) {
-    throw new Error('O catálogo importado contém identificadores duplicados.');
-  }
+// Aplica o catálogo somente depois que todos os dados foram validados.
+if (normalizedRecords && window.Estudio3DCore) {
   window.Estudio3DCore.updateProject({ characters: normalizedRecords });
   renderCharacterCatalog();
 }
