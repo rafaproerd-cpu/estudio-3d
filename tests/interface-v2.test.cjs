@@ -570,7 +570,7 @@ test('visibilidade e nomes personalizados são persistidos para personagens e ob
 test('visibilidade é restaurada para instâncias procedurais e GLB em ZIP e JSON', () => {
   assert.match(html, /if \(character && typeof instance\.visible === 'boolean'\) character\.visible = instance\.visible/);
   assert.match(html, /if \(typeof instance\.visible === 'boolean'\) root\.visible = instance\.visible/);
-  assert.match(html, /if \(typeof activeInstance\.visible === 'boolean'\) character\.visible = activeInstance\.visible/);
+  assert.match(html, /activeInstance && typeof activeInstance\.visible === 'boolean'\) character\.visible = activeInstance\.visible/);
 });
 
 test('exportação da cena ignora objetos ocultos', () => {
