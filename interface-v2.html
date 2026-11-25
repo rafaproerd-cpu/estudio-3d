@@ -262,6 +262,59 @@ function status(message){
 document.querySelector('#status').textContent=message;
 }
 
+/* PERSISTÊNCIA DA CENA NO NAVEGADOR */
+
+function persistEditorState() {
+  const core = window.Estudio3DCore;
+  if (!core) return { ok: false, message: 'Núcleo do projeto indisponível.' };
+  const project = core.getProject();
+  const activeCharacter = character && character.userData.isCharacter && characterRecordId
+    ? { id: characterRecordId, transform: {
+        position: character.position.toArray(),
+        rotation: character.rotation.toArray(),
+        scale: character.scale.toArray()
+      } }
+    : null;
+  const editorState = {
+    background: '#' + scene.background.getHexString(),
+    light: sun.intensity,
+    activeCharacter,
+    objects: objects.filter(obj => !obj.userData.isCharacter).map(obj => ({
+      type: obj.userData.type,
+      color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#527cff',
+      position: obj.position.toArray(),
+      rotation: obj.rotation.toArray(),
+      scale: obj.scale.toArray()
+    }))
+  };
+  core.updateProject({ settings: { ...(project.settings || {}), editorState } });
+  return core.saveProject();
+}
+
+function restoreEditorState(editorState) {
+  if (!editorState || typeof editorState !== 'object') return;
+  if (typeof editorState.background === 'string' && /^#[0-9a-f]{6}$/i.test(editorState.background)) {
+    scene.background = new THREE.Color(editorState.background);
+    document.querySelector('#background').value = editorState.background;
+  }
+  if (Number.isFinite(editorState.light)) {
+    sun.intensity = Math.max(0, Math.min(5, editorState.light));
+    document.querySelector('#light').value = sun.intensity;
+  }
+  if (Array.isArray(editorState.objects)) {
+    editorState.objects.forEach(item => {
+      if (!item || !['box', 'sphere', 'cylinder', 'torus'].includes(item.type)) return;
+      addObject(item.type, false);
+      const obj = objects[objects.length - 1];
+      if (item.color && /^#[0-9a-f]{6}$/i.test(item.color)) obj.material.color.set(item.color);
+      if (Array.isArray(item.position) && item.position.length === 3 && item.position.every(Number.isFinite)) obj.position.fromArray(item.position);
+      if (Array.isArray(item.rotation) && item.rotation.length === 3 && item.rotation.every(Number.isFinite)) obj.rotation.fromArray(item.rotation);
+      if (Array.isArray(item.scale) && item.scale.length === 3 && item.scale.every(Number.isFinite)) obj.scale.fromArray(item.scale);
+    });
+  }
+  updateList();
+}
+
 /* CARREGAMENTO DO PERSONAGEM */
 
 function loadCharacter(){
@@ -320,6 +373,10 @@ objects.push(character);
 try {
   const api = window.Estudio3DCharacters;
   if (api) {
+    const loadingImportedProject = !!(pendingCharacterImport && pendingCharacterImport.record);
+    const savedEditorState = !loadingImportedProject && window.Estudio3DCore
+      ? (window.Estudio3DCore.getProject().settings || {}).editorState
+      : null;
     let record;
     let restoreProcedural = false;
     let restoredProceduralTransform = null;
@@ -353,13 +410,20 @@ try {
       }
       pendingCharacterImport = null;
     } else {
-      const saved = api.getCharacters().find(item =>
+      const savedActive = savedEditorState && savedEditorState.activeCharacter && savedEditorState.activeCharacter.id
+        ? api.getCharacter(savedEditorState.activeCharacter.id)
+        : null;
+      const saved = savedActive || api.getCharacters().find(item =>
         item.model && item.model.assetId === 'man-base-character-rigged.glb'
       );
+      restoreProcedural = !!(savedActive && savedActive.model && savedActive.model.source === 'procedural_preview');
+      restoredProceduralTransform = savedEditorState && savedEditorState.activeCharacter
+        ? savedEditorState.activeCharacter.transform || null
+        : null;
       record = saved
-        ? api.updateCharacter(saved.id, {
+        ? (restoreProcedural ? saved : api.updateCharacter(saved.id, {
             model: { source: 'created_in_studio', format: 'glb', assetId: 'man-base-character-rigged.glb' }
-          })
+          }))
         : api.addCharacterToProject({
             name: 'Meu personagem', category: 'human', ageStage: 'adult', rigType: 'humanoid',
             description: 'Personagem carregado no editor 3D',
@@ -370,6 +434,7 @@ try {
     selectedCatalogRecordId = record.id;
     syncCharacterForm(record);
     const savedResult = window.Estudio3DCore.saveProject();
+    if (savedEditorState) restoreEditorState(savedEditorState);
     if (restoreProcedural) {
       scene.remove(character);
       const loadedIndex = objects.indexOf(character);
@@ -381,7 +446,7 @@ try {
         if (Array.isArray(t.position)) character.position.fromArray(t.position);
         if (Array.isArray(t.rotation)) character.rotation.fromArray(t.rotation);
         if (Array.isArray(t.scale)) character.scale.fromArray(t.scale);
-        window.Estudio3DCore.saveProject();
+        persistEditorState();
       }
       return;
     }
@@ -449,7 +514,7 @@ status('Erro ao carregar o GLB. Confira se o arquivo está na mesma pasta da int
 
 /* OBJETOS */
 
-function addObject(type){
+function addObject(type, persist = true){
 
 let geometry;
 
@@ -479,6 +544,7 @@ selectObject(mesh);
 updateList();
 
 status('Objeto adicionado.');
+if (persist) persistEditorState();
 }
 
 function selectObject(obj){
@@ -876,6 +942,7 @@ function generateCharacterPrototype() {
   selectObject(group);
   updateList();
   status('Protótipo 3D gerado para ' + record.category + '. Você já pode exportar a malha em GLB; rigging e animações deste protótipo ainda não estão disponíveis.');
+  persistEditorState();
 }
 
 document.querySelector('#generateCharacter3D').onclick = generateCharacterPrototype;
@@ -913,6 +980,7 @@ material.color.set(e.target.value);
 });
 
 persistSelectedCharacter({ appearance: { colors: { primary: e.target.value } } });
+persistEditorState();
 };
 
 document.querySelector('#accentColor').oninput=e=>{
@@ -925,6 +993,7 @@ document.querySelector('#accentColor').oninput=e=>{
     });
   });
   persistSelectedCharacter({ appearance: { colors: { accent: e.target.value } } });
+  persistEditorState();
 };
 
 document.querySelector('#size').oninput=e=>{
@@ -932,6 +1001,7 @@ document.querySelector('#size').oninput=e=>{
 if(selected){
 selected.scale.setScalar(Number(e.target.value));
   persistSelectedCharacter({ appearance: { body: { editorScale: Number(e.target.value) } } });
+  persistEditorState();
 }
 
 };
@@ -941,6 +1011,7 @@ document.querySelector('#position').oninput=e=>{
 if(selected){
 selected.position.x=Number(e.target.value);
   persistSelectedCharacter({ appearance: { body: { editorPositionX: Number(e.target.value) } } });
+  persistEditorState();
 }
 
 };
@@ -950,6 +1021,7 @@ document.querySelector('#rotation').oninput=e=>{
 if(selected){
 selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
   persistSelectedCharacter({ appearance: { body: { editorRotationY: Number(e.target.value) } } });
+  persistEditorState();
 }
 
 };
@@ -957,12 +1029,14 @@ selected.rotation.y=THREE.MathUtils.degToRad(Number(e.target.value));
 document.querySelector('#light').oninput=e=>{
 
 sun.intensity=Number(e.target.value);
+persistEditorState();
 
 };
 
 document.querySelector('#background').onchange=e=>{
 
 scene.background=new THREE.Color(e.target.value);
+persistEditorState();
 
 };
 
@@ -1069,6 +1143,7 @@ selected=null;
 updateList();
 
 status('Objeto excluído.');
+persistEditorState();
 
 };
 
@@ -1091,6 +1166,7 @@ document.querySelector('#pauseAnimation').disabled=true;
 updateList();
 
 status('Cena limpa. Recarregue a página para carregar o personagem novamente.');
+persistEditorState();
 
 };
 
@@ -1420,6 +1496,7 @@ camera.lookAt(0,0,0);
 canvas.addEventListener('pointerup',e=>{
 
 dragging=false;
+persistEditorState();
 
 const rect=canvas.getBoundingClientRect();
 
