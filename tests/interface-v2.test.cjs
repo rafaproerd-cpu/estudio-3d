@@ -251,3 +251,15 @@ test('personagem rigged restaura posição, rotação e escala salvas localmente
   assert.match(loader, /character\.rotation\.fromArray\(t\.rotation\)/);
   assert.match(loader, /character\.scale\.fromArray\(t\.scale\)/);
 });
+
+
+test('importar projeto sem personagem remove o personagem anterior da cena', () => {
+  const start = html.indexOf("document.querySelector('#file').onchange");
+  const end = html.indexOf('/* CÂMERA E SELEÇÃO */', start);
+  const importer = html.slice(start, end);
+  assert.match(importer, /if \(!data\.character && character\)/);
+  assert.match(importer, /scene\.remove\(character\)/);
+  assert.match(importer, /characterRecordId = null/);
+  assert.match(importer, /selectedCatalogRecordId = null/);
+  assert.match(importer, /mixer\.stopAllAction\(\)/);
+});
