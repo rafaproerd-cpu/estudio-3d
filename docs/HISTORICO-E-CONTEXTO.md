@@ -269,3 +269,5 @@ Commits conhecidos na branch `main`:
 - A exportação JSON agora inclui `assetManifest`, com ID do personagem, identificador/nome do arquivo, formato e indicação explícita de que o binário não está incorporado.
 - Limitação intencional desta etapa: o GLB continua sendo um arquivo separado. Ao transferir o projeto, mantenha o `.glb` junto do JSON; a importação JSON ainda não procura nem religa automaticamente esses arquivos. Empacotamento ZIP com assets incorporados fica para uma etapa posterior.
 - Foram acrescentados testes automatizados para a interface de importação GLB e para o manifesto. Resultado do GitHub Actions será registrado após a conclusão do workflow.
+
+- Validação final desta etapa: GitHub Actions run `45636001811`, commit `a3961a1ee23bd2df32d6470d24d3f469ae0f89f7`, **43/43 testes aprovados** (0 falhas). A checagem sintática do JavaScript da interface também passou. A importação/exportação GLB ainda requer teste visual manual em navegador com um arquivo real.
