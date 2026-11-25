@@ -1,0 +1,31 @@
+name: Testes do sistema de personagens
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'character-system.js'
+      - 'estudio-core.js'
+      - 'tests/**'
+      - '.github/workflows/character-system-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'character-system.js'
+      - 'estudio-core.js'
+      - 'tests/**'
+      - '.github/workflows/character-system-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  character-system:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Executar testes automatizados
+        run: node --test tests/character-system.test.cjs
