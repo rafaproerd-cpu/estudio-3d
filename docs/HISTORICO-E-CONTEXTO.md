@@ -318,3 +318,13 @@ Commits conhecidos na branch `main`:
 - Quatro assertivas do bloco de múltiplas instâncias foram ajustadas para verificar o comportamento implementado e aceitar a ordem válida das opções `offset` e `persist`; a falha anterior era causada por testes excessivamente rígidos, não por falha do código de restauração.
 - Testes automatizados: GitHub Actions run `45642777003`, commit `b2346b82e6d511d47de405962906ad69dc6dafb5`, **60/60 aprovados, 0 falhas**.
 - A validação é automatizada e estática/estrutural; não substitui teste visual real no navegador com vários modelos e animações.
+
+## 25/11/2026 — GLBs múltiplos, mixers independentes e exportação de cena
+
+- A interface agora oferece `Importar GLB (substituir)` e `Adicionar GLB à cena`, permitindo manter vários modelos externos simultaneamente. Cada modelo adicionado recebe cadastro próprio e transformação independente.
+- Cada raiz de personagem mantém seu próprio `THREE.AnimationMixer` e lista de clipes. Selecionar outro personagem alterna os controles para as animações dele; o loop atualiza os mixers registrados. Ao remover ou limpar personagens, os mixers correspondentes são encerrados e descartados.
+- A importação de pacote ZIP também recria as instâncias GLB adicionais registradas em `sceneCharacters`, reaplicando transformações e clipes de cada asset disponível no pacote.
+- Foi adicionado `Exportar cena completa GLB`, que exporta cópias dos objetos visíveis registrados pelo editor (personagens e primitivas), sem reparentar os objetos originais. O botão anterior continua exportando apenas o personagem selecionado.
+- Limitação conhecida: a exportação da cena completa inclui geometria e materiais, mas ainda não serializa os clipes de animação independentes. Isso requer etapa própria de consolidação/validação de animações. A portabilidade ZIP preserva os arquivos GLB originais.
+- Testes automatizados: run `45644158732`, commit `682a4b8df04ff537db45c7fe3ee6a1204bf70cf9`, **66/66 aprovados, 0 falhas**. Os testes cobrem estrutura e regressões; não substituem teste visual de navegador nem round-trip real com arquivos GLB animados.
+- Publicação Pages referente à alteração de código está sendo verificada separadamente; não considerar publicada até o workflow concluir.
