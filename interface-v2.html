@@ -196,6 +196,22 @@ h3{font-size:11px}
 <input type="color" id="hairColor" value="#30251f">
 </div>
 
+<div class="section">
+<h3>Roupas (protótipo humanoide)</h3>
+<label>Parte superior</label>
+<select id="outfitTopStyle"><option value="none">Sem roupa superior</option><option value="shirt">Camiseta</option><option value="jacket">Jaqueta</option></select>
+<label>Cor da parte superior</label>
+<input type="color" id="outfitTopColor" value="#315b9a">
+<label>Calça</label>
+<select id="outfitBottomStyle"><option value="none">Sem calça</option><option value="pants">Calça básica</option></select>
+<label>Cor da calça</label>
+<input type="color" id="outfitBottomColor" value="#26344f">
+<label>Calçados</label>
+<select id="outfitShoesStyle"><option value="none">Sem calçados</option><option value="shoes">Sapatos básicos</option></select>
+<label>Cor dos calçados</label>
+<input type="color" id="outfitShoesColor" value="#242424">
+</div>
+
 <label>Posição horizontal</label>
 <input type="range" id="position" min="-4" max="4" step="0.1" value="0">
 
@@ -1070,6 +1086,13 @@ function syncCharacterForm(record) {
   const body = record.appearance && record.appearance.body || {};
   const face = record.appearance && record.appearance.face || {};
   const hair = record.appearance && record.appearance.hair || {};
+  const outfit = record.appearance && record.appearance.outfit || {};
+  document.querySelector('#outfitTopStyle').value = outfit.topStyle || 'shirt';
+  document.querySelector('#outfitTopColor').value = /^#[0-9a-f]{6}$/i.test(outfit.topColor || '') ? outfit.topColor : '#315b9a';
+  document.querySelector('#outfitBottomStyle').value = outfit.bottomStyle || 'pants';
+  document.querySelector('#outfitBottomColor').value = /^#[0-9a-f]{6}$/i.test(outfit.bottomColor || '') ? outfit.bottomColor : '#26344f';
+  document.querySelector('#outfitShoesStyle').value = outfit.shoesStyle || 'shoes';
+  document.querySelector('#outfitShoesColor').value = /^#[0-9a-f]{6}$/i.test(outfit.shoesColor || '') ? outfit.shoesColor : '#242424';
   document.querySelector('#hairStyle').value = hair.style || 'short';
   document.querySelector('#hairColor').value = /^#[0-9a-f]{6}$/i.test(hair.color || '') ? hair.color : '#30251f';
   document.querySelector('#faceHeadScale').value = Number.isFinite(Number(face.headScale)) ? face.headScale : 1;
@@ -1233,6 +1256,64 @@ function applyProceduralHair(characterGroup, settings = {}) {
   characterGroup.add(hair);
 }
 
+// Roupas geométricas básicas para o protótipo humanoide; ficam em grupo próprio.
+function applyProceduralOutfit(characterGroup, settings = {}) {
+  if (!characterGroup || !characterGroup.userData.supportsOutfit) return;
+  const previous = characterGroup.getObjectByName('procedural-outfit');
+  if (previous) {
+    characterGroup.remove(previous);
+    previous.traverse(node => {
+      if (node.geometry) node.geometry.dispose();
+      if (node.material) node.material.dispose();
+    });
+  }
+  const outfit = new THREE.Group();
+  outfit.name = 'procedural-outfit';
+  const topStyle = ['none', 'shirt', 'jacket'].includes(settings.topStyle) ? settings.topStyle : 'shirt';
+  const bottomStyle = ['none', 'pants'].includes(settings.bottomStyle) ? settings.bottomStyle : 'pants';
+  const shoesStyle = ['none', 'shoes'].includes(settings.shoesStyle) ? settings.shoesStyle : 'shoes';
+  const makeMaterial = (color, fallback) => new THREE.MeshStandardMaterial({
+    color: /^#[0-9a-f]{6}$/i.test(color || '') ? color : fallback,
+    roughness: 0.78
+  });
+  const addMesh = (geometry, material, x, y, z, scale = null) => {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, y, z);
+    if (scale) mesh.scale.set(...scale);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.userData.editorRoot = characterGroup;
+    outfit.add(mesh);
+  };
+  if (topStyle !== 'none') {
+    const topMaterial = makeMaterial(settings.topColor, '#315b9a');
+    const top = new THREE.Mesh(
+      new THREE.CapsuleGeometry(topStyle === 'jacket' ? 0.415 : 0.405, 0.84, 6, 12),
+      topMaterial
+    );
+    top.position.set(0, 0.05, 0);
+    top.castShadow = true;
+    top.userData.editorRoot = characterGroup;
+    outfit.add(top);
+  }
+  if (bottomStyle === 'pants') {
+    const pantsMaterial = makeMaterial(settings.bottomColor, '#26344f');
+    for (const side of [-1, 1]) {
+      addMesh(new THREE.CapsuleGeometry(0.125, 0.55, 4, 8), pantsMaterial,
+        side * 0.19, -0.91, 0);
+    }
+  }
+  if (shoesStyle === 'shoes') {
+    const shoesMaterial = makeMaterial(settings.shoesColor, '#242424');
+    for (const side of [-1, 1]) {
+      addMesh(new THREE.BoxGeometry(0.27, 0.16, 0.43), shoesMaterial,
+        side * 0.19, -1.39, 0.09);
+    }
+  }
+  outfit.traverse(node => { node.userData.editorRoot = characterGroup; });
+  characterGroup.add(outfit);
+}
+
 function generateCharacterPrototype(options = {}) {
   const addToScene = options.addToScene === true;
   if (!window.Estudio3DCharacters || !selectedCatalogRecordId) {
@@ -1362,6 +1443,7 @@ function generateCharacterPrototype(options = {}) {
   } else {
     // Humanoide base para humanos, alienígenas, criaturas e outras categorias.
     group.userData.supportsHair = true;
+    group.userData.supportsOutfit = true;
     const faceSettings = record.appearance && record.appearance.face || {};
     const headScale = Number.isFinite(Number(faceSettings.headScale)) ? Math.max(0.75, Math.min(1.35, Number(faceSettings.headScale))) : 1;
     const eyeScale = Number.isFinite(Number(faceSettings.eyeScale)) ? Math.max(0.6, Math.min(1.6, Number(faceSettings.eyeScale))) : 1;
@@ -1388,6 +1470,7 @@ function generateCharacterPrototype(options = {}) {
       part(new THREE.ConeGeometry(0.12, 0.48, 12), material, 0.36, 1.62, 0);
     }
     applyProceduralHair(group, record.appearance && record.appearance.hair || {});
+    applyProceduralOutfit(group, record.appearance && record.appearance.outfit || {});
   }
 
   // Restaura ajustes de transformação salvos no cadastro; na ausência deles,
@@ -1599,6 +1682,26 @@ const record = selected.userData.isCharacter && characterRecordId
   };
   control.addEventListener('input', updateHair);
   control.addEventListener('change', updateHair);
+});
+
+['outfitTopStyle', 'outfitTopColor', 'outfitBottomStyle', 'outfitBottomColor', 'outfitShoesStyle', 'outfitShoesColor'].forEach(controlId => {
+  const control = document.querySelector('#' + controlId);
+  const updateOutfit = () => {
+    if (!selected || !selected.userData.supportsOutfit || !characterRecordId) return;
+    const settings = {
+      topStyle: document.querySelector('#outfitTopStyle').value,
+      topColor: document.querySelector('#outfitTopColor').value,
+      bottomStyle: document.querySelector('#outfitBottomStyle').value,
+      bottomColor: document.querySelector('#outfitBottomColor').value,
+      shoesStyle: document.querySelector('#outfitShoesStyle').value,
+      shoesColor: document.querySelector('#outfitShoesColor').value
+    };
+    applyProceduralOutfit(selected, settings);
+    persistSelectedCharacter({ appearance: { outfit: settings } });
+    persistEditorState();
+  };
+  control.addEventListener('input', updateOutfit);
+  control.addEventListener('change', updateOutfit);
 });
 
 ['faceHeadScale', 'faceEyeScale', 'faceEyeSpacing'].forEach((controlId) => {
