@@ -104,5 +104,6 @@ test('protótipo restaura escala, posição e rotação salvas no cadastro', () 
   assert.match(generator, /savedBody\.editorRotationY/);
   assert.match(generator, /group\.position\.set\(/);
   assert.match(generator, /group\.rotation\.y = Number\.isFinite\(savedEditorRotationY\)/);
+  assert.match(generator, /THREE\.MathUtils\.degToRad\(savedEditorRotationY\)/);
   assert.match(generator, /savedEditorScale > 0/);
 });
