@@ -318,8 +318,11 @@ try {
   const api = window.Estudio3DCharacters;
   if (api) {
     let record;
+    let restoreProcedural = false;
+    let restoredProceduralTransform = null;
     if (pendingCharacterImport && pendingCharacterImport.record) {
       const imported = pendingCharacterImport.record;
+      restoreProcedural = !!(imported.model && imported.model.source === 'procedural_preview');
       record = api.addCharacterToProject({
         name: imported.name || 'Personagem importado',
         category: imported.category || 'human',
@@ -334,6 +337,7 @@ try {
         tags: imported.tags || []
       });
       const transform = pendingCharacterImport.transform;
+      restoredProceduralTransform = transform || null;
       if (transform) {
         if (Array.isArray(transform.position)) character.position.fromArray(transform.position);
         if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
@@ -357,6 +361,20 @@ try {
     characterRecordId = record.id;
     syncCharacterForm(record);
     const savedResult = window.Estudio3DCore.saveProject();
+    if (restoreProcedural) {
+      scene.remove(character);
+      const loadedIndex = objects.indexOf(character);
+      if (loadedIndex >= 0) objects.splice(loadedIndex, 1);
+      character = null;
+      generateCharacterPrototype();
+      if (restoredProceduralTransform && character) {
+        const t = restoredProceduralTransform;
+        if (Array.isArray(t.position)) character.position.fromArray(t.position);
+        if (Array.isArray(t.rotation)) character.rotation.fromArray(t.rotation);
+        if (Array.isArray(t.scale)) character.scale.fromArray(t.scale);
+      }
+      return;
+    }
     status(savedResult.ok
       ? 'Personagem carregado e cadastrado no projeto.'
       : 'Personagem carregado; não foi possível salvar no navegador.');
@@ -702,7 +720,29 @@ function generateCharacterPrototype() {
     return mesh;
   }
 
-  if (record.category === 'animal') {
+  const ageScale = {
+    baby: 0.68, child: 0.82, teen: 0.94, adult: 1, senior: 0.97
+  };
+  if (record.category === 'avian') {
+    // Protótipo de ave: corpo, cabeça, bico, asas, cauda e pernas.
+    part(new THREE.SphereGeometry(0.58, 24, 18), material, 0, 0.12, 0);
+    part(new THREE.SphereGeometry(0.34, 20, 16), material, 0, 0.55, 0.42);
+    const beak = part(new THREE.ConeGeometry(0.13, 0.42, 12), accent, 0, 0.48, 0.78);
+    beak.rotation.x = Math.PI / 2;
+    for (const side of [-1, 1]) {
+      const wing = part(new THREE.SphereGeometry(0.38, 18, 14), accent, side * 0.48, 0.16, -0.02);
+      wing.scale.set(0.42, 0.72, 1.45);
+      wing.rotation.z = side * -0.18;
+      limb(side * 0.2, -0.25, 0.08, side * 0.2, -0.78, 0.08, 0.075, accent);
+      part(new THREE.ConeGeometry(0.075, 0.22, 8), accent, side * 0.2, -0.86, 0.16);
+    }
+    for (let i = -1; i <= 1; i++) {
+      const feather = part(new THREE.ConeGeometry(0.09, 0.48, 8), material, i * 0.15, 0.2, -0.58);
+      feather.rotation.x = -Math.PI / 2.5;
+    }
+    part(new THREE.SphereGeometry(0.055, 10, 8), accent, -0.13, 0.62, 0.68);
+    part(new THREE.SphereGeometry(0.055, 10, 8), accent, 0.13, 0.62, 0.68);
+  } else if (record.category === 'animal') {
     // Protótipo quadrúpede com tronco, cabeça, quatro patas e cauda.
     part(new THREE.SphereGeometry(0.72, 24, 18), material, 0, 0.15, 0);
     part(new THREE.SphereGeometry(0.43, 20, 16), material, 0, 0.35, 0.78);
@@ -743,6 +783,7 @@ function generateCharacterPrototype() {
     }
   }
 
+  group.scale.setScalar(ageScale[record.ageStage] || 1);
   group.position.set(0, 0, 0);
   scene.add(group);
   objects.push(group);
@@ -1156,15 +1197,26 @@ if(data.character && data.character.record){
       : window.Estudio3DCharacters.addCharacterToProject(patch);
     characterRecordId = restored.id;
     const transform = data.character.transform || {};
-    if(Array.isArray(transform.position)) character.position.fromArray(transform.position);
-    if(Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
-    if(Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+    if (imported.model && imported.model.source === 'procedural_preview') {
+      if (character) {
+        scene.remove(character);
+        const oldIndex = objects.indexOf(character);
+        if (oldIndex >= 0) objects.splice(oldIndex, 1);
+      }
+      character = null;
+      generateCharacterPrototype();
+    }
+    if(character) {
+      if(Array.isArray(transform.position)) character.position.fromArray(transform.position);
+      if(Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+      if(Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+    }
   } else {
     pendingCharacterImport = data.character;
   }
 }
 
-selected=objects[objects.length-1]||character||null;
+selected=(data.character && character) ? character : (objects[objects.length-1]||null);
 if(selected) selectObject(selected);
 updateList();
 if(window.Estudio3DCore) window.Estudio3DCore.saveProject();
