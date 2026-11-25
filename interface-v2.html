@@ -328,6 +328,27 @@ if (!pendingCharacterImport && startupEditorState && startupEditorState.hasChara
   status('Cena restaurada sem personagem. Você pode adicionar objetos ou gerar um personagem pelo catálogo.');
   return;
 }
+if (!pendingCharacterImport && startupEditorState && startupEditorState.activeCharacter) {
+  const savedRecord = window.Estudio3DCharacters
+    ? window.Estudio3DCharacters.getCharacter(startupEditorState.activeCharacter.id)
+    : null;
+  if (savedRecord && savedRecord.model && savedRecord.model.source === 'procedural_preview') {
+    characterRecordId = savedRecord.id;
+    selectedCatalogRecordId = savedRecord.id;
+    syncCharacterForm(savedRecord);
+    restoreEditorState(startupEditorState);
+    generateCharacterPrototype();
+    const transform = startupEditorState.activeCharacter.transform || {};
+    if (character) {
+      if (Array.isArray(transform.position)) character.position.fromArray(transform.position);
+      if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+      if (Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+    }
+    persistEditorState();
+    status('Personagem procedural e cena restaurados sem depender do arquivo GLB-base.');
+    return;
+  }
+}
 
 status('Carregando personagem 3D...');
 
