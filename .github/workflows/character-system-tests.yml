@@ -9,6 +9,7 @@ on:
       - 'teste-estudio.html'
       - 'tests/rig-system.test.cjs'
       - 'estudio-core.js'
+      - 'interface-v2.html'
       - 'tests/**'
       - '.github/workflows/character-system-tests.yml'
   pull_request:
@@ -16,6 +17,7 @@ on:
     paths:
       - 'character-system.js'
       - 'estudio-core.js'
+      - 'interface-v2.html'
       - 'tests/**'
       - '.github/workflows/character-system-tests.yml'
   workflow_dispatch:
@@ -30,5 +32,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Validar sintaxe do módulo do editor 3D
+        run: |
+          python - <<'PY' | node --check --input-type=module
+          from pathlib import Path
+          import re
+          html = Path('interface-v2.html').read_text(encoding='utf-8')
+          match = re.search(r'<script type="module">([\\s\\S]*?)</script>', html)
+          if not match:
+              raise SystemExit('Módulo principal do editor não encontrado.')
+          print(match.group(1))
+          PY
       - name: Executar testes automatizados
         run: node --test tests/*.test.cjs
