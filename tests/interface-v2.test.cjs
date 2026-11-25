@@ -546,3 +546,9 @@ test('geração de cópias não persiste estado intermediário antes de aplicar 
   const generator = html.slice(start, end);
   assert.match(generator, /if \(!addToScene\) persistEditorState\(\)/);
 });
+
+test('selecionar objetos comuns desativa os controles de animação de personagens', () => {
+  assert.match(html, /\} else \{\s*activateCharacterAnimations\(null\);\s*\}/);
+  assert.match(html, /function activateCharacterAnimations\(root\)/);
+  assert.match(html, /select\.disabled = true/);
+});
