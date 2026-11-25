@@ -415,3 +415,11 @@ Commits conhecidos na branch `main`:
 - Os elementos são gerados em grupo independente `procedural-face-details` e salvos em `appearance.face`.
 - Os controles são voltados ao protótipo humanoide procedural; a geometria é simplificada e ainda não representa fios, textura, aparo detalhado ou simulação de pelos.
 - Testes estruturais adicionados; inspeção visual em navegador segue necessária.
+
+
+## 25/11/2026 — Formato do rosto e orelhas
+
+- Incluídos controles de largura e altura da cabeça, tamanho das orelhas e formato arredondado, pontudo ou alongado.
+- Os ajustes são persistidos em `appearance.face`, reaplicados ao atualizar os controles e restaurados ao gerar novamente o personagem.
+- As orelhas são geometrias procedurais simples; não representam anatomia detalhada ou escultura profissional.
+- Testes estruturais adicionados; revisão visual em navegador ainda necessária.
