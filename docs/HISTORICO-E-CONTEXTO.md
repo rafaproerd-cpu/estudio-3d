@@ -354,3 +354,12 @@ Commits conhecidos na branch `main`:
 - A implementação usa uma cópia segura do personagem para não reparentar nem alterar o modelo em edição.
 - Foram adicionados testes automatizados estruturais para verificar que os clipes da instância selecionada chegam às opções do exportador. Workflow de testes `45668415389`: sucesso; publicação Pages `45668467902`: sucesso no commit `cbfb61ba77e8708956da43361583ed01dea5b931`.
 - Limite importante: os testes atuais não abrem um GLB animado real nem confirmam reprodução após reimportação. Essa validação no navegador/visualizador 3D continua pendente. A exportação da cena completa ainda não consolida animações independentes de várias instâncias.
+
+
+## 25/11/2026 — Exportação de clipes por instância na cena completa
+
+- A exportação GLB da cena completa agora coleta os clipes de cada personagem visível com mixer próprio e os envia juntos ao GLTFExporter.
+- Para evitar que trilhas de personagens diferentes sejam ligadas ao primeiro esqueleto com nomes iguais, cada cópia recebe nomes de nós exclusivos e os nomes-alvo das trilhas (incluindo índices de ossos) são remapeados por instância.
+- Os objetos sem animação continuam sendo incluídos; objetos ocultos continuam fora da exportação.
+- Testes automatizados e verificação de sintaxe aprovados no workflow `45670279720`, commit `47a56746f5ed231768436468e06a8389d0b1fe26`.
+- Ainda é necessária validação manual com dois ou mais GLBs reais animados: abrir o arquivo resultante no Blender/visualizador, confirmar todos os clipes, reprodução e integridade dos esqueletos. Os testes atuais verificam a estrutura do código, não o round-trip real.
