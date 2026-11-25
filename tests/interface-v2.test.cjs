@@ -509,6 +509,16 @@ test('exportação GLB do personagem selecionado inclui seus clipes de animaçã
   assert.match(html, /exporter\.parse\([\s\S]*?exportClone,[\s\S]*?exportOptions/);
 });
 
+test('exportação da cena completa remapeia nomes e clipes para cada instância animada', () => {
+  assert.match(html, /function remapAnimationClipForExport\(clip, root, prefix\)/);
+  assert.match(html, /THREE\.PropertyBinding\.parseTrackName\(track\.name\)/);
+  assert.match(html, /renamedNodes\.get\(parsed\.objectIndex\)/);
+  assert.match(html, /const sceneExportAnimations = \[\]/);
+  assert.match(html, /sceneExportAnimations\.push\(\.\.\.animationState\.clips\.map/);
+  assert.match(html, /sceneExportOptions\.animations = sceneExportAnimations/);
+  assert.match(html, /exporter\.parse\([\s\S]*?exportRoot,[\s\S]*?sceneExportOptions/);
+});
+
 test('exportação GLB da cena completa inclui todas as instâncias e objetos sem reparentar originais', () => {
   assert.match(html, /id="exportSceneGLB"/);
   assert.match(html, /document\.querySelector\('#exportSceneGLB'\)\.onclick/);
@@ -517,7 +527,7 @@ test('exportação GLB da cena completa inclui todas as instâncias e objetos se
   assert.match(html, /const copy = cloneSkeletonSafe\(obj, false\)/);
   assert.match(html, /exportRoot\.add\(copy\)/);
   assert.match(html, /estudio-3d-cena-completa\.glb/);
-  assert.match(html, /clipes de animação precisam de validação\/exportação específica/);
+  assert.match(html, /clipes de animação\. Confira o arquivo salvo e valide a reprodução/);
 });
 
 test('gerenciador da cena permite renomear e duplicar instâncias', () => {
