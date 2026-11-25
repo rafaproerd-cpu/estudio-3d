@@ -1250,29 +1250,30 @@ status('Selecione um objeto primeiro.');
 return;
 }
 
-if(selected.userData.isCharacter){
+const removedObject = selected;
+scene.remove(removedObject);
+const removedIndex = objects.indexOf(removedObject);
+if (removedIndex >= 0) objects.splice(removedIndex, 1);
 
-scene.remove(selected);
-objects.splice(objects.indexOf(selected),1);
-
-character=null;
-mixer=null;
-activeAction=null;
-animationActions=[];
-
-document.querySelector('#animationSelect').innerHTML='<option>Personagem removido</option>';
-document.querySelector('#animationSelect').disabled=true;
-document.querySelector('#animate').disabled=true;
-document.querySelector('#pauseAnimation').disabled=true;
-
-}else{
-
-scene.remove(selected);
-objects.splice(objects.indexOf(selected),1);
-
+if (removedObject.userData.isCharacter && removedObject === character) {
+  if (mixer) mixer.stopAllAction();
+  mixer = null;
+  activeAction = null;
+  animationActions = [];
+  character = objects.find(obj => obj.userData.isCharacter) || null;
+  characterRecordId = character ? (character.userData.characterRecordId || null) : null;
+  document.querySelector('#animationSelect').innerHTML = character
+    ? '<option>Animação não carregada para este personagem</option>'
+    : '<option>Personagem removido</option>';
+  document.querySelector('#animationSelect').disabled = true;
+  document.querySelector('#animate').disabled = true;
+  document.querySelector('#pauseAnimation').disabled = true;
 }
 
-selected=null;
+selected = character && objects.includes(character)
+  ? character
+  : (objects[objects.length - 1] || null);
+if (selected) selectObject(selected);
 updateList();
 
 status('Objeto excluído.');
