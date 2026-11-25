@@ -401,26 +401,26 @@ test('manifesto ZIP vincula cada GLB ao ID correto e exige todos os modelos exte
 
 test('catálogo permite adicionar várias instâncias procedurais sem remover as anteriores', () => {
   assert.match(html, /title = 'Adicionar uma cópia deste personagem à cena'/);
-  assert.match(html, /row\\.append\\(selectButton, addButton, deleteButton\\)/);
-  assert.match(html, /function addCharacterInstance\\(recordId, transform = null\\)/);
-  assert.match(html, /generateCharacterPrototype\\(\\{ addToScene: true \\}\\)/);
-  assert.match(html, /if \\(!addToScene && character\\)/);
-  assert.match(html, /group\\.userData\\.characterRecordId = record\\.id/);
+  assert.match(html, /row\.append\(selectButton, addButton, deleteButton\)/);
+  assert.match(html, /function addCharacterInstance\(recordId, transform = null\)/);
+  assert.match(html, /generateCharacterPrototype\(\{ addToScene: true \}\)/);
+  assert.match(html, /if \(!addToScene && character\)/);
+  assert.match(html, /group\.userData\.characterRecordId = record\.id/);
 });
 
 test('exportação registra cada personagem e sua transformação individual', () => {
-  assert.match(html, /sceneCharacters: objects\\.filter\\(obj => obj\\.userData\\.isCharacter\\)/);
+  assert.match(html, /sceneCharacters: objects\.filter\(obj => obj\.userData\.isCharacter\)/);
   assert.match(html, /active: obj === character/);
-  assert.match(html, /source: obj\\.userData\\.proceduralCategory/);
+  assert.match(html, /source: obj\.userData\.proceduralCategory/);
 });
 
 test('importação valida instâncias e restaura personagens procedurais adicionais', () => {
-  assert.match(html, /data\\.sceneCharacters\\.length > 500/);
-  assert.match(html, /instance\\.source !== 'procedural_preview'/);
-  assert.match(html, /addCharacterInstance\\(instance\\.recordId, instance\\.transform\\)/);
+  assert.match(html, /data\.sceneCharacters\.length > 500/);
+  assert.match(html, /instance\.source !== 'procedural_preview'/);
+  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform\)/);
 });
 
 test('selecionar personagem da cena atualiza seu cadastro associado', () => {
-  assert.match(html, /characterRecordId = obj\\.userData\\.characterRecordId/);
-  assert.match(html, /selectedRecord = window\\.Estudio3DCharacters\\.getCharacter\\(characterRecordId\\)/);
+  assert.match(html, /characterRecordId = obj\.userData\.characterRecordId/);
+  assert.match(html, /selectedRecord = window\.Estudio3DCharacters\.getCharacter\(characterRecordId\)/);
 });
