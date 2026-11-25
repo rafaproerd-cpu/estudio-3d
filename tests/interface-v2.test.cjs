@@ -71,6 +71,6 @@ test('oferece cor independente para detalhes do personagem', () => {
 test('reaplica a cor dos detalhes salva ao reconstruir o protótipo', () => {
   assert.match(html, /record\.appearance && record\.appearance\.colors/);
   assert.match(html, /record\.appearance\.colors\.accent/);
-  assert.match(html, /savedAccentColor && \/\^#[0-9a-f]\{6\}\$\/i\.test\(savedAccentColor\)/);
+  assert.ok(html.includes("savedAccentColor && /^#[0-9a-f]{6}$/i.test(savedAccentColor)"));
   assert.match(html, /accentMaterialFound/);
 });
