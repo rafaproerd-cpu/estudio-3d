@@ -1548,6 +1548,15 @@ document.querySelector('#bundleFile').onchange = async (event) => {
     const zip = await window.JSZip.loadAsync(file, { checkCRC32: true });
     const entries = Object.values(zip.files);
     if (entries.length > 1000) throw new Error('O pacote contém arquivos demais.');
+    let declaredArchiveBytes = 0;
+    for (const entry of entries) {
+      if (!entry.dir && entry._data && Number.isFinite(entry._data.uncompressedSize)) {
+        declaredArchiveBytes += entry._data.uncompressedSize;
+      }
+    }
+    if (declaredArchiveBytes > 300 * 1024 * 1024) {
+      throw new Error('O conteúdo descompactado do ZIP excede o limite de 300 MB.');
+    }
     for (const entry of entries) {
       const name = entry.name;
       if (name.includes('\\') || name.startsWith('/') || /^[a-z]:/i.test(name) ||
@@ -1588,6 +1597,10 @@ document.querySelector('#bundleFile').onchange = async (event) => {
       }
       const entry = zip.file(asset.archivePath);
       if (!entry || entry.dir) throw new Error('Modelo obrigatório ausente: ' + asset.fileName);
+      if (entry._data && Number.isFinite(entry._data.uncompressedSize) &&
+          entry._data.uncompressedSize > 100 * 1024 * 1024) {
+        throw new Error('Um modelo GLB excede 100 MB.');
+      }
       const buffer = await entry.async('arraybuffer');
       if (buffer.byteLength > 100 * 1024 * 1024) throw new Error('Um modelo GLB excede 100 MB.');
       totalAssetBytes += buffer.byteLength;
@@ -1619,6 +1632,21 @@ document.querySelector('#bundleFile').onchange = async (event) => {
     // Restaura na cena o modelo correspondente ao personagem ativo no projeto.
     const activeId = project.character && project.character.record && project.character.record.id;
     const activeAsset = activeId ? preparedAssets.get(activeId) : null;
+    if (!activeAsset && activeId && project.character && project.character.record &&
+        project.character.record.model && project.character.record.model.source === 'procedural_preview') {
+      selectedCatalogRecordId = activeId;
+      const proceduralRecord = window.Estudio3DCharacters.getCharacter(activeId);
+      if (proceduralRecord) {
+        syncCharacterForm(proceduralRecord);
+        generateCharacterPrototype();
+        const transform = project.character.transform || {};
+        if (character) {
+          if (Array.isArray(transform.position)) character.position.fromArray(transform.position);
+          if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+          if (Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+        }
+      }
+    }
     if (activeAsset) {
       if (character) {
         scene.remove(character);
