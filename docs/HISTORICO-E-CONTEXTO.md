@@ -346,3 +346,11 @@ Commits conhecidos na branch `main`:
 - Corrigida também a restauração da visibilidade do personagem ativo, além das instâncias adicionais.
 - Testes automatizados: workflow `45645750205`, commit `6370fcf1d1ec3e367d7336d9aeee6dd8fb97c100`, **76/76 aprovados, 0 falhas**.
 - Limite de validação: ainda são testes estruturais/automatizados. O teste visual real no navegador e o round-trip com arquivos GLB reais continuam pendentes antes de declarar a etapa validada.
+
+
+## 25/11/2026 — Preparação da exportação de animações GLB
+
+- A exportação individual de personagem agora envia ao `GLTFExporter` os clipes registrados para aquela instância, quando houver animações; a exportação sem clipes continua usando as opções binárias normais.
+- A implementação usa uma cópia segura do personagem para não reparentar nem alterar o modelo em edição.
+- Foram adicionados testes automatizados estruturais para verificar que os clipes da instância selecionada chegam às opções do exportador. Workflow de testes `45668415389`: sucesso; publicação Pages `45668467902`: sucesso no commit `cbfb61ba77e8708956da43361583ed01dea5b931`.
+- Limite importante: os testes atuais não abrem um GLB animado real nem confirmam reprodução após reimportação. Essa validação no navegador/visualizador 3D continua pendente. A exportação da cena completa ainda não consolida animações independentes de várias instâncias.
