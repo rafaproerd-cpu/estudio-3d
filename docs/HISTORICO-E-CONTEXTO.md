@@ -177,3 +177,14 @@ Commits conhecidos na branch `main`:
 - **Commits:** a515b1b (correção), 067b0e4 (teste inicial) e 182d9e1 (assertiva corrigida).
 - **Validação:** workflow de testes concluído com sucesso no commit 182d9e1. 24 testes passaram no total; o primeiro ciclo encontrou uma assertiva de teste incorreta, corrigida no commit seguinte. O deploy Pages do mesmo commit estava em andamento no momento deste registro.
 - **Limitação:** o salvamento é no armazenamento local do navegador, não sincroniza automaticamente os dados do editor com o GitHub.
+
+
+## 13. 25/11/2026 — Correção da unidade de rotação na restauração procedural
+
+- **Problema identificado:** o editor salva `editorRotationY` em graus, mas a reconstrução procedural atribuía esse valor diretamente a `group.rotation.y`, que usa radianos no Three.js.
+- **Correção:** a restauração agora converte o valor salvo com `THREE.MathUtils.degToRad(savedEditorRotationY)`.
+- **Arquivos:** `interface-v2.html` e `tests/interface-v2.test.cjs`.
+- **Commits:** `7070209` (correção) e `7077ca6` (teste da conversão).
+- **Validação:** a correção e a nova assertiva foram commitadas; o workflow automatizado deste commit ainda precisa concluir para confirmar o resultado.
+- **Estado anterior confirmado nesta retomada:** no commit `d1316994`, os 25 testes automatizados e a publicação do GitHub Pages concluíram com sucesso.
+- **Próximo passo:** aguardar o workflow do commit `7077ca6`; depois continuar a revisão da restauração e seleção de personagens.
