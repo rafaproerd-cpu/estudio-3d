@@ -175,6 +175,7 @@ h3{font-size:11px}
 <button id="exportBundle">Exportar projeto completo (.zip)</button>
 <button id="importBundle">Importar projeto completo (.zip)</button>
 <button id="exportGLB">Exportar personagem GLB</button>
+<button id="exportSceneGLB">Exportar cena completa GLB</button>
 <button id="importGLB">Importar GLB (substituir)</button>
 <button id="addGLB">＋ Adicionar GLB à cena</button>
 <button id="import">Importar JSON</button>
@@ -1592,6 +1593,56 @@ document.querySelector('#glbFile').onchange = async (event) => {
 };
 
 // Exporta o objeto selecionado como GLB binário, preservando geometria e materiais.
+document.querySelector('#exportSceneGLB').onclick = () => {
+  const sceneCharacters = objects.filter(obj => obj && obj.visible);
+  if (!sceneCharacters.length) {
+    status('A cena não possui objetos para exportar.');
+    return;
+  }
+
+  // Exporta cópias dos objetos do usuário para não reparentar os originais
+  // nem interromper os mixers e controles da cena em edição.
+  const exportRoot = new THREE.Group();
+  exportRoot.name = 'Estudio3D-Scene';
+  sceneCharacters.forEach((obj, index) => {
+    const copy = obj.clone(true);
+    copy.name = obj.name || 'Objeto-' + (index + 1);
+    copy.position.copy(obj.position);
+    copy.quaternion.copy(obj.quaternion);
+    copy.scale.copy(obj.scale);
+    exportRoot.add(copy);
+  });
+  exportRoot.updateMatrixWorld(true);
+
+  const exporter = new GLTFExporter();
+  status('Preparando exportação GLB da cena completa...');
+  exporter.parse(
+    exportRoot,
+    result => {
+      try {
+        const blob = new Blob([result], { type: 'model/gltf-binary' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'estudio-3d-cena-completa.glb';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        status('Cena completa exportada em GLB. A geometria e os materiais foram incluídos; clipes de animação precisam de validação/exportação específica.');
+      } catch (error) {
+        console.error('[Estúdio 3D] Falha ao preparar a cena GLB:', error);
+        status('Não foi possível preparar o download da cena GLB.');
+      }
+    },
+    error => {
+      console.error('[Estúdio 3D] Falha na exportação da cena GLB:', error);
+      status('Falha ao exportar a cena: ' + (error.message || 'erro desconhecido'));
+    },
+    { binary: true, onlyVisible: true }
+  );
+};
+
 document.querySelector('#exportGLB').onclick = () => {
   if (!selected || !selected.userData.isCharacter) {
     status('Selecione um personagem na cena antes de exportar em GLB.');
