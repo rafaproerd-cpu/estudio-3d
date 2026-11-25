@@ -167,3 +167,13 @@ Commits conhecidos na branch `main`:
 - **Commits:** 36f7bd9 (cor principal preserva detalhes) e 9c0572f (teste de regressão).
 - **Validação:** workflow automatizado Testes do sistema de personagens concluído com sucesso no commit 9c0572f. A etapa de testes automatizados passou. Isso não substitui a validação visual manual no navegador.
 - **Próximo passo:** teste visual pelo usuário para confirmar a edição da cor principal e da cor de detalhes no protótipo; depois evoluir personalização por partes.
+
+
+## 12. 25/11/2026 — Persistência ao excluir cadastro do catálogo
+
+- **Problema identificado:** excluir um personagem do catálogo atualizava o projeto em memória, mas não chamava o salvamento local; ao recarregar o editor, o cadastro poderia reaparecer.
+- **Correção:** após remover o cadastro, a interface chama Estudio3DCore.saveProject() e informa se a gravação local foi concluída. O modelo 3D que já está na cena permanece, conforme a mensagem da interface.
+- **Arquivos:** interface-v2.html e tests/interface-v2.test.cjs.
+- **Commits:** a515b1b (correção), 067b0e4 (teste inicial) e 182d9e1 (assertiva corrigida).
+- **Validação:** workflow de testes concluído com sucesso no commit 182d9e1. 24 testes passaram no total; o primeiro ciclo encontrou uma assertiva de teste incorreta, corrigida no commit seguinte. O deploy Pages do mesmo commit estava em andamento no momento deste registro.
+- **Limitação:** o salvamento é no armazenamento local do navegador, não sincroniza automaticamente os dados do editor com o GitHub.
