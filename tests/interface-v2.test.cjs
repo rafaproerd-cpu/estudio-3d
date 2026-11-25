@@ -58,5 +58,5 @@ test('regenerar protótipo substitui o personagem anterior em vez de duplicá-lo
 test('cor primária salva no cadastro é reaplicada ao reconstruir o protótipo', () => {
   assert.match(html, /record\.appearance && record\.appearance\.colors/);
   assert.match(html, /record\.appearance\.colors\.primary/);
-  assert.match(html, /savedPrimaryColor && \/\^#[0-9a-f\]\{6\}\$\/i\.test\(savedPrimaryColor\)/);
+  assert.ok(html.includes("savedPrimaryColor && /^#[0-9a-f]{6}$/i.test(savedPrimaryColor)"));
 });
