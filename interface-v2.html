@@ -679,13 +679,27 @@ status('Cena limpa. Recarregue a página para carregar o personagem novamente.')
 
 function saveProject(){
 
+const characterData = character && characterRecordId && window.Estudio3DCharacters
+  ? window.Estudio3DCharacters.getCharacter(characterRecordId)
+  : null;
+
 return{
 
-version:2,
+version:3,
 
 background:scene.background.getHexString(),
 
 light:sun.intensity,
+
+// Inclui os metadados universais e a transformação do personagem no arquivo.
+character: characterData ? {
+  record: characterData,
+  transform: {
+    position: character.position.toArray(),
+    rotation: character.rotation.toArray(),
+    scale: character.scale.toArray()
+  }
+} : null,
 
 objects:objects
 .filter(o=>!o.userData.isCharacter)
