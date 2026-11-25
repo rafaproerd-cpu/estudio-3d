@@ -204,6 +204,10 @@ h3{font-size:11px}
 <input type="color" id="faceEyeColor" value="#3b79b7">
 <label>Tamanho das pupilas</label>
 <input type="range" id="facePupilScale" min="0.5" max="1.8" step="0.05" value="1">
+<label>Olhar horizontal</label>
+<input type="range" id="faceGazeX" min="-0.04" max="0.04" step="0.005" value="0">
+<label>Olhar vertical</label>
+<input type="range" id="faceGazeY" min="-0.04" max="0.04" step="0.005" value="0">
 <label>Tamanho do nariz</label>
 <input type="range" id="faceNoseScale" min="0.5" max="1.6" step="0.05" value="1">
 <label>Formato do nariz</label>
@@ -1153,6 +1157,8 @@ function syncCharacterForm(record) {
   document.querySelector('#faceEyeSpacing').value = Number.isFinite(Number(face.eyeSpacing)) ? face.eyeSpacing : 1;
   document.querySelector('#faceEyeColor').value = /^#[0-9a-f]{6}$/i.test(face.eyeColor || '') ? face.eyeColor : '#3b79b7';
   document.querySelector('#facePupilScale').value = Number.isFinite(Number(face.pupilScale)) ? face.pupilScale : 1;
+  document.querySelector('#faceGazeX').value = Number.isFinite(Number(face.gazeX)) ? face.gazeX : 0;
+  document.querySelector('#faceGazeY').value = Number.isFinite(Number(face.gazeY)) ? face.gazeY : 0;
   document.querySelector('#faceNoseScale').value = Number.isFinite(Number(face.noseScale)) ? face.noseScale : 1;
   document.querySelector('#faceNoseStyle').value = ['round', 'narrow', 'wide', 'pointed'].includes(face.noseStyle) ? face.noseStyle : 'round';
   document.querySelector('#faceMouthStyle').value = ['neutral', 'smile', 'sad', 'surprised', 'angry', 'serious'].includes(face.mouthStyle) ? face.mouthStyle : 'neutral';
@@ -1448,16 +1454,18 @@ function applyProceduralFaceDetails(characterGroup, settings = {}) {
   const noseScale = Number.isFinite(Number(settings.noseScale))
     ? Math.max(0.5, Math.min(1.6, Number(settings.noseScale))) : 1;
   const pupilScale = Number.isFinite(Number(settings.pupilScale)) ? Math.max(0.5, Math.min(1.8, Number(settings.pupilScale))) : 1;
+  const gazeX = Number.isFinite(Number(settings.gazeX)) ? Math.max(-0.04, Math.min(0.04, Number(settings.gazeX))) : 0;
+  const gazeY = Number.isFinite(Number(settings.gazeY)) ? Math.max(-0.04, Math.min(0.04, Number(settings.gazeY))) : 0;
   const pupilMaterial = new THREE.MeshStandardMaterial({ color: '#171717', roughness: 0.3 });
   for (const side of [-1, 1]) {
     const iris = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 10), eyeMaterial);
     iris.name = 'face-iris';
-    iris.position.set(side * 0.16, 1.12, 0.432);
+    iris.position.set(side * 0.16 + gazeX, 1.12 + gazeY, 0.432);
     iris.userData.editorRoot = characterGroup;
     details.add(iris);
     const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 10), pupilMaterial);
     pupil.name = 'face-pupil';
-    pupil.position.set(side * 0.16, 1.12, 0.465);
+    pupil.position.set(side * 0.16 + gazeX, 1.12 + gazeY, 0.465);
     pupil.scale.setScalar(pupilScale);
     pupil.userData.editorRoot = characterGroup;
     details.add(pupil);
@@ -2004,13 +2012,15 @@ const record = selected.userData.isCharacter && characterRecordId
   };
 });
 
-['faceEyeColor', 'facePupilScale', 'faceEyeStyle', 'faceNoseScale', 'faceNoseStyle', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor', 'faceEarScale', 'faceEarStyle'].forEach(controlId => {
+['faceEyeColor', 'facePupilScale', 'faceGazeX', 'faceGazeY', 'faceEyeStyle', 'faceNoseScale', 'faceNoseStyle', 'faceMouthStyle', 'faceBeardStyle', 'faceMustacheStyle', 'faceEyebrowStyle', 'faceHairColor', 'faceEarScale', 'faceEarStyle'].forEach(controlId => {
   const control = document.querySelector('#' + controlId);
   const updateFaceDetails = () => {
     if (!selected || !selected.userData.supportsFaceDetails || !characterRecordId) return;
     const settings = {
       eyeColor: document.querySelector('#faceEyeColor').value,
       pupilScale: Number(document.querySelector('#facePupilScale').value),
+      gazeX: Number(document.querySelector('#faceGazeX').value),
+      gazeY: Number(document.querySelector('#faceGazeY').value),
       eyeStyle: document.querySelector('#faceEyeStyle').value,
       noseScale: Number(document.querySelector('#faceNoseScale').value),
       noseStyle: document.querySelector('#faceNoseStyle').value,
@@ -2024,7 +2034,7 @@ const record = selected.userData.isCharacter && characterRecordId
     };
     applyProceduralFaceDetails(selected, settings);
     const keyMap = {
-      faceEyeColor: 'eyeColor', facePupilScale: 'pupilScale', faceEyeStyle: 'eyeStyle', faceNoseScale: 'noseScale', faceNoseStyle: 'noseStyle', faceMouthStyle: 'mouthStyle',
+      faceEyeColor: 'eyeColor', facePupilScale: 'pupilScale', faceGazeX: 'gazeX', faceGazeY: 'gazeY', faceEyeStyle: 'eyeStyle', faceNoseScale: 'noseScale', faceNoseStyle: 'noseStyle', faceMouthStyle: 'mouthStyle',
       faceBeardStyle: 'beardStyle', faceMustacheStyle: 'mustacheStyle',
       faceEyebrowStyle: 'eyebrowStyle', faceHairColor: 'facialHairColor',
       faceEarScale: 'earScale', faceEarStyle: 'earStyle'
