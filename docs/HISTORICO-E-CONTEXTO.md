@@ -380,3 +380,12 @@ Commits conhecidos na branch `main`:
 - Estilo e cor são persistidos em `appearance.hair` e reaplicados ao regenerar protótipos humanoides.
 - Escopo atual: somente personagens que usam a base humanoide procedural. Não altera cabelos de modelos GLB importados e ainda não é um sistema de penteados detalhados/fios individuais.
 - Testes estruturais adicionados; validação visual real no navegador permanece necessária.
+
+
+## 25/11/2026 — Primeiras roupas procedurais no protótipo humanoide
+
+- Adicionados controles para parte superior (sem roupa, camiseta ou jaqueta), calça básica e sapatos básicos, com cores independentes.
+- As peças são geradas em um grupo `procedural-outfit` separado do corpo e do cabelo, permitindo atualizar as roupas sem reconstruir o personagem.
+- As configurações são salvas em `appearance.outfit`, recuperadas ao selecionar o cadastro e reaplicadas ao regenerar o protótipo.
+- Escopo atual: geometrias simples de pré-visualização em personagens que usam a base humanoide procedural. Não são roupas com costura, tecido simulado, UVs, ajustes anatômicos avançados ou compatibilidade automática com modelos GLB importados.
+- Testes estruturais adicionados; validação visual no navegador e revisão de sobreposição das peças ainda são necessárias.
