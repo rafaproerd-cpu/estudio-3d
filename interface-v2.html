@@ -209,6 +209,7 @@ Carregamento de personagem GLB.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
 
 const canvas=document.querySelector('#scene');
 
@@ -765,19 +766,40 @@ document.querySelector('#duplicateSceneObject').onclick = () => {
       status('Não foi possível localizar o cadastro deste personagem.');
       return;
     }
-    if (!selected.userData.proceduralCategory) {
-      status('A duplicação de modelos GLB com esqueleto será habilitada após integrar a clonagem segura de esqueletos.');
-      return;
-    }
     const source = selected;
     const sourceName = source.userData.instanceName || source.name || record.name;
-    addCharacterInstance(recordId);
-    if (character) {
-      character.userData.instanceName = (sourceName + ' (cópia)').slice(0, 80);
-      character.name = character.userData.instanceName;
-      updateList();
-      persistEditorState();
+    if (source.userData.proceduralCategory) {
+      addCharacterInstance(recordId);
+      if (character) {
+        character.userData.instanceName = (sourceName + ' (cópia)').slice(0, 80);
+        character.name = character.userData.instanceName;
+        updateList();
+        persistEditorState();
+      }
+      return;
     }
+    const sourceAnimationState = characterAnimationStates.get(source);
+    const copy = cloneSkeleton(source);
+    copy.name = (sourceName + ' (cópia)').slice(0, 80);
+    copy.userData = { ...source.userData, instanceName: copy.name, characterRecordId: recordId };
+    copy.position.copy(source.position);
+    copy.position.x += 1.8;
+    copy.rotation.copy(source.rotation);
+    copy.scale.copy(source.scale);
+    copy.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.userData.editorRoot = copy;
+      }
+    });
+    scene.add(copy);
+    objects.push(copy);
+    registerCharacterAnimations(copy, sourceAnimationState ? sourceAnimationState.clips : []);
+    selectObject(copy);
+    updateList();
+    persistEditorState();
+    status('Cópia independente do modelo GLB adicionada à cena.'); 
     return;
   }
 
@@ -1998,7 +2020,7 @@ document.querySelector('#bundleFile').onchange = async (event) => {
       .forEach(instance => {
         const asset = preparedAssets.get(instance.recordId);
         if (!asset) return;
-        const root = asset.gltf.scene.clone(true);
+        const root = cloneSkeleton(asset.gltf.scene);
         root.name = (instance.instanceName || asset.fileName.replace(/\.glb$/i, '') || 'Personagem importado').slice(0, 80);
         root.userData.instanceName = root.name;
         root.userData.type = 'personagem';
