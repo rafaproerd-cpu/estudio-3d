@@ -962,7 +962,9 @@ document.querySelector('#duplicateSceneObject').onclick = () => {
     return;
   }
 
-  const copy = selected.clone(true);
+  // Também usa a cópia segura em objetos comuns: meshes da cena podem
+  // carregar editorRoot no userData, criando referência circular.
+  const copy = cloneSkeletonSafe(selected, false);
   copy.position.x += 1.2;
   copy.name = ((selected.userData.instanceName || selected.name || 'Objeto') + ' (cópia)').slice(0, 80);
   copy.userData = { ...selected.userData, instanceName: copy.name, editorRoot: copy };
