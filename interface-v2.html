@@ -1099,7 +1099,12 @@ const characterData = character && characterRecordId && window.Estudio3DCharacte
 
 return{
 
-version:3,
+version:4,
+
+// Exporta o catálogo inteiro, não apenas o personagem visual atualmente ativo.
+characters: window.Estudio3DCharacters
+  ? window.Estudio3DCharacters.getCharacters()
+  : [],
 
 background:scene.background.getHexString(),
 
@@ -1212,7 +1217,7 @@ const data=JSON.parse(await file.text());
 if(!Array.isArray(data.objects)){
 throw new Error('Arquivo inválido: lista de objetos ausente.');
 }
-if(data.version && ![2,3].includes(data.version)){
+if(data.version && ![2,3,4].includes(data.version)){
 throw new Error('Versão de projeto não suportada.');
 }
 
@@ -1252,13 +1257,30 @@ sun.intensity=data.light;
 document.querySelector('#light').value=data.light;
 }
 
+// Restaura o catálogo completo. Arquivos antigos continuam compatíveis.
+if (window.Estudio3DCharacters && window.Estudio3DCore) {
+  const sourceRecords = Array.isArray(data.characters)
+    ? data.characters
+    : (data.character && data.character.record ? [data.character.record] : []);
+  const normalizedRecords = sourceRecords.map((source) => {
+    const normalized = window.Estudio3DCharacters.createCharacter(source);
+    const validation = window.Estudio3DCharacters.validateCharacter(normalized);
+    if (!validation.valid) throw new Error(validation.errors.join(' '));
+    return normalized;
+  });
+  const ids = normalizedRecords.map(record => record.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error('O catálogo importado contém identificadores duplicados.');
+  }
+  window.Estudio3DCore.updateProject({ characters: normalizedRecords });
+  renderCharacterCatalog();
+}
+
 // Restaura os metadados e a transformação do personagem importado.
 if(data.character && data.character.record){
   if(character && window.Estudio3DCharacters){
     const imported = data.character.record;
-    const existing = characterRecordId
-      ? window.Estudio3DCharacters.getCharacter(characterRecordId)
-      : null;
+    const existing = window.Estudio3DCharacters.getCharacter(imported.id);
     const patch = {
       name: imported.name || 'Personagem importado',
       category: imported.category || 'human',
@@ -1273,8 +1295,8 @@ if(data.character && data.character.record){
       tags: imported.tags || []
     };
     const restored = existing
-      ? window.Estudio3DCharacters.updateCharacter(characterRecordId, patch)
-      : window.Estudio3DCharacters.addCharacterToProject(patch);
+      ? window.Estudio3DCharacters.updateCharacter(imported.id, patch)
+      : window.Estudio3DCharacters.addCharacterToProject({ ...patch, id: imported.id });
     characterRecordId = restored.id;
     selectedCatalogRecordId = restored.id;
     const transform = data.character.transform || {};
