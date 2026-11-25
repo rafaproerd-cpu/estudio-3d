@@ -263,3 +263,15 @@ test('importar projeto sem personagem remove o personagem anterior da cena', () 
   assert.match(importer, /selectedCatalogRecordId = null/);
   assert.match(importer, /mixer\.stopAllAction\(\)/);
 });
+
+
+test('preview procedural salvo é restaurado sem carregar o GLB-base', () => {
+  const start = html.indexOf('function loadCharacter()');
+  const end = html.indexOf('/* OBJETOS */', start);
+  const loader = html.slice(start, end);
+  assert.match(loader, /savedRecord\.model\.source === 'procedural_preview'/);
+  assert.match(loader, /restoreEditorState\(startupEditorState\)/);
+  assert.match(loader, /generateCharacterPrototype\(\)/);
+  assert.match(loader, /Personagem procedural e cena restaurados sem depender do arquivo GLB-base/);
+  assert.ok(loader.indexOf("status('Personagem procedural") < loader.indexOf('const loader=new GLTFLoader()'));
+});
