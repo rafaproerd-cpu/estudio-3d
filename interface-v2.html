@@ -290,6 +290,16 @@ function persistEditorState() {
     background: '#' + scene.background.getHexString(),
     light: sun.intensity,
     activeCharacter,
+    sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
+      recordId: obj.userData.characterRecordId || (obj === character ? characterRecordId : null),
+      active: obj === character,
+      source: obj.userData.proceduralCategory ? 'procedural_preview' : 'external_file',
+      transform: {
+        position: obj.position.toArray(),
+        rotation: obj.rotation.toArray(),
+        scale: obj.scale.toArray()
+      }
+    })),
     objects: objects.filter(obj => !obj.userData.isCharacter).map(obj => ({
       type: obj.userData.type,
       color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#527cff',
@@ -603,9 +613,14 @@ selected=obj;
 
 if(!obj)return;
 
-if (obj.userData.isCharacter && characterRecordId && window.Estudio3DCharacters) {
-  selectedCatalogRecordId = characterRecordId;
-  syncCharacterForm(window.Estudio3DCharacters.getCharacter(characterRecordId));
+if (obj.userData.isCharacter) {
+  character = obj;
+  characterRecordId = obj.userData.characterRecordId || characterRecordId;
+  if (characterRecordId && window.Estudio3DCharacters) {
+    selectedCatalogRecordId = characterRecordId;
+    const selectedRecord = window.Estudio3DCharacters.getCharacter(characterRecordId);
+    if (selectedRecord) syncCharacterForm(selectedRecord);
+  }
 }
 
 let materialFound=null;
@@ -739,6 +754,12 @@ function renderCharacterCatalog() {
         ? 'Cadastro selecionado. O modelo 3D associado pode ser carregado no editor.'
         : 'Cadastro selecionado. Modelo 3D ainda não associado.');
     };
+    const addButton = document.createElement('button');
+    addButton.type = 'button';
+    addButton.textContent = '＋';
+    addButton.title = 'Adicionar uma cópia deste personagem à cena';
+    addButton.style.cssText = 'width:38px;flex:0 0 38px';
+    addButton.onclick = () => addCharacterInstance(record.id);
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
     deleteButton.textContent = '×';
@@ -756,7 +777,7 @@ function renderCharacterCatalog() {
           : 'Cadastro removido nesta sessão, mas não foi possível salvar no navegador.');
       }
     };
-    row.append(selectButton, deleteButton);
+    row.append(selectButton, addButton, deleteButton);
     container.appendChild(row);
   });
 }
@@ -805,7 +826,8 @@ document.querySelector('#saveCharacterData').onclick = () => {
 
 
 // Geração procedural inicial: malha 3D de pré-visualização conforme a categoria.
-function generateCharacterPrototype() {
+function generateCharacterPrototype(options = {}) {
+  const addToScene = options.addToScene === true;
   if (!window.Estudio3DCharacters || !selectedCatalogRecordId) {
     status('Crie ou selecione um personagem no catálogo antes de gerar o protótipo.');
     return;
@@ -832,7 +854,7 @@ function generateCharacterPrototype() {
   document.querySelector('#pauseAnimation').textContent = 'Ⅱ Pausar animação';
 
   // O editor mantém um personagem principal por vez: evita duplicatas ao regenerar.
-  if (character) {
+  if (!addToScene && character) {
     scene.remove(character);
     const previousIndex = objects.indexOf(character);
     if (previousIndex >= 0) objects.splice(previousIndex, 1);
@@ -843,6 +865,7 @@ function generateCharacterPrototype() {
   group.userData.type = 'procedural-character';
   group.userData.isCharacter = true;
   group.userData.proceduralCategory = record.category;
+  group.userData.characterRecordId = record.id;
 
   const palette = {
     human: 0xc58d68, animal: 0xb9824d, creature: 0x687c9f,
@@ -995,7 +1018,30 @@ function generateCharacterPrototype() {
   persistEditorState();
 }
 
-document.querySelector('#generateCharacter3D').onclick = generateCharacterPrototype;
+document.querySelector('#generateCharacter3D').onclick = () => generateCharacterPrototype();
+
+function addCharacterInstance(recordId, transform = null) {
+  if (!window.Estudio3DCharacters) return;
+  const record = window.Estudio3DCharacters.getCharacter(recordId);
+  if (!record) {
+    status('Cadastro não encontrado. Atualize o catálogo e tente novamente.');
+    return;
+  }
+  selectedCatalogRecordId = recordId;
+  syncCharacterForm(record);
+  generateCharacterPrototype({ addToScene: true });
+  if (!character) return;
+  if (transform && Array.isArray(transform.position)) character.position.fromArray(transform.position);
+  if (transform && Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
+  if (transform && Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
+  character.userData.characterRecordId = recordId;
+  character.position.x += objects.filter(obj => obj.userData.isCharacter).length > 1 && !transform ? 1.8 : 0;
+  selectObject(character);
+  renderCharacterCatalog();
+  updateList();
+  persistEditorState();
+  status('Cópia de ' + record.name + ' adicionada à cena. Cada personagem pode ser selecionado e transformado separadamente.');
+}
 
 function persistSelectedCharacter(patch) {
   if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
@@ -1254,6 +1300,18 @@ assetManifest: catalog
 background:scene.background.getHexString(),
 
 light:sun.intensity,
+
+// Guarda todas as instâncias de personagens presentes na cena.
+sceneCharacters: objects.filter(obj => obj.userData.isCharacter).map(obj => ({
+  recordId: obj.userData.characterRecordId || (obj === character ? characterRecordId : null),
+  active: obj === character,
+  source: obj.userData.proceduralCategory ? 'procedural_preview' : 'external_file',
+  transform: {
+    position: obj.position.toArray(),
+    rotation: obj.rotation.toArray(),
+    scale: obj.scale.toArray()
+  }
+})),
 
 // Inclui os metadados universais e a transformação do personagem no arquivo.
 character: characterData ? {
@@ -1764,6 +1822,22 @@ for (const item of data.objects) {
   }
 }
 
+// Valida a lista de instâncias quando presente, mantendo compatibilidade com projetos antigos.
+if (data.sceneCharacters !== undefined) {
+  if (!Array.isArray(data.sceneCharacters) || data.sceneCharacters.length > 500) {
+    throw new Error('A lista de personagens da cena é inválida ou excede o limite.');
+  }
+  for (const instance of data.sceneCharacters) {
+    if (!instance || typeof instance.recordId !== 'string' ||
+        !['procedural_preview', 'external_file'].includes(instance.source) ||
+        !instance.transform || !['position', 'rotation', 'scale'].every(key =>
+          Array.isArray(instance.transform[key]) && instance.transform[key].length === 3 &&
+          instance.transform[key].every(Number.isFinite))) {
+      throw new Error('Uma instância de personagem contém dados inválidos.');
+    }
+  }
+}
+
 let normalizedRecords = null;
 if (window.Estudio3DCharacters && window.Estudio3DCore) {
   const sourceRecords = Array.isArray(data.characters)
@@ -1891,6 +1965,25 @@ if(data.character && data.character.record){
   } else {
     pendingCharacterImport = data.character;
   }
+}
+
+// Restaura instâncias procedurais adicionais sem duplicar o personagem ativo.
+if (Array.isArray(data.sceneCharacters)) {
+  const activeInstance = data.sceneCharacters.find(instance => instance.active);
+  data.sceneCharacters.forEach(instance => {
+    if (instance.active) {
+      if (character && activeInstance && activeInstance.recordId === characterRecordId) {
+        if (Array.isArray(instance.transform.position)) character.position.fromArray(instance.transform.position);
+        if (Array.isArray(instance.transform.rotation)) character.rotation.fromArray(instance.transform.rotation);
+        if (Array.isArray(instance.transform.scale)) character.scale.fromArray(instance.transform.scale);
+      }
+      return;
+    }
+    if (instance.source !== 'procedural_preview') return;
+    const instanceRecord = window.Estudio3DCharacters &&
+      window.Estudio3DCharacters.getCharacter(instance.recordId);
+    if (instanceRecord) addCharacterInstance(instance.recordId, instance.transform);
+  });
 }
 
 selected=(data.character && character) ? character : (objects[objects.length-1]||null);
