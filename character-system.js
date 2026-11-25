@@ -70,6 +70,27 @@
     };
   }
 
+  // Estrutura de aparência independente de espécie ou estilo visual.
+  function createAppearance(options = {}) {
+    const source = options && typeof options === 'object' ? options : {};
+    const objectOrEmpty = value =>
+      value && typeof value === 'object' && !Array.isArray(value)
+        ? clone(value) : {};
+
+    return {
+      body: objectOrEmpty(source.body),
+      face: objectOrEmpty(source.face),
+      hair: objectOrEmpty(source.hair),
+      wardrobe: objectOrEmpty(source.wardrobe),
+      colors: objectOrEmpty(source.colors),
+      features: Array.isArray(source.features)
+        ? source.features.filter(item => typeof item === 'string')
+            .map(item => item.trim()).filter(Boolean)
+        : [],
+      notes: cleanText(source.notes)
+    };
+  }
+
   function createCharacter(options = {}) {
     const now = new Date().toISOString();
 
@@ -83,6 +104,9 @@
       rigType: rigTypes.includes(options.rigType)
         ? options.rigType : 'unknown',
       description: cleanText(options.description),
+
+      // Parâmetros preparados para o futuro editor de aparência 3D.
+      appearance: createAppearance(options.appearance),
 
       visualDirection: createVisualDirection(
         options.visualDirection || {}
@@ -223,6 +247,33 @@
           })
         : current.visualDirection,
 
+      appearance: safeUpdates.appearance
+        ? createAppearance({
+            ...current.appearance,
+            ...safeUpdates.appearance,
+            body: {
+              ...(current.appearance && current.appearance.body || {}),
+              ...(safeUpdates.appearance.body || {})
+            },
+            face: {
+              ...(current.appearance && current.appearance.face || {}),
+              ...(safeUpdates.appearance.face || {})
+            },
+            hair: {
+              ...(current.appearance && current.appearance.hair || {}),
+              ...(safeUpdates.appearance.hair || {})
+            },
+            wardrobe: {
+              ...(current.appearance && current.appearance.wardrobe || {}),
+              ...(safeUpdates.appearance.wardrobe || {})
+            },
+            colors: {
+              ...(current.appearance && current.appearance.colors || {}),
+              ...(safeUpdates.appearance.colors || {})
+            }
+          })
+        : createAppearance(current.appearance),
+
       gameReady: safeUpdates.gameReady
         ? { ...current.gameReady, ...safeUpdates.gameReady }
         : current.gameReady,
@@ -302,6 +353,7 @@
       capabilities: [
         'character_metadata',
         'contextual_visual_direction',
+        'structured_appearance_parameters',
         'separate_character_parts',
         'game_export_metadata'
       ],
