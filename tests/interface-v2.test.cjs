@@ -402,7 +402,7 @@ test('manifesto ZIP vincula cada GLB ao ID correto e exige todos os modelos exte
 test('catálogo permite adicionar várias instâncias procedurais sem remover as anteriores', () => {
   assert.match(html, /title = 'Adicionar uma cópia deste personagem à cena'/);
   assert.match(html, /row\.append\(selectButton, addButton, deleteButton\)/);
-  assert.match(html, /function addCharacterInstance\(recordId, transform = null\)/);
+  assert.match(html, /function addCharacterInstance\(recordId, transform = null, options = {}\)/);
   assert.match(html, /generateCharacterPrototype\(\{ addToScene: true \}\)/);
   assert.match(html, /if \(!addToScene && character\)/);
   assert.match(html, /group\.userData\.characterRecordId = record\.id/);
@@ -417,7 +417,7 @@ test('exportação registra cada personagem e sua transformação individual', (
 test('importação valida instâncias e restaura personagens procedurais adicionais', () => {
   assert.match(html, /data\.sceneCharacters\.length > 500/);
   assert.match(html, /instance\.source !== 'procedural_preview'/);
-  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform\)/);
+  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform, \{ offset: false, persist: false \} \)/);
 });
 
 test('selecionar personagem da cena atualiza seu cadastro associado', () => {
@@ -429,7 +429,7 @@ test('selecionar personagem da cena atualiza seu cadastro associado', () => {
 test('restauração local recria personagens procedurais adicionais sem perder o personagem ativo', () => {
   assert.match(html, /function restoreAdditionalSceneCharacters\(editorState\)/);
   assert.match(html, /editorState\.sceneCharacters\.forEach\(instance =>/);
-  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform, \{ persist: false, offset: false \} \)/);
+  assert.match(html, /addCharacterInstance\(instance\.recordId, instance\.transform, \{ offset: false, persist: false \} \)/);
   assert.match(html, /character = activeRoot/);
 });
 
