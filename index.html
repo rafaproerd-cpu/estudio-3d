@@ -13,22 +13,23 @@
     p{margin:0;color:#b9c2d5;font-size:14px}
     .hint{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:2;background:#20283acc;border:1px solid #ffffff24;border-radius:999px;padding:10px 15px;color:#dce5f7;font-size:12px;white-space:nowrap}
     .error{position:fixed;inset:auto 16px 70px;background:#512b35;color:#fff;padding:12px;border-radius:12px;display:none;z-index:3}
-    .editor{position:fixed;z-index:4;right:18px;top:88px;width:min(290px,calc(100vw - 36px));padding:18px;border:1px solid #ffffff20;border-radius:18px;background:#171e2ddd;backdrop-filter:blur(18px);box-shadow:0 18px 55px #0006}
-    .editor h2{font-size:16px;margin:0 0 14px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;color:#b9c2d5}
+    .editor{position:fixed;z-index:4;right:18px;top:88px;width:min(290px,calc(100vw - 36px));max-height:calc(100dvh - 112px);overflow:auto;padding:18px;border:1px solid #ffffff20;border-radius:18px;background:#171e2ddd;backdrop-filter:blur(18px);box-shadow:0 18px 55px #0006}
+    .editor h2{font-size:16px;margin:0 0 14px}.editor-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-head button{padding:6px 9px;font-size:11px}.editor.collapsed .editor-content{display:none}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:12px;color:#b9c2d5}
     .field input[type=text]{width:100%;border:1px solid #ffffff24;border-radius:9px;padding:10px;background:#0e1420;color:#fff;font:inherit}
     .field input[type=color]{width:100%;height:38px;border:0;background:none;cursor:pointer}
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
     .editor button{border:1px solid #ffffff20;border-radius:10px;padding:10px;background:#283653;color:#fff;font-weight:650;cursor:pointer}
     .editor button.primary{background:#526fff;border-color:#526fff;grid-column:1/-1}
     .editor button:active{transform:scale(.98)}.editor small{display:block;color:#8996ae;font-size:10px;line-height:1.45;margin-top:10px}
-    @media(max-width:600px){.editor{top:auto;bottom:62px;right:12px;width:210px;padding:12px}.editor h2{margin-bottom:8px}.field{margin:7px 0;gap:3px}.field input[type=color]{height:27px}.editor button{padding:8px;font-size:11px}.panel{left:12px;top:12px}.hint{bottom:15px;font-size:10px}}
+    @media(max-width:900px){.editor{top:auto;bottom:58px;left:12px;right:12px;width:auto;max-height:38dvh;padding:12px}.editor h2{margin:0;font-size:14px}.editor-head{margin-bottom:7px}.editor-content{display:grid;grid-template-columns:1fr 1fr;column-gap:12px;align-items:end}.field{margin:5px 0;gap:3px}.field input[type=color]{height:28px}.actions{grid-column:1/-1;margin-top:7px}.editor button{padding:8px;font-size:11px}.editor small{grid-column:1/-1}.panel{left:12px;top:12px}.hint{bottom:12px;font-size:10px}.editor.collapsed{max-height:none;width:max-content;left:auto;max-width:calc(100vw - 24px);padding:8px 12px}.editor.collapsed .editor-head{margin:0}.editor.collapsed h2{font-size:12px}}
   </style>
 </head>
 <body>
   <div id="scene"></div>
   <header class="panel"><h1>Estúdio 3D</h1><p>Protótipo inicial • personagem animado</p></header>
   <section class="editor" aria-label="Personalização do personagem">
-    <h2>Personalizar personagem</h2>
+    <div class="editor-head"><h2>Personalizar personagem</h2><button id="toggleEditor" type="button" aria-expanded="true">Ocultar</button></div>
+    <div class="editor-content">
     <div class="field"><label for="characterName">Nome</label><input id="characterName" type="text" value="Personagem 01" maxlength="32"></div>
     <div class="field"><label for="skinColor">Tom de pele</label><input id="skinColor" type="color" value="#f0bd98"></div>
     <div class="field"><label for="outfitColor">Cor da roupa</label><input id="outfitColor" type="color" value="#527cff"></div>
@@ -37,6 +38,7 @@
       <button class="primary" id="exportCharacter">Exportar ficha JSON</button>
     </div>
     <small>O JSON salva nome, cores e transformações básicas. A exportação do modelo 3D em GLB será adicionada numa próxima etapa.</small>
+    </div>
   </section>
   <div class="hint">Arraste para girar • aproxime com dois dedos</div>
   <div id="error" class="error">Não foi possível carregar o motor 3D. Verifique sua conexão e recarregue a página.</div>
@@ -49,7 +51,7 @@
     scene.fog = new THREE.Fog(0x10131b, 8, 22);
 
     const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 100);
-    camera.position.set(0, 2.2, 7.8);
+    camera.position.set(0, 0.35, 8.6);
 
     const renderer = new THREE.WebGLRenderer({antialias:true});
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -124,7 +126,7 @@
       outfitInput.value=chosen;blue.color.set(chosen);
     });
     document.querySelector('#resetView').addEventListener('click',()=>{
-      spin=0;camera.position.set(0,2.2,7.8);camera.lookAt(0,0,0);
+      spin=0;camera.position.set(0,2.2,7.8);camera.lookAt(0,-0.12,0);
     });
     document.querySelector('#exportCharacter').addEventListener('click',()=>{
       const data={
