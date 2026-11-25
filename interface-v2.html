@@ -282,7 +282,7 @@ function cloneSkeletonSafe(source, attachEditorRoots = true) {
     }
   });
   try {
-    const copy = cloneSkeletonSafe(source);
+    const copy = cloneSkeleton(source);
     if (attachEditorRoots) {
       copy.traverse(node => {
         if (node.isMesh) node.userData.editorRoot = copy;
