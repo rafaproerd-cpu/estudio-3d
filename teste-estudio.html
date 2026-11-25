@@ -444,15 +444,38 @@ const object=new THREE.Mesh(new THREE.BoxGeometry(1.45,1.8,0.9),clothes);
 object.position.y=0.9;object.castShadow=true;group.add(object);
 ellipsoid('Detalhe frontal',white,0,1.05,0.47,0.28,0.2,0.04);
 }else if(isAnimal){
-ellipsoid('Corpo',clothes,0,1.05,0,0.95,0.48,0.42);
-ellipsoid('Cabeça',skin,0.78,1.45,0,0.42,0.4,0.38);
-for(const x of [-0.62,0.62]) for(const z of [-0.25,0.25]){
-capsule('Pata',skin,[x,0.18,z],[x*0.9,0.92,z],0.13,0.1);
+const fur=skin;
+const muzzle=material(0xe6d8c8,0.86);
+const nose=material(0x28232a,0.35);
+const innerEar=material(0x9d6f75,0.85);
+const paw=material(0x514653,0.88);
+ellipsoid('Tronco principal',clothes,-0.12,1.12,0,0.88,0.43,0.39);
+ellipsoid('Peito',fur,0.52,1.12,0,0.43,0.48,0.4);
+ellipsoid('Quadril',clothes,-0.65,1.1,0,0.42,0.43,0.39);
+capsule('Pescoço',fur,[0.43,1.2,0],[0.78,1.58,0],0.29,0.25);
+ellipsoid('Cabeça',fur,0.9,1.72,0,0.43,0.42,0.38);
+ellipsoid('Bochecha',fur,1.05,1.53,0.02,0.3,0.23,0.32);
+ellipsoid('Focinho',muzzle,1.22,1.57,0.08,0.25,0.17,0.24);
+ellipsoid('Nariz',nose,1.43,1.63,0.08,0.09,0.075,0.11);
+for(const side of [-1,1]){
+ellipsoid('Olho',white,0.99,1.83,side*0.315,0.105,0.115,0.055);
+ellipsoid('Pupila',eye,1.025,1.83,side*0.36,0.052,0.065,0.026);
+ellipsoid('Orelha externa',fur,0.72,2.08,side*0.23,0.16,0.3,0.13);
+ellipsoid('Orelha interna',innerEar,0.75,2.09,side*0.335,0.085,0.19,0.025);
 }
-ellipsoid('Focinho',white,1.08,1.32,0.05,0.22,0.16,0.24);
-ellipsoid('Olho esquerdo',eye,0.92,1.58,0.34,0.055,0.07,0.035);
-ellipsoid('Olho direito',eye,0.62,1.58,0.34,0.055,0.07,0.035);
-capsule('Cauda',skin,[-0.82,1.18,0],[-1.35,1.55,0],0.13,0.06);
+for(const x of [-0.72,0.48]){
+for(const side of [-1,1]){
+const z=side*0.25;
+const hipY=0.98;
+const kneeX=x+(x<0?0.04:-0.04);
+capsule('Perna superior',fur,[x,hipY,z],[kneeX,0.48,z],0.17,0.13);
+capsule('Perna inferior',fur,[kneeX,0.5,z],[kneeX+0.02,0.15,z],0.115,0.085);
+ellipsoid('Pata',paw,kneeX+0.09,0.105,z+0.015,0.19,0.105,0.14);
+}
+}
+capsule('Cauda base',fur,[-0.92,1.28,0],[-1.18,1.52,0],0.13,0.105);
+capsule('Cauda ponta',fur,[-1.18,1.52,0],[-1.42,1.76,0],0.105,0.055);
+ellipsoid('Peito claro',muzzle,0.58,0.93,0.015,0.23,0.31,0.31);
 }else{
 const ageScale=character.ageStage==='baby'?0.68:character.ageStage==='child'?0.78:character.ageStage==='teen'?0.92:character.ageStage==='senior'?0.98:1;
 const bodyY=1.12*ageScale;
