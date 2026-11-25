@@ -365,6 +365,7 @@ if (!pendingCharacterImport && startupEditorState && startupEditorState.activeCh
       if (Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
       if (Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
     }
+    restoreAdditionalSceneCharacters(startupEditorState);
     persistEditorState();
     status('Personagem procedural e cena restaurados sem depender do arquivo GLB-base.');
     return;
@@ -507,9 +508,14 @@ try {
         if (Array.isArray(t.scale)) character.scale.fromArray(t.scale);
         persistEditorState();
       }
+      restoreAdditionalSceneCharacters(savedEditorState);
+      persistEditorState();
       return;
     }
-    if (savedEditorState) persistEditorState();
+    if (savedEditorState) {
+      restoreAdditionalSceneCharacters(savedEditorState);
+      persistEditorState();
+    }
     status(savedResult.ok
       ? 'Personagem carregado e cadastrado no projeto.'
       : 'Personagem carregado; não foi possível salvar no navegador.');
@@ -1020,7 +1026,7 @@ function generateCharacterPrototype(options = {}) {
 
 document.querySelector('#generateCharacter3D').onclick = () => generateCharacterPrototype();
 
-function addCharacterInstance(recordId, transform = null) {
+function addCharacterInstance(recordId, transform = null, options = {}) {
   if (!window.Estudio3DCharacters) return;
   const record = window.Estudio3DCharacters.getCharacter(recordId);
   if (!record) {
@@ -1035,12 +1041,32 @@ function addCharacterInstance(recordId, transform = null) {
   if (transform && Array.isArray(transform.rotation)) character.rotation.fromArray(transform.rotation);
   if (transform && Array.isArray(transform.scale)) character.scale.fromArray(transform.scale);
   character.userData.characterRecordId = recordId;
-  character.position.x += objects.filter(obj => obj.userData.isCharacter).length > 1 && !transform ? 1.8 : 0;
+  if (options.offset !== false) {
+    character.position.x += objects.filter(obj => obj.userData.isCharacter).length > 1 && !transform ? 1.8 : 0;
+  }
   selectObject(character);
   renderCharacterCatalog();
   updateList();
-  persistEditorState();
+  if (options.persist !== false) persistEditorState();
   status('Cópia de ' + record.name + ' adicionada à cena. Cada personagem pode ser selecionado e transformado separadamente.');
+}
+
+function restoreAdditionalSceneCharacters(editorState) {
+  if (!editorState || !Array.isArray(editorState.sceneCharacters)) return;
+  const activeRoot = character;
+  const activeRecordId = characterRecordId;
+  const activeSelection = selected;
+  editorState.sceneCharacters.forEach(instance => {
+    if (!instance || instance.active || instance.source !== 'procedural_preview') return;
+    const record = window.Estudio3DCharacters &&
+      window.Estudio3DCharacters.getCharacter(instance.recordId);
+    if (record) addCharacterInstance(instance.recordId, instance.transform, { persist: false, offset: false });
+  });
+  character = activeRoot;
+  characterRecordId = activeRecordId;
+  selected = activeSelection;
+  if (activeSelection) selectObject(activeSelection);
+  updateList();
 }
 
 function persistSelectedCharacter(patch) {
