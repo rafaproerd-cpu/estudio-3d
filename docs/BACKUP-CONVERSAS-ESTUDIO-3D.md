@@ -157,3 +157,10 @@ Durante a continuidade do editor, foi identificado que o ângulo salvo no cadast
 - Ao reabrir, se `hasCharacter` for explicitamente `false`, o editor restaura os objetos/configurações salvos sem carregar automaticamente o GLB-base.
 - Compatibilidade: estados antigos sem esse campo continuam seguindo o fluxo anterior de carregamento.
 - Testes automatizados aprovados: 36/36 no GitHub Actions, workflow run `45633895779`, commit `9a19533a95b453a0571a2283a180dadcbab0e841`.
+
+
+## 25/11/2026 — Ajustes finais na restauração e substituição de cenas
+
+- Corrigida restauração da transformação completa (posição, rotação e escala) também para personagens rigged salvos localmente, não apenas para protótipos procedurais.
+- Ao importar um projeto sem personagem ativo, o editor agora remove o personagem anterior da cena, limpa sua associação e encerra ações de animação antigas; o catálogo importado continua preservado separadamente.
+- Testes automatizados aprovados: 38/38 no GitHub Actions, workflow run `45634201857`, commit `53fc035efa203f9518c1393cb69715f10a443410`.
