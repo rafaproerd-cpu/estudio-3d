@@ -62,6 +62,17 @@ test('controles de proporção corporal são persistidos e reaplicados ao protó
   assert.match(html, /ageScale\[record && record\.ageStage\]/);
 });
 
+test('cabelos procedurais oferecem estilos e cor persistidos no protótipo humanoide', () => {
+  assert.match(html, /id="hairStyle"/);
+  assert.match(html, /id="hairColor"/);
+  assert.match(html, /function applyProceduralHair\(/);
+  assert.match(html, /procedural-hair/);
+  assert.match(html, /appearance: \{ hair: \{ style, color \} \}/);
+  assert.match(html, /supportsHair = true/);
+  assert.match(html, /value="long">Comprido/);
+  assert.match(html, /value="spiky">Arrepiado/);
+});
+
 test('controles faciais do protótipo humanoide são persistidos e reaplicados', () => {
   assert.match(html, /id="faceHeadScale"/);
   assert.match(html, /id="faceEyeScale"/);
