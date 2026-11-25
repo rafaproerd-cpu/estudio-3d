@@ -86,6 +86,12 @@ h3{font-size:11px}
 <div class="section">
 <h3>Objetos da cena</h3>
 <div id="objectList"></div>
+<label for="sceneObjectName">Nome da instância selecionada</label>
+<input id="sceneObjectName" type="text" maxlength="80" placeholder="Nome do objeto">
+<div class="toolbar">
+<button id="renameSceneObject">Renomear</button>
+<button id="duplicateSceneObject">Duplicar</button>
+</div>
 </div>
 </aside>
 
@@ -659,6 +665,8 @@ function selectObject(obj){
 selected=obj;
 
 if(!obj)return;
+document.querySelector('#sceneObjectName').value =
+  obj.userData.instanceName || obj.name || '';
 
 if (obj.userData.isCharacter) {
   character = obj;
@@ -708,9 +716,8 @@ objects.forEach((obj,i)=>{
 
 const b=document.createElement('button');
 
-b.textContent=obj.userData.isCharacter
-?'Personagem '+(i+1)
-:(obj.userData.type||'Objeto')+' '+(i+1);
+b.textContent=obj.userData.instanceName || obj.name ||
+  (obj.userData.isCharacter ? 'Personagem '+(i+1) : (obj.userData.type||'Objeto')+' '+(i+1));
 
 b.className=obj===selected?'active':'';
 
@@ -721,6 +728,72 @@ list.appendChild(b);
 });
 
 }
+
+document.querySelector('#renameSceneObject').onclick = () => {
+  if (!selected) {
+    status('Selecione um objeto da cena para renomear.');
+    return;
+  }
+  const nextName = document.querySelector('#sceneObjectName').value.trim();
+  if (!nextName) {
+    status('Digite um nome para o objeto.');
+    return;
+  }
+  selected.userData.instanceName = nextName.slice(0, 80);
+  selected.name = selected.userData.instanceName;
+  updateList();
+  persistEditorState();
+  status('Instância renomeada.');
+};
+
+document.querySelector('#duplicateSceneObject').onclick = () => {
+  if (!selected) {
+    status('Selecione um objeto da cena para duplicar.');
+    return;
+  }
+  if (selected.userData.isCharacter) {
+    const recordId = selected.userData.characterRecordId;
+    const record = recordId && window.Estudio3DCharacters
+      ? window.Estudio3DCharacters.getCharacter(recordId) : null;
+    if (!record) {
+      status('Não foi possível localizar o cadastro deste personagem.');
+      return;
+    }
+    if (!selected.userData.proceduralCategory) {
+      status('A duplicação de modelos GLB com esqueleto será habilitada após integrar a clonagem segura de esqueletos.');
+      return;
+    }
+    const source = selected;
+    const sourceName = source.userData.instanceName || source.name || record.name;
+    addCharacterInstance(recordId);
+    if (character) {
+      character.userData.instanceName = (sourceName + ' (cópia)').slice(0, 80);
+      character.name = character.userData.instanceName;
+      updateList();
+      persistEditorState();
+    }
+    return;
+  }
+
+  const copy = selected.clone(true);
+  copy.position.x += 1.2;
+  copy.name = ((selected.userData.instanceName || selected.name || 'Objeto') + ' (cópia)').slice(0, 80);
+  copy.userData = { ...selected.userData, instanceName: copy.name, editorRoot: copy };
+  copy.traverse(child => {
+    if (child.isMesh && child.material) {
+      child.material = Array.isArray(child.material)
+        ? child.material.map(material => material.clone())
+        : child.material.clone();
+      child.userData.editorRoot = copy;
+    }
+  });
+  scene.add(copy);
+  objects.push(copy);
+  selectObject(copy);
+  updateList();
+  persistEditorState();
+  status('Cópia adicionada à cena.');
+};
 
 /* BOTÕES */
 
