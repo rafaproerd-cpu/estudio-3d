@@ -450,6 +450,7 @@ try {
       }
       return;
     }
+    if (savedEditorState) persistEditorState();
     status(savedResult.ok
       ? 'Personagem carregado e cadastrado no projeto.'
       : 'Personagem carregado; não foi possível salvar no navegador.');
