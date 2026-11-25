@@ -894,16 +894,8 @@ function generateCharacterPrototype(options = {}) {
   // A associação visual só muda quando o protótipo do cadastro selecionado é gerado.
   characterRecordId = selectedCatalogRecordId;
 
-  // Um protótipo procedural não herda ações do modelo rigged que foi substituído.
-  if (mixer) mixer.stopAllAction();
-  mixer = null;
-  activeAction = null;
-  animationActions = [];
-  document.querySelector('#animationSelect').innerHTML = '<option>Protótipo sem animações</option>';
-  document.querySelector('#animationSelect').disabled = true;
-  document.querySelector('#animate').disabled = true;
-  document.querySelector('#pauseAnimation').disabled = true;
-  document.querySelector('#pauseAnimation').textContent = 'Ⅱ Pausar animação';
+  // Ao substituir, encerra o mixer anterior; ao adicionar, preserva os demais.
+  if (!addToScene && mixer) mixer.stopAllAction();
 
   // O editor mantém um personagem principal por vez: evita duplicatas ao regenerar.
   if (!addToScene && character) {
