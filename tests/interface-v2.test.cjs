@@ -383,3 +383,11 @@ test('importação ZIP protege contra conteúdo descompactado excessivo e restau
   assert.match(html, /project\.character\.record\.model\.source === 'procedural_preview'/);
   assert.match(html, /generateCharacterPrototype\(\)/);
 });
+
+
+test('importação de projeto impede que o carregamento inicial do GLB sobrescreva a cena', () => {
+  assert.match(html, /let projectImportRevision = 0/);
+  assert.match(html, /const loadRevision = projectImportRevision/);
+  assert.match(html, /if \(loadRevision !== projectImportRevision\) return/);
+  assert.match(html, /projectImportRevision \+= 1/);
+});
