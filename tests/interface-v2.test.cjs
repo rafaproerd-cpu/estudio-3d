@@ -445,11 +445,13 @@ test('modelos GLB importados ficam vinculados ao ID do cadastro no catálogo', (
 });
 
 
-test('instâncias múltiplas ainda não substituem modelos GLB externos por protótipos', () => {
-  assert.match(html, /const canAddProcedural = !record\.model/);
-  assert.match(html, /addButton\.disabled = !canAddProcedural/);
-  assert.match(html, /Instâncias de modelos 3D externos serão habilitadas em uma próxima etapa/);
-  assert.match(html, /A inclusão de múltiplas instâncias de modelos GLB externos será habilitada em uma próxima etapa/);
+test('catálogo permite importar um GLB adicional sem substituir os personagens existentes', () => {
+  assert.match(html, /id="addGLB"/);
+  assert.match(html, /document\.querySelector\('#addGLB'\)\.onclick/);
+  assert.match(html, /const addToScene = event\.target\.dataset\.addToScene === 'true'/);
+  assert.match(html, /if \(!addToScene && character\)/);
+  assert.match(html, /addToScene \? \{ name: file\.name\.replace/);
+  assert.match(html, /objects\.filter\(obj => obj\.userData\.isCharacter\)\.length \* 1\.8/);
 });
 
 test('excluir personagem da cena preserva as demais instâncias e seleciona uma ativa', () => {
@@ -463,4 +465,38 @@ test('excluir personagem da cena preserva as demais instâncias e seleciona uma 
   assert.match(handler, /objects\.find\(obj => obj\.userData\.isCharacter\)/);
   assert.match(handler, /characterRecordId = character \? \(character\.userData\.characterRecordId \|\| null\) : null/);
   assert.match(handler, /if \(selected\) selectObject\(selected\)/);
+});
+
+test('cada personagem GLB mantém mixer e clipes de animação independentes', () => {
+  assert.match(html, /const characterAnimationStates = new Map\(\)/);
+  assert.match(html, /function registerCharacterAnimations\(root, clips\)/);
+  assert.match(html, /characterAnimationStates\.set\(root, state\)/);
+  assert.match(html, /function activateCharacterAnimations\(root\)/);
+  assert.match(html, /const activeAnimationState = characterAnimationStates\.get\(character\)/);
+  assert.match(html, /characterAnimationStates\.forEach\(state =>/);
+});
+
+test('selecionar personagem alterna os controles para suas próprias animações', () => {
+  assert.match(html, /activateCharacterAnimations\(obj\)/);
+  assert.match(html, /animationActions = state \? state\.clips : \[\]/);
+  assert.match(html, /mixer = state \? state\.mixer : null/);
+});
+
+test('excluir ou limpar a cena encerra e remove os mixers dos personagens', () => {
+  assert.match(html, /characterAnimationStates\.delete\(removedObject\)/);
+  assert.match(html, /characterAnimationStates\.clear\(\)/);
+  assert.match(html, /removedAnimationState\.mixer\.stopAllAction\(\)/);
+});
+
+test('pacote ZIP restaura personagens GLB adicionais com transformações e animações', () => {
+  assert.match(html, /filter\(instance => instance && !instance\.active && instance\.source === 'external_file'\)/);
+  assert.match(html, /const asset = preparedAssets\.get\(instance\.recordId\)/);
+  assert.match(html, /registerCharacterAnimations\(root, asset\.gltf\.animations \|\| \[\]\)/);
+  assert.match(html, /root\.position\.fromArray\(transform\.position\)/);
+});
+
+test('exportação ZIP continua incluindo os binários GLB de todos os cadastros externos', () => {
+  assert.match(html, /const requiredAssets = project\.assetManifest \|\| \[\]/);
+  assert.match(html, /externalModelAssets\.set\(record\.id, \{ fileName: file\.name, data: buffer \}\)/);
+  assert.match(html, /bundledProject\.assetManifest = bundledProject\.assetManifest\.map/);
 });
