@@ -502,6 +502,13 @@ test('exportação ZIP continua incluindo os binários GLB de todos os cadastros
   assert.match(html, /bundledProject\.assetManifest = bundledProject\.assetManifest\.map/);
 });
 
+test('exportação GLB do personagem selecionado inclui seus clipes de animação', () => {
+  assert.match(html, /const exportAnimationState = characterAnimationStates\.get\(exportTarget\)/);
+  assert.match(html, /if \(exportAnimationState && exportAnimationState\.clips\.length\)/);
+  assert.match(html, /exportOptions\.animations = exportAnimationState\.clips/);
+  assert.match(html, /exporter\.parse\([\s\S]*?exportClone,[\s\S]*?exportOptions/);
+});
+
 test('exportação GLB da cena completa inclui todas as instâncias e objetos sem reparentar originais', () => {
   assert.match(html, /id="exportSceneGLB"/);
   assert.match(html, /document\.querySelector\('#exportSceneGLB'\)\.onclick/);
