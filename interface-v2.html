@@ -96,6 +96,31 @@ h3{font-size:11px}
 
 <aside class="right">
 
+<div class="section">
+<h3>Cadastro universal</h3>
+<label>Nome do personagem</label>
+<input id="characterName" type="text" maxlength="80" placeholder="Ex.: Guardião da floresta">
+<label>Categoria</label>
+<select id="characterCategory">
+<option value="human">Humano</option><option value="animal">Animal</option><option value="creature">Criatura / Monstro</option><option value="robot">Robô</option><option value="alien">Alienígena</option><option value="object">Objeto antropomórfico</option><option value="other">Outro</option>
+</select>
+<label>Fase da vida</label>
+<select id="characterAge">
+<option value="baby">Bebê</option><option value="child">Criança</option><option value="teen">Adolescente</option><option value="adult">Adulto</option><option value="senior">Idoso</option><option value="not_applicable">Não se aplica</option>
+</select>
+<label>Tipo de estrutura (rig)</label>
+<select id="characterRig">
+<option value="humanoid">Humanoide</option><option value="quadruped">Quadrúpede</option><option value="avian">Ave</option><option value="custom">Personalizado</option><option value="none">Sem rig</option><option value="unknown">A definir</option>
+</select>
+<label>Estilo visual</label>
+<select id="characterStyle">
+<option value="definido pelo contexto">Definido pelo contexto</option><option value="cartoon">Cartoon</option><option value="cartoon realista">Cartoon realista</option><option value="3D estilizado semi-realista">3D estilizado semi-realista</option><option value="realista">Realista</option><option value="fantasia">Fantasia</option><option value="anime">Anime</option>
+</select>
+<label>Descrição</label>
+<input id="characterDescription" type="text" maxlength="300" placeholder="Descreva o personagem">
+<button id="saveCharacterData" style="width:100%;margin-top:10px">Salvar cadastro</button>
+</div>
+
 <div>
 <h3>Aparência</h3>
 <label>Cor do objeto</label>
@@ -322,6 +347,7 @@ try {
           });
     }
     characterRecordId = record.id;
+    syncCharacterForm(record);
     const savedResult = window.Estudio3DCore.saveProject();
     status(savedResult.ok
       ? 'Personagem carregado e cadastrado no projeto.'
@@ -425,6 +451,10 @@ selected=obj;
 
 if(!obj)return;
 
+if (obj.userData.isCharacter && characterRecordId && window.Estudio3DCharacters) {
+  syncCharacterForm(window.Estudio3DCharacters.getCharacter(characterRecordId));
+}
+
 let materialFound=null;
 
 obj.traverse((child)=>{
@@ -498,6 +528,45 @@ document.querySelector('#rotate').onclick=()=>setMode('rotate');
 document.querySelector('#scale').onclick=()=>setMode('scale');
 
 /* APARÊNCIA */
+function syncCharacterForm(record) {
+  if (!record) return;
+  document.querySelector('#characterName').value = record.name || '';
+  document.querySelector('#characterCategory').value = record.category || 'human';
+  document.querySelector('#characterAge').value = record.ageStage || 'adult';
+  document.querySelector('#characterRig').value = record.rigType || 'unknown';
+  document.querySelector('#characterStyle').value =
+    record.visualDirection && record.visualDirection.style
+      ? record.visualDirection.style : 'definido pelo contexto';
+  document.querySelector('#characterDescription').value = record.description || '';
+}
+
+document.querySelector('#saveCharacterData').onclick = () => {
+  if (!character || !characterRecordId || !window.Estudio3DCharacters) {
+    status('Carregue e selecione um personagem antes de salvar o cadastro.');
+    return;
+  }
+  try {
+    const updated = window.Estudio3DCharacters.updateCharacter(characterRecordId, {
+      name: document.querySelector('#characterName').value.trim() || 'Novo personagem',
+      category: document.querySelector('#characterCategory').value,
+      ageStage: document.querySelector('#characterAge').value,
+      rigType: document.querySelector('#characterRig').value,
+      description: document.querySelector('#characterDescription').value.trim(),
+      visualDirection: {
+        style: document.querySelector('#characterStyle').value
+      }
+    });
+    const saved = window.Estudio3DCore.saveProject();
+    syncCharacterForm(updated);
+    status(saved.ok
+      ? 'Cadastro do personagem salvo no projeto.'
+      : 'Cadastro atualizado, mas não foi possível salvar no navegador.');
+  } catch (error) {
+    console.error('[Estúdio 3D] Falha ao salvar cadastro:', error);
+    status('Não foi possível salvar o cadastro: ' + error.message);
+  }
+};
+
 function persistSelectedCharacter(patch) {
   if (!selected || !selected.userData.isCharacter || !characterRecordId) return;
   try {
