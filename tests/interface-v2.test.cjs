@@ -44,8 +44,8 @@ test('importação reconstrói protótipos procedurais nos dois caminhos', () =>
 });
 
 test('JavaScript da interface passa pela análise sintática', () => {
-  const match = html.match(/<script type="module">([\\s\\S]*?)<\\/script>/);
+  const match = html.match(/<script type="module">([\s\S]*?)<\/script>/);
   assert.ok(match, 'script principal da interface não encontrado');
-  const source = match[1].replace(/^import .*;\\s*$/gm, '');
+  const source = match[1].replace(/^import .*;\s*$/gm, '');
   assert.doesNotThrow(() => new Function(source));
 });
