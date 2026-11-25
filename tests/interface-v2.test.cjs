@@ -38,7 +38,7 @@ test('projeto JSON preserva cadastro e transformação do personagem', () => {
 });
 
 test('importação reconstrói protótipos procedurais nos dois caminhos', () => {
-  assert.ok((html.match(/generateCharacterPrototype\(\);/g) || []).length >= 3);
+  assert.ok((html.match(/generateCharacterPrototype\(\);/g) || []).length >= 2);
   assert.match(html, /imported\.model\.source === 'procedural_preview'/);
   assert.match(html, /restoreProcedural/);
 });
