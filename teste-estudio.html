@@ -105,6 +105,39 @@ label{margin:8px 0}
 <label>Animação</label>
 <button id="rotate">Girar modelo: ligado</button>
 </div>
+
+<div class="character-panel" style="flex:1 1 100%;min-width:210px;border-top:1px solid #30384b;margin-top:12px;padding-top:10px">
+<h3>Personagens</h3>
+<label for="characterName">Nome do personagem</label>
+<input id="characterName" type="text" maxlength="80" placeholder="Ex.: Luna" style="background:#10131b;color:white;border:1px solid #465575;border-radius:8px;padding:10px">
+<label for="characterCategory">Tipo</label>
+<select id="characterCategory">
+<option value="human">Humano</option><option value="animal">Animal</option><option value="creature">Criatura</option><option value="robot">Robô</option><option value="alien">Extraterrestre</option><option value="object">Objeto</option><option value="other">Outro</option>
+</select>
+<label for="characterAge">Faixa etária</label>
+<select id="characterAge">
+<option value="baby">Bebê</option><option value="child">Criança</option><option value="teen">Adolescente</option><option value="adult" selected>Adulto</option><option value="senior">Idoso</option><option value="not_applicable">Não se aplica</option>
+</select>
+<label for="characterRig">Estrutura</label>
+<select id="characterRig">
+<option value="humanoid">Humanoide</option><option value="quadruped">Quadrúpede</option><option value="avian">Ave</option><option value="custom">Personalizada</option><option value="none">Sem rig</option><option value="unknown" selected>Não definida</option>
+</select>
+<label for="characterStyle">Estilo visual</label>
+<input id="characterStyle" type="text" maxlength="120" placeholder="Ex.: 3D estilizado semi-realista" style="background:#10131b;color:white;border:1px solid #465575;border-radius:8px;padding:10px">
+<label for="characterDescription">Características e descrição</label>
+<textarea id="characterDescription" rows="3" maxlength="1500" placeholder="Descreva aparência, personalidade, roupas e detalhes..." style="width:100%;background:#10131b;color:white;border:1px solid #465575;border-radius:8px;padding:10px;resize:vertical"></textarea>
+<button id="characterSave" type="button">＋ Cadastrar personagem</button>
+<button id="characterCancel" type="button" style="display:none">Cancelar edição</button>
+<label for="characterList">Personagens deste projeto</label>
+<select id="characterList"><option value="">Nenhum personagem cadastrado</option></select>
+<button id="characterEdit" type="button">Editar selecionado</button>
+<button id="characterDelete" type="button" class="danger">Excluir selecionado</button>
+<button id="projectSave" type="button">Salvar projeto neste aparelho</button>
+<button id="projectLoad" type="button">Carregar projeto salvo</button>
+<div id="characterMessage" class="library-count" role="status" aria-live="polite">Cadastros são salvos no projeto deste navegador.</div>
+<p style="font-size:11px;line-height:1.5;color:#9eacc8">Nesta etapa, o cadastro organiza os dados do personagem. A geração de um novo modelo 3D, rigging e animações será integrada em etapas posteriores.</p>
+</div>
+
 </aside>
 
 <section class="viewer">
@@ -688,6 +721,118 @@ animate();
 
     status.textContent = '● Erro na conexão dos módulos';
   }
+})();
+</script>
+
+
+<script>
+(function(){
+  'use strict';
+  const core = window.Estudio3DCore;
+  const characters = window.Estudio3DCharacters;
+  const $ = id => document.getElementById(id);
+  if (!core || !characters) {
+    $('characterMessage').textContent = 'Erro: os módulos do Estúdio 3D não foram carregados.';
+    return;
+  }
+  let editingId = null;
+  function message(text){ $('characterMessage').textContent = text; }
+  function refreshList(selectId){
+    const items = characters.getCharacters();
+    const list = $('characterList');
+    list.innerHTML = '';
+    if (!items.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Nenhum personagem cadastrado';
+      list.appendChild(option);
+    } else {
+      items.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        list.appendChild(option);
+      });
+    }
+    $('characterEdit').disabled = !items.length;
+    $('characterDelete').disabled = !items.length;
+    if (selectId && items.some(item => item.id === selectId)) list.value = selectId;
+  }
+  function clearForm(){
+    editingId = null;
+    $('characterName').value = '';
+    $('characterCategory').value = 'human';
+    $('characterAge').value = 'adult';
+    $('characterRig').value = 'unknown';
+    $('characterStyle').value = '';
+    $('characterDescription').value = '';
+    $('characterSave').textContent = '＋ Cadastrar personagem';
+    $('characterCancel').style.display = 'none';
+  }
+  $('characterSave').addEventListener('click', function(){
+    const name = $('characterName').value.trim();
+    if (!name) { message('Digite um nome para o personagem.'); $('characterName').focus(); return; }
+    const data = {
+      name,
+      category: $('characterCategory').value,
+      ageStage: $('characterAge').value,
+      rigType: $('characterRig').value,
+      description: $('characterDescription').value.trim(),
+      visualDirection: {
+        style: $('characterStyle').value.trim() || 'definido pelo contexto',
+        description: $('characterDescription').value.trim()
+      }
+    };
+    try {
+      let saved;
+      if (editingId) saved = characters.updateCharacter(editingId, data);
+      else saved = characters.addCharacterToProject(data);
+      refreshList(saved.id);
+      clearForm();
+      message(editingId ? 'Personagem atualizado.' : 'Personagem cadastrado no projeto.');
+    } catch (error) {
+      message(error.message || 'Não foi possível salvar o personagem.');
+    }
+  });
+  $('characterEdit').addEventListener('click', function(){
+    const item = characters.getCharacter($('characterList').value);
+    if (!item) { message('Selecione um personagem.'); return; }
+    editingId = item.id;
+    $('characterName').value = item.name || '';
+    $('characterCategory').value = item.category || 'human';
+    $('characterAge').value = item.ageStage || 'adult';
+    $('characterRig').value = item.rigType || 'unknown';
+    $('characterStyle').value = item.visualDirection?.style || '';
+    $('characterDescription').value = item.description || '';
+    $('characterSave').textContent = 'Salvar alterações';
+    $('characterCancel').style.display = 'block';
+    message('Editando: ' + item.name);
+  });
+  $('characterCancel').addEventListener('click', clearForm);
+  $('characterDelete').addEventListener('click', function(){
+    const id = $('characterList').value;
+    const item = characters.getCharacter(id);
+    if (!item) { message('Selecione um personagem.'); return; }
+    if (!window.confirm('Excluir "' + item.name + '" deste projeto?')) return;
+    characters.removeCharacter(id);
+    refreshList();
+    clearForm();
+    message('Personagem excluído.');
+  });
+  $('projectSave').addEventListener('click', function(){
+    const result = core.saveProject();
+    message(result.message || (result.ok ? 'Projeto salvo.' : 'Não foi possível salvar.'));
+  });
+  $('projectLoad').addEventListener('click', function(){
+    const result = core.loadProject();
+    if (result.ok) {
+      refreshList();
+      clearForm();
+      message('Projeto carregado. ' + characters.getCharacters().length + ' personagem(ns) encontrado(s).');
+    } else message(result.message || 'Não foi possível carregar um projeto salvo.');
+  });
+  refreshList();
+  message('Sistema de cadastro conectado. Cadastre o primeiro personagem.');
 })();
 </script>
 
